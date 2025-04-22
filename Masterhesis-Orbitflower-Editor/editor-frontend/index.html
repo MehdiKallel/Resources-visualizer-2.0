@@ -52,8 +52,13 @@
 
       // var skills;
       // var serverlocation = "https://lehre.bpm.in.tum.de/ports/3000/"
-      var serverlocation = "http://localhost:3000/";
+      var serverlocation;
       var currentorgmodel;
+      
+      function getSkills(who) {
+        let skills = $("subject[uid=" + who + "] subjectSkills skillRef",currentorgmodel);
+	console.log(skills);      
+      }
 
       $(document).ready(function () {
         $('svg').attr({
@@ -62,20 +67,27 @@
         });
         viz = new OrbitFlower($('svg'));
 
-        
         $.ajax({
-          url: serverlocation + "organisation",
+          url: 'index.conf',
+          dataType: 'json',
           success: function(res) { 
-            currentorgmodel = res;
-            viz.show(currentorgmodel);
-            skills = new SkillsFeature($('svg'), currentorgmodel);
-            skills.initialize();
-          },
-          error: function(err) {
-            console.error("Failed to load organization model:", err);
+            serverlocation = res.server;
+            $.ajax({
+              url: serverlocation + "/organisation",
+              success: function(res) {       
+                currentorgmodel = res;
+		getSkills('harapata97');	
+                viz.show(currentorgmodel);                                       
+                skills = new SkillsFeature($('svg'), currentorgmodel);           
+                skills.initialize();                                             
+              },                                                                 
+              error: function(err) {                                             
+                console.error("Failed to load organization model:", err);        
+              }                                                                  
+            });                                                                  
           }
-        });
-
+        }); 
+        
         var relatedText = null;
         $('svg').on('click', function (e) {
           var clickedElement = e.target;
@@ -299,19 +311,12 @@
           </div>
         </ui-area>
         <ui-resizehandle data-belongs-to-tab="graph" data-label="drag to resize"></ui-resizehandle>
-        <ui-area data-belongs-to-tab="graph" style="border-right: 1px solid var(--x-ui-border-color); height: 100%;">
-          <div style="display: flex; flex-direction: column; height: 100%;">
+        <ui-area  is="x-ui-" data-belongs-to-tab="graph" style="border-right: 1px solid var(--x-ui-border-color); height: 100%;">
             <div id="users" style="flex: 1; min-height: 200px; border-bottom: 1px solid var(--x-ui-border-color); overflow: auto;  margin-left: 20px;">
             </div>
-            <ui-resizehandle 
-              data-belongs-to-tab="graph"
-              data-label="drag to resize" 
-              style="height: 10px; cursor: row-resize; background: var(--x-ui-border-color);">
-            </ui-resizehandle>
-
+	    <ui-resizehandle>drag to resize</ui-resizehandle>
             <div id="expressionBuilder" style="flex: 1; min-height: 200px; overflow: auto;">
             </div>
-          </div>
         </ui-area>
 
         <ui-area data-belongs-to-tab="manage-subjects" class="inactive">

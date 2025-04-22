@@ -1,3 +1,4 @@
+const morgan = require('morgan')
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
@@ -17,6 +18,7 @@ class UpdateEmitter extends EventEmitter {}
 const updateEmitter = new UpdateEmitter();
 
 const app = express();
+app.use(morgan('tiny'));
 app.use(cors());
 const PORT = 3000;
 const XML_FILE = path.join(__dirname, "organisation.xml");

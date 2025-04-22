@@ -1,4 +1,4 @@
-// Define all form handler functions first, before any event listeners
+var apiBaseUrl = null;
 
 // Form submission handlers for the management forms
 async function handleSubjectFormSubmit(e) {
@@ -33,7 +33,7 @@ async function handleSubjectFormSubmit(e) {
         `;
 
   try {
-    const response = await fetch("http://localhost:3000/subjects", {
+    const response = await fetch(`${apiBaseUrl}/subjects`, {
       method: "POST",
       headers: { "Content-Type": "application/xml" },
       body: xmlPayload,
@@ -75,7 +75,7 @@ async function handleUnitFormSubmit(e) {
         `;
 
   try {
-    const response = await fetch("http://localhost:3000/units", {
+    const response = await fetch(`${apiBaseUrl}/units`, {
       method: "POST",
       headers: { "Content-Type": "application/xml" },
       body: xmlPayload,
@@ -117,7 +117,7 @@ async function handleRoleFormSubmit(e) {
         `;
 
   try {
-    const response = await fetch("http://localhost:3000/roles", {
+    const response = await fetch(`${apiBaseUrl}/roles`, {
       method: "POST",
       headers: { "Content-Type": "application/xml" },
       body: xmlPayload,
@@ -147,25 +147,27 @@ async function handleSkillFormSubmit(e) {
     return;
   }
 
-  const relationElements = Array.from(document.querySelectorAll(".relation-item"))
-  .map((item) => {
-    const relId = item.querySelector(".relation-id").value.trim();
-    const relValue = item.querySelector(".relation-value").value.trim();
-    if (relId) {
-      return `<relation id="${relId}" type="${relValue}"/>`;
-    }
-    return "";
-  })
-  .filter((str) => str !== "");
+  const relationElements = Array.from(
+    document.querySelectorAll(".relation-item")
+  )
+    .map((item) => {
+      const relId = item.querySelector(".relation-id").value.trim();
+      const relValue = item.querySelector(".relation-value").value.trim();
+      if (relId) {
+        return `<relation id="${relId}" type="${relValue}"/>`;
+      }
+      return "";
+    })
+    .filter((str) => str !== "");
 
-const xmlPayload = `
+  const xmlPayload = `
   <skill id="${skillId}">
     ${relationElements.join("")}
   </skill>
 `;
 
   try {
-    const response = await fetch("http://localhost:3000/skills", {
+    const response = await fetch(`${apiBaseUrl}/skills`, {
       method: "POST",
       headers: { "Content-Type": "application/xml" },
       body: xmlPayload,
@@ -210,7 +212,7 @@ function displayMessage(message, type, elementId) {
 // Function to fetch all available skills from the server
 async function fetchAllSkills() {
   try {
-    const response = await fetch("http://localhost:3000/skills");
+    const response = await fetch(`${apiBaseUrl}/skills`);
     if (!response.ok) throw new Error("Failed to fetch skills");
     const skills = await response.json();
     return skills;
@@ -245,7 +247,7 @@ function addUnitRolePair() {
 async function openSubjectEditor(uid) {
   try {
     const [subjectResponse, allSkills] = await Promise.all([
-      fetch(`http://localhost:3000/subjects/byuid/${uid}`),
+      fetch(`${apiBaseUrl}/subjects/byuid/${uid}`),
       fetchAllSkills(),
     ]);
 
@@ -386,7 +388,7 @@ function addSkillBackToDropdown(skillId) {
 
   for (let i = 0; i < dropdown.options.length; i++) {
     if (dropdown.options[i].value === skillId) {
-      return; 
+      return;
     }
   }
   const option = document.createElement("option");
@@ -462,12 +464,10 @@ async function handleSubjectEditorSubmit(event) {
   );
 
   try {
-    const response = await fetch(
-      `http://localhost:3000/subjects/${subjectId}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/xml" },
-        body: `<?xml version="1.0"?>
+    const response = await fetch(`${apiBaseUrl}/subjects/${subjectId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/xml" },
+      body: `<?xml version="1.0"?>
         <subject id="${subjectId}" uid="${subjectUid}">
           <relations>
             ${pairs
@@ -479,8 +479,7 @@ async function handleSubjectEditorSubmit(event) {
           </skills>
         </subject>
       `,
-      }
-    );
+    });
 
     if (response.ok) {
       showEditMessage("✅ Changes saved successfully!", "success");
@@ -523,203 +522,204 @@ function closeTabAndReturnToGraph(element) {
   }
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-  console.log("DOM fully loaded, initializing form handlers");
+(async function init() {
+  try {
+    const resp = await fetch("index.conf");
+    if (!resp.ok) throw new Error(resp.statusText);
+    const cfg = await resp.json();
+    apiBaseUrl = cfg.server;
+    console.log("API base URL set to:", apiBaseUrl);
+  } catch (e) {
+    console.error("Could not load index.conf:", e);
+    return;
+  }
+  console.error("API base URL:", apiBaseUrl);
 
-  const subjectForm = document.getElementById("manage-subjects-form");
-  if (subjectForm) {
-    console.log("Subject form found, attaching handler");
-    subjectForm.addEventListener("submit", handleSubjectFormSubmit);
+  document.addEventListener("DOMContentLoaded", function () {
+    console.error("DOM fully loaded, initializing form handlers" + apiBaseUrl);
 
-    const addUnitRolePairBtn = document.getElementById("add-unit-role-pair");
-    if (addUnitRolePairBtn) {
-      addUnitRolePairBtn.addEventListener("click", function () {
-        const pairDiv = document.createElement("div");
-        pairDiv.className = "unit-role-pair";
-        pairDiv.innerHTML = `
+    const subjectForm = document.getElementById("manage-subjects-form");
+    if (subjectForm) {
+      console.log("Subject form found, attaching handler");
+      subjectForm.addEventListener("submit", handleSubjectFormSubmit);
+
+      const addUnitRolePairBtn = document.getElementById("add-unit-role-pair");
+      if (addUnitRolePairBtn) {
+        addUnitRolePairBtn.addEventListener("click", function () {
+          const pairDiv = document.createElement("div");
+          pairDiv.className = "unit-role-pair";
+          pairDiv.innerHTML = `
                 <input type="text" class="unit-id" placeholder="Unit ID" required>
                 <input type="text" class="role-id" placeholder="Role ID" required>
                 <button type="button" class="remove-btn">×</button>
               `;
-        document.getElementById("unit-role-pairs").appendChild(pairDiv);
+          document.getElementById("unit-role-pairs").appendChild(pairDiv);
 
-        const removeBtn = pairDiv.querySelector(".remove-btn");
-        if (removeBtn) {
-          removeBtn.addEventListener("click", function () {
-            pairDiv.remove();
-          });
-        }
+          const removeBtn = pairDiv.querySelector(".remove-btn");
+          if (removeBtn) {
+            removeBtn.addEventListener("click", function () {
+              pairDiv.remove();
+            });
+          }
+        });
+      }
+
+      document.querySelectorAll(".remove-btn").forEach((button) => {
+        button.addEventListener("click", function (e) {
+          e.target.closest(".unit-role-pair, .role-parent-pair").remove();
+        });
       });
     }
 
-    document.querySelectorAll(".remove-btn").forEach((button) => {
-      button.addEventListener("click", function (e) {
-        e.target.closest(".unit-role-pair, .role-parent-pair").remove();
-      });
-    });
-  }
+    const unitForm = document.getElementById("manage-units-form");
+    if (unitForm) {
+      console.log("Unit form found, attaching handler");
+      unitForm.addEventListener("submit", handleUnitFormSubmit);
+    }
 
-  const unitForm = document.getElementById("manage-units-form");
-  if (unitForm) {
-    console.log("Unit form found, attaching handler");
-    unitForm.addEventListener("submit", handleUnitFormSubmit);
-  }
+    const roleForm = document.getElementById("manage-roles-form");
+    if (roleForm) {
+      console.log("Role form found, attaching handler");
+      roleForm.addEventListener("submit", handleRoleFormSubmit);
 
-  const roleForm = document.getElementById("manage-roles-form");
-  if (roleForm) {
-    console.log("Role form found, attaching handler");
-    roleForm.addEventListener("submit", handleRoleFormSubmit);
-
-    const addRoleParentBtn = document.getElementById("add-role-parent");
-    if (addRoleParentBtn) {
-      addRoleParentBtn.addEventListener("click", function () {
-        const parentDiv = document.createElement("div");
-        parentDiv.className = "role-parent-pair";
-        parentDiv.innerHTML = `
+      const addRoleParentBtn = document.getElementById("add-role-parent");
+      if (addRoleParentBtn) {
+        addRoleParentBtn.addEventListener("click", function () {
+          const parentDiv = document.createElement("div");
+          parentDiv.className = "role-parent-pair";
+          parentDiv.innerHTML = `
                 <input type="text" class="role-parent-id" placeholder="Parent ID" required>
                 <button type="button" class="remove-btn">×</button>
               `;
-        document.getElementById("role-parents").appendChild(parentDiv);
+          document.getElementById("role-parents").appendChild(parentDiv);
 
-        const removeBtn = parentDiv.querySelector(".remove-btn");
-        if (removeBtn) {
-          removeBtn.addEventListener("click", function () {
-            parentDiv.remove();
-          });
-        }
-      });
+          const removeBtn = parentDiv.querySelector(".remove-btn");
+          if (removeBtn) {
+            removeBtn.addEventListener("click", function () {
+              parentDiv.remove();
+            });
+          }
+        });
+      }
     }
-  }
 
-  const skillForm = document.getElementById("manage-skills-form");
-  if (skillForm) {
-    console.log("Skill form found, attaching handler");
-    skillForm.addEventListener("submit", handleSkillFormSubmit);
-    enhanceSkillForm();
-  }
-  document
-    .getElementById("add-relation-btn")
-    ?.addEventListener("click", addRelationItem);
-
-  document.addEventListener("click", function (e) {
-    if (e.target && e.target.matches("[data-tab]")) {
-      console.log("Tab clicked:", e.target.getAttribute("data-tab"));
-
-      setTimeout(function () {
-        const tabId = e.target.getAttribute("data-tab");
-        setupTabFormHandlers(tabId);
-      }, 100);
+    const skillForm = document.getElementById("manage-skills-form");
+    if (skillForm) {
+      console.log("Skill form found, attaching handler");
+      skillForm.addEventListener("submit", handleSkillFormSubmit);
+      enhanceSkillForm();
     }
+    document
+      .getElementById("add-relation-btn")
+      ?.addEventListener("click", addRelationItem);
+
+    document.addEventListener("click", function (e) {
+      if (e.target && e.target.matches("[data-tab]")) {
+        console.log("Tab clicked:", e.target.getAttribute("data-tab"));
+
+        setTimeout(function () {
+          const tabId = e.target.getAttribute("data-tab");
+          setupTabFormHandlers(tabId);
+        }, 100);
+      }
+    });
   });
-});
 
-function addRelationItem() {
-  console.log("Adding relation item");
-  const container = document.getElementById("relations-container");
-  const div = document.createElement("div");
-  div.className = "relation-item";
-  div.innerHTML = `
+  function addRelationItem() {
+    console.log("Adding relation item");
+    const container = document.getElementById("relations-container");
+    const div = document.createElement("div");
+    div.className = "relation-item";
+    div.innerHTML = `
     <input type="text" class="relation-id" placeholder="Related Skill ID">
     <input type="text" class="relation-value" placeholder="Relation Value">
     <button type="button" class="remove-relation-btn">Remove</button>
   `;
-  div.querySelector(".remove-relation-btn").addEventListener("click", () => {
-    container.removeChild(div);
-  });
-  container.appendChild(div);
-}
-
-function setupTabFormHandlers(tabId) {
-  console.log("Setting up form handlers for tab:", tabId);
-
-  switch (tabId) {
-    case "manage-subjects":
-      const subjectForm = document.getElementById("manage-subjects-form");
-      if (subjectForm) {
-        console.log("Attaching subject form handler");
-        subjectForm.removeEventListener("submit", handleSubjectFormSubmit);
-        subjectForm.addEventListener("submit", handleSubjectFormSubmit);
-      }
-      break;
-
-    case "manage-units":
-      const unitForm = document.getElementById("manage-units-form");
-      if (unitForm) {
-        console.log("Attaching unit form handler");
-        unitForm.addEventListener("submit", handleUnitFormSubmit);
-      }
-      break;
-
-    case "manage-roles":
-      const roleForm = document.getElementById("manage-roles-form");
-      if (roleForm) {
-        console.log("Attaching role form handler");
-        roleForm.addEventListener("submit", handleRoleFormSubmit);
-      }
-      break;
-
-    case "manage-skills":
-      const skillForm = document.getElementById("manage-skills-form");
-      if (skillForm) {
-        console.log("Attaching skill form handler");
-        skillForm.addEventListener("submit", handleSkillFormSubmit);
-      }
-      break;
-  }
-}
-
-async function enhanceSkillForm() {
-  try {
-    const skills = await fetchAllSkills();
-
-    const relatedSkillInput = document.getElementById("related-skill-id");
-    if (!relatedSkillInput) return;
-
-    const container = document.createElement("div");
-    container.className = "skill-dropdown-container";
-
-    const select = document.createElement("select");
-    select.id = "related-skill-dropdown";
-    select.className = "skill-dropdown";
-
-    select.innerHTML =
-      '<option value="">Select a related skill (optional)...</option>';
-
-    skills.forEach((skill) => {
-      const option = document.createElement("option");
-      option.value = skill.id;
-      option.textContent = skill.id;
-      select.appendChild(option);
+    div.querySelector(".remove-relation-btn").addEventListener("click", () => {
+      container.removeChild(div);
     });
-
-    container.appendChild(select);
-    relatedSkillInput.parentNode.replaceChild(container, relatedSkillInput);
-
-    initializeSearchableDropdown(select);
-
-    const hiddenInput = document.createElement("input");
-    hiddenInput.type = "hidden";
-    hiddenInput.id = "related-skill-id";
-    container.appendChild(hiddenInput);
-
-    select.addEventListener("change", function () {
-      hiddenInput.value = this.value;
-    });
-  } catch (error) {
-    console.error("Error enhancing skill form:", error);
+    container.appendChild(div);
   }
-}
 
-window.handleSubjectFormSubmit = handleSubjectFormSubmit;
-window.handleUnitFormSubmit = handleUnitFormSubmit;
-window.handleRoleFormSubmit = handleRoleFormSubmit;
-window.handleSkillFormSubmit = handleSkillFormSubmit;
-window.openSubjectEditor = openSubjectEditor;
-window.addUnitRolePair = addUnitRolePair;
-window.addSkillAssignment = addSkillAssignment;
-window.addSkillFromDropdown = addSkillFromDropdown;
-window.handleSubjectEditorSubmit = handleSubjectEditorSubmit;
-window.setupTabFormHandlers = setupTabFormHandlers;
-window.fetchAllSkills = fetchAllSkills;
-window.initializeSearchableDropdown = initializeSearchableDropdown;
-window.addSkillBackToDropdown = addSkillBackToDropdown;
+  function setupTabFormHandlers(tabId) {
+    console.log("Setting up form handlers for tab:", tabId);
+
+    switch (tabId) {
+      case "manage-subjects":
+        const subjectForm = document.getElementById("manage-subjects-form");
+        if (subjectForm) {
+          console.log("Attaching subject form handler");
+          subjectForm.removeEventListener("submit", handleSubjectFormSubmit);
+          subjectForm.addEventListener("submit", handleSubjectFormSubmit);
+        }
+        break;
+
+      case "manage-units":
+        const unitForm = document.getElementById("manage-units-form");
+        if (unitForm) {
+          console.log("Attaching unit form handler");
+          unitForm.addEventListener("submit", handleUnitFormSubmit);
+        }
+        break;
+
+      case "manage-roles":
+        const roleForm = document.getElementById("manage-roles-form");
+        if (roleForm) {
+          console.log("Attaching role form handler");
+          roleForm.addEventListener("submit", handleRoleFormSubmit);
+        }
+        break;
+
+      case "manage-skills":
+        const skillForm = document.getElementById("manage-skills-form");
+        if (skillForm) {
+          console.log("Attaching skill form handler");
+          skillForm.addEventListener("submit", handleSkillFormSubmit);
+        }
+        break;
+    }
+  }
+
+  async function enhanceSkillForm() {
+    try {
+      const skills = await fetchAllSkills();
+
+      const relatedSkillInput = document.getElementById("related-skill-id");
+      if (!relatedSkillInput) return;
+
+      const container = document.createElement("div");
+      container.className = "skill-dropdown-container";
+
+      const select = document.createElement("select");
+      select.id = "related-skill-dropdown";
+      select.className = "skill-dropdown";
+
+      select.innerHTML =
+        '<option value="">Select a related skill (optional)...</option>';
+
+      skills.forEach((skill) => {
+        const option = document.createElement("option");
+        option.value = skill.id;
+        option.textContent = skill.id;
+        select.appendChild(option);
+      });
+
+      container.appendChild(select);
+      relatedSkillInput.parentNode.replaceChild(container, relatedSkillInput);
+
+      initializeSearchableDropdown(select);
+
+      const hiddenInput = document.createElement("input");
+      hiddenInput.type = "hidden";
+      hiddenInput.id = "related-skill-id";
+      container.appendChild(hiddenInput);
+
+      select.addEventListener("change", function () {
+        hiddenInput.value = this.value;
+      });
+    } catch (error) {
+      console.error("Error enhancing skill form:", error);
+    }
+  }
+})();
+
