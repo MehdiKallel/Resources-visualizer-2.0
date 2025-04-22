@@ -23,7 +23,7 @@ document.addEventListener("click", function (event) {
       entityId
     );
 
-    addEntityToExpression(entityId, entityType, event.target.parentElement);
+    addEntityToExpression(entityId, entityType, event.target);
     event.stopPropagation();
   } else if (event.target.tagName === "path") {
     const skillId = event.target.getAttribute("data-skill-id");
@@ -53,16 +53,11 @@ document.addEventListener("click", function (event) {
 function createExpressionBuilderUI() {
   const container = document.querySelector("#expressionBuilder");
   container.id = "expressionBuilder";
-  container.style.top = "20px";
-  container.style.left = "20px";
-  container.style.margin = "0"; // remove any auto margin
+
+  container.style.margin = "0";
   container.style.backgroundColor = "white";
   container.style.padding = "10px";
-  container.style.border = "1px solid #ccc";
-  container.style.borderRadius = "5px";
   container.style.zIndex = "1000";
-  container.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
-  container.style.width = "calc(100% - 40px)";
   container.style.maxWidth = "100%"; // Maximum width constraint
 
   // Create a header with the title, pause/resume and collapse/expand buttons
@@ -659,7 +654,7 @@ style.textContent = `
   }
   .active-filter-element {
     stroke: #ff0000;
-    stroke-width: 2px;
+    stroke-width: 3px;
   }
 `;
 document.head.appendChild(style);

@@ -62,45 +62,6 @@
       <parent>Dekanat Informatik</parent>
       <permissions/>
     </unit>
-    <unit id="fefefe">
-      <permissions/>
-    </unit>
-    <unit id="fefe">
-      <permissions/>
-    </unit>
-    <unit id="jzuzjzu">
-      <permissions/>
-    </unit>
-    <unit id="fefeeee">
-      <permissions/>
-    </unit>
-    <unit id="feffe">
-      <permissions/>
-    </unit>
-    <unit id="fefefeeee">
-      <permissions/>
-    </unit>
-    <unit id="wdwdw">
-      <permissions/>
-    </unit>
-    <unit id="wwwwww">
-      <permissions/>
-    </unit>
-    <unit id="fefwef">
-      <permissions/>
-    </unit>
-    <unit id="ewfwf">
-      <permissions/>
-    </unit>
-    <unit id="fefefeeeee">
-      <permissions/>
-    </unit>
-    <unit id="fefeef">
-      <permissions/>
-    </unit>
-    <unit id="efewfwe">
-      <permissions/>
-    </unit>
   </units>
   <roles>
     <role id="Regular">
@@ -139,12 +100,6 @@
     <role id="Assistant">
       <parent>Project</parent>
       <parent>Regular</parent>
-      <permissions/>
-    </role>
-    <role id="fwefwf">
-      <permissions/>
-    </role>
-    <role id="fewfw">
       <permissions/>
     </role>
   </roles>
@@ -210,14 +165,9 @@
       <subjectSkills>
         <skillRef id="Azure"/>
       </subjectSkills>
-      <subjectSkills>
-        <skillRef id="Azure"/>
-      </subjectSkills>
       <relation unit="Educational Technologies" role="Regular"/>
       <subjectSkills>
         <skillRef id="Azure"/>
-        <skillRef id="Azure"/>
-        <skillRef id="AWS"/>
       </subjectSkills>
     </subject>
     <subject id="Ewald Hellerschmid" uid="hellere8">
@@ -450,9 +400,6 @@
       <relation unit="Software Architectures" role="Teaching"/>
       <relation unit="Software Architectures" role="Project"/>
       <relation unit="Software Architectures" role="Assistant"/>
-      <subjectSkills>
-        <skillRef id="AWS"/>
-      </subjectSkills>
     </subject>
     <subject id="Uwe Zdun" uid="zdunu7">
       <relation unit="Software Architectures" role="Univ.Prof."/>
@@ -719,21 +666,12 @@
         <skillRef id="AWS"/>
         <skillRef id="Google Cloud"/>
       </subjectSkills>
-      <subjectSkills>
-        <skillRef id="AWS"/>
-        <skillRef id="Google Cloud"/>
-      </subjectSkills>
-      <subjectSkills>
-        <skillRef id="AWS"/>
-        <skillRef id="AWS"/>
-        <skillRef id="Google Cloud"/>
-        <skillRef id="AWS"/>
-        <skillRef id="Google Cloud"/>
-      </subjectSkills>
+      <relation unit="Cooperative Systems" role="Teaching"/>
+      <relation unit="Cooperative Systems" role="Regular"/>
       <relation unit="Cooperative Systems" role="Assistant"/>
       <subjectSkills>
         <skillRef id="AWS"/>
-        <skillRef id="AWS"/>
+        <skillRef id="Google Cloud"/>
       </subjectSkills>
     </subject>
     <subject id="Peter Reichl" uid="reichlp6">
@@ -813,22 +751,9 @@
       <relation unit="Data Mining" role="Assistant"/>
     </subject>
     <subject id="Anastasiia Sedova" uid="sedovaa20">
-      <subjectSkills>
-        <skillRef id="fewfw"/>
-      </subjectSkills>
-      <subjectSkills>
-        <skillRef id="fewfw"/>
-        <skillRef id="Azure"/>
-      </subjectSkills>
       <relation unit="Data Mining" role="Teaching"/>
       <relation unit="Data Mining" role="Regular"/>
       <relation unit="Data Mining" role="Assistant"/>
-      <subjectSkills>
-        <skillRef id="fewfw"/>
-        <skillRef id="fewfw"/>
-        <skillRef id="Azure"/>
-        <skillRef id="Google Cloud"/>
-      </subjectSkills>
     </subject>
     <subject id="Andreas Stephan" uid="stephana93">
       <relation unit="Data Mining" role="Regular"/>
@@ -865,7 +790,6 @@
       <relation unit="Data Mining" role="Regular"/>
       <relation unit="Data Mining" role="Assistant"/>
     </subject>
-    <subject id="fefe" uid="uid-1745053363501"/>
   </subjects>
   <skills>
     <skill id="Azure">
@@ -882,6 +806,5 @@
     <skill id="Google Cloud">
       <relation id="Azure" type="RelatedTo"/>
     </skill>
-    <skill id="fewfw"/>
   </skills>
 </organisation>

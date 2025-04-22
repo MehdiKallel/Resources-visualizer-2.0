@@ -442,7 +442,7 @@ function createResizableSkillSvgParticles() {
   }
 
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  const svgSize = 300; // Slightly larger for better spacing
+  const svgSize = "100%"; // Slightly larger for better spacing
   svg.setAttribute("width", svgSize);
   svg.setAttribute("height", svgSize);
   svg.setAttribute("viewBox", `-250 -250 500 500`); // Expanded viewBox from -200,-200,400,400

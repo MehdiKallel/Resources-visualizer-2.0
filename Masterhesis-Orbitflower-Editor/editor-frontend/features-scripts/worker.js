@@ -1,8 +1,6 @@
 window.detailedView = false;
 
-// Shared color determination function to ensure consistency between worker nodes and skill segments
 function getSkillIdColor(skillId) {
-  // Predefined color palette - matches the palette in skillsFeature.js
   const colorPalette = [
     "#60A5FA", // Soft blue
     "#34D399", // Mint green
@@ -18,123 +16,108 @@ function getSkillIdColor(skillId) {
     "#7c3aed", // Violet 600,
   ];
 
-  // Simple hash function to convert skillId string to a number
   let hash = 0;
   for (let i = 0; i < skillId.length; i++) {
     hash = (hash << 5) - hash + skillId.charCodeAt(i);
     hash = hash & hash; // Convert to 32bit integer
   }
 
-  // Use absolute value and modulo to get an index in the palette range
   const index = Math.abs(hash) % colorPalette.length;
   return colorPalette[index];
 }
 
 class SkillTreeComponent {
   constructor(options) {
-    // Add these variables at the top of the class
     this.tooltip = document.createElement("div");
     this.tooltip.id = "tooltip";
-    // Tooltip will be appended to the component container later
     
-    // Inject CSS styles (only once)
     if (!document.getElementById("skill-tree-component-styles")) {
       const style = document.createElement("style");
       style.id = "skill-tree-component-styles";
       style.innerHTML = `
-  .skill-tree-component {
-    width: 100%;
-    height: 100% !important; /* Changed from 50% to 100% */
-    overflow: hidden;
-    position: relative;
-  }
-  
-  .particle-canvas {
-  }
+        .skill-tree-component {
+          width: 100%;
+          height: 100% !important; /* Changed from 50% to 100% */
+          overflow: hidden;
+          position: relative;
+        }
+        
+        .particle-canvas {
+        }
 
-  .node circle {
-    stroke: #fff;
-    stroke-width: 1.5;
-    transition: r 0.3s ease, fill 0.3s ease;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
-  }
+        .node circle {
+          stroke: #fff;
+          stroke-width: 1.5;
+          transition: r 0.3s ease, fill 0.3s ease;
+          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
 
-  .node text {
-    font: 13px 'Segoe UI', sans-serif;
-    fill: #64748b;
-    transition: fill 0.2s ease;
-  }
+        .node text {
+          font: 13px 'Segoe UI', sans-serif;
+          fill: #64748b;
+          transition: fill 0.2s ease;
+        }
 
-  .node:hover circle {
-    stroke: #1e293b;
-  }
+        .node:hover circle {
+          stroke: #1e293b;
+        }
 
-  .node:hover text {
-    fill: #1e293b;
-    font-weight: 500;
-  }
+        .node:hover text {
+          fill: #1e293b;
+          font-weight: 500;
+        }
 
-  .relationship-line {
-    stroke-opacity: 0; /* Make paths completely transparent */
-  }
+        .relationship-line {
+          stroke-opacity: 0; /* Make paths completely transparent */
+        }
 
-  #tooltip {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    padding: 12px;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-    font-size: 14px;
-    color: #334155;
-    pointer-events: none;
-    max-width: 280px;
-  }
+        #tooltip {
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 6px;
+          padding: 12px;
+          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+          font-size: 14px;
+          color: #334155;
+          pointer-events: none;
+          max-width: 280px;
+        }
 
-  .tooltip-title {
-    font-weight: 600;
-    margin-bottom: 8px;
-    color: #1e293b;
-  }
+        .tooltip-title {
+          font-weight: 600;
+          margin-bottom: 8px;
+          color: #1e293b;
+        }
 
-  .tooltip-content {
-    line-height: 1.5;
-  }
-`;
-
+        .tooltip-content {
+          line-height: 1.5;
+        }
+      `;
       document.head.appendChild(style);
     }
 
-    // Options and properties
     this.container = document.getElementById(`${options.container}`);
     this.filterType = options.filterType;
     this.filterId = options.filterId;
     this.skillId = options.skillId;
     this.xmlData = options.xmlData;
 
-    console.log(
-      "##################----------------------##############XML data",
-      this.container
-    );
 
-    // Internal properties for tree, relationships and employee counts.
     this.skillTree = null;
     this.relationships = [];
     this.skillEmployeeMap = new Map();
     this.maxEmployeeCount = 1;
 
-    // Particle system properties with reduced size and count
     this.particles = [];
     this.lastParticleTime = null;
     this.particleLimit = 1000;
     this.particleSpawnRate = 6;
     this.particleBaseSize = 5;
 
-    // Transformation state for pan/zoom.
     this.transform = { x: 0, y: 0, scale: 1 };
     this.isDragging = false;
     this.lastMousePosition = { x: 0, y: 0 };
 
-    // Create the component container with full height instead of 50%
     this.el = document.createElement("div");
     this.el.className = "skill-tree-component";
     this.el.style.position = "relative";
@@ -152,7 +135,7 @@ class SkillTreeComponent {
     this.el.appendChild(this.particleCanvas);
     this.particleCtx = this.particleCanvas.getContext("2d");
 
-    // Create the SVG element to fill the component
+
     this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     this.svg.setAttribute("width", "100%");
     this.svg.setAttribute("height", "100%");
@@ -165,28 +148,21 @@ class SkillTreeComponent {
     this.el.appendChild(this.svg);
   }
 
-  // Handle window resize with improved centering and dimension handling
   handleResize() {
     if (this.container) {
-      // Get current container dimensions
       const containerWidth = this.container.clientWidth;
       const containerHeight = this.container.clientHeight;
       
-      // Update component dimensions
       this.el.style.width = `${containerWidth}px`;
       this.el.style.height = `${containerHeight}px`;
       
-      // Set canvas dimensions to match container exactly
       this.particleCanvas.width = containerWidth;
       this.particleCanvas.height = containerHeight;
       
-      // Update SVG viewBox if needed for proper scaling
       this.svg.setAttribute("viewBox", `0 0 ${containerWidth} ${containerHeight}`);
 
-      // Re-render the tree with new dimensions
       this.renderTree();
 
-      // Re-center after resize
       setTimeout(() => this.centerSVG(), 0);
       
       console.log(`Canvas resized to ${containerWidth}x${containerHeight}`);
@@ -200,113 +176,65 @@ class SkillTreeComponent {
     this.filterId = relatedText;
     this.skillId = skillId;
 
-    // Create an SVG group for all content (to allow pan/zoom transforms).
     this.svgContent = document.createElementNS(
       "http://www.w3.org/2000/svg",
       "g"
     );
     this.svg.appendChild(this.svgContent);
 
-    // Append tooltip to component container now that it's available
     this.el.appendChild(this.tooltip);
     
-    // Update tooltip styling to position relative to component
     this.tooltip.style.position = "absolute";
-    this.tooltip.style.zIndex = "1000"; // Ensure high z-index
-    this.tooltip.style.pointerEvents = "none"; // Prevent tooltip from blocking interactions
+    this.tooltip.style.zIndex = "1000";
+    this.tooltip.style.pointerEvents = "none"; 
 
-    // Enable pan/zoom navigation by grabbing.
     this.setupNavigation();
-
-    // Build the tree from XML.
     this.parseXML();
     this.filterTreeBySkill();
     this.computeLayout();
 
-    // Render the tree and center the SVG only during initial render
     this.render();
     this.centerSVG();
 
-    // Start the particle animation loop.
     requestAnimationFrame(this.animateParticles.bind(this));
 
-    // Track if this is the first render
     this.isFirstRender = true;
 
-    // Set up ResizeObserver to maintain proper canvas dimensions during resizing
     if (window.ResizeObserver) {
       this.resizeObserver = new ResizeObserver(entries => {
         for (let entry of entries) {
-          // Update canvas dimensions to match container
           this.handleResize();
         }
       });
       this.resizeObserver.observe(this.container);
     }
 
-    // On each document click (if window.isZoom), update with fresh data,
-    // re-render the tree but preserve the current view position
+    
     document.addEventListener("click", (event) => {
       if (this.wasDragging) {
         this.wasDragging = false;
         return;
       }
-
-      if (window.isZoom) {
-        // Store current transform to preserve view position for smooth transitions
-        const currentTransform = { ...this.transform };
-
-        this.particles = [];
-
-        this.filterType = window.currentEntityType;
-        this.filterId = window.currentEntityId;
-        this.skillId = window.skillId;
-
-        // Rebuild the tree.
-        this.parseXML();
-        this.filterTreeBySkill();
-
-        // After rebuilding the tree, force a centered view
-        this.isFirstRender = true;
-
-        // Render the tree
-        this.render();
-
-        // Center on first render, or when data changes completely
-        if (this.isFirstRender) {
-          this.centerSVG();
-          this.isFirstRender = false;
-        } else {
-          // Restore the transform to preserve view position
-          this.transform = currentTransform;
-          this.applyTransform();
-        }
-      }
     });
 
-    // Handle window resize events
     window.addEventListener("resize", this.handleResize.bind(this));
 
-    // Add this.activeParticles array to track particles for click detection
     this.activeParticles = [];
 
-    // Setup the canvas click handler
     this.setupCanvasClickHandler();
 
-    // Add layout type property - 'radial' or 'hierarchical'
     this.layoutType = options.layoutType || "radial";
   }
 
   reset(container) {
-    document.querySelector(`${container}`).innerHTML = ""; // Corrected to use innerHTML instead of empty()
+    document.querySelector(`${container}`).innerHTML = ""; 
     ;
     console.error("reset called successfully");
     console.log(document.querySelector(`${container}`).innerHTML);
   }
-  // Compute a dynamic skill color based on employee count with improved aesthetics
-  // Updated getSkillColor method
+
+
   getSkillColor(value) {
-    // Check if we have a specific skill ID for this node
     if (this.currentSkillId) {
       return getSkillIdColor(this.currentSkillId);
     }
@@ -330,9 +258,7 @@ class SkillTreeComponent {
     return colors[index];
   }
 
-  // Return a relationship color based on its type with improved aesthetics
   getRelationshipColor(type) {
-    // More appealing, pastel colors with better transparency
     const colors = {
       isRelatedTo: "rgba(123, 58, 223, 0.8)", // Brighter Purple
       dependOn: "rgba(255, 30, 99, 0.8)", // Brighter Pink
@@ -344,7 +270,7 @@ class SkillTreeComponent {
     return colors[type] || "rgba(33, 150, 243, 0.4)"; // Default blue
   }
 
-  // --- XML Parsing and Tree Building ---
+
 
   parseXML() {
     const skills = {};
@@ -457,14 +383,13 @@ class SkillTreeComponent {
         graph[id] = new Set();
       }
 
-      // get relations of only skill id provided <skill id="skillId"> <relation ..> </skill>
-      if (id != this.skillId && window.isZoom) continue;
+    
+      if (id != this.skillId) continue;
       const relElements = elem.getElementsByTagName("relation");
       console.log("my relations", relElements);
       for (let j = 0; j < relElements.length; j++) {
         const relElem = relElements[j];
         const targetId = relElem.getAttribute("id");
-        // For all types of relationships, add undirected edges.
         if (targetId) {
           if (!graph[id]) graph[id] = new Set();
           if (!graph[targetId]) graph[targetId] = new Set();
@@ -473,9 +398,7 @@ class SkillTreeComponent {
         }
       }
     }
-    console.log("graph", graph);
 
-    // Use BFS to build a spanning tree starting from the specified skillId.
     const visited = new Set();
     const queue = [];
     const spanningTree = { id: this.skillId, name: this.skillId, children: [] };
@@ -498,13 +421,10 @@ class SkillTreeComponent {
       });
     }
 
-    // Set the spanning tree as the new skillTree.
     this.skillTree = spanningTree;
-    // Recenter the SVG after filtering.
     setTimeout(() => this.centerSVG(), 50);
   }
 
-  // Compute a simple (x,y) layout recursively.
   computeLayout() {
     if (this.layoutType === "radial") {
       this.computeRadialLayout();
@@ -513,7 +433,6 @@ class SkillTreeComponent {
     }
   }
 
-  // Original hierarchical layout implementation
   computeHierarchicalLayout() {
     let nextX = 50;
     const horizontalSpacing = 160;
@@ -575,15 +494,12 @@ class SkillTreeComponent {
         node.y = centerY + radius * Math.sin(angle);
       }
 
-      // Position children around this node
       if (node.children && node.children.length > 0) {
         const childCount = node.children.length;
         const childArc = arc / childCount;
 
-        // Calculate starting angle for first child - offset to center children within arc
         let startAngle = angle - arc / 2 + childArc / 2;
 
-        // Position each child
         node.children.forEach((child, index) => {
           const childAngle = startAngle + index * childArc;
           positionNodesRadially(child, level + 1, childAngle, childArc);
@@ -707,7 +623,6 @@ class SkillTreeComponent {
       this.svgContent.appendChild(group);
     });
 
-    // Draw extra relationship lines with improved curves, styling, AND CLICK HANDLERS
     this.relationships.forEach((rel) => {
       const fromNode = nodes.find((n) => n.id === rel.from);
       const toNode = nodes.find((n) => n.id === rel.to);
@@ -716,7 +631,6 @@ class SkillTreeComponent {
       const start = { x: fromNode.x, y: fromNode.y };
       const end = { x: toNode.x, y: toNode.y };
 
-      // Calculate a nicer curve based on the distance between nodes
       const distance = Math.sqrt(
         Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2)
       );
@@ -724,7 +638,6 @@ class SkillTreeComponent {
       const midX = (start.x + end.x) / 2;
       const midY = (start.y + end.y) / 2;
 
-      // Perpendicular offset vector for a nicer curve
       const dx = end.x - start.x;
       const dy = end.y - start.y;
       const nx = -dy; // Perpendicular vector
@@ -840,16 +753,13 @@ class SkillTreeComponent {
     );
   }
 
-  // Improved center SVG method to show the entire graph
   centerSVG() {
-    // Use the SVG's own dimensions
     const svgRect = this.svg.getBoundingClientRect();
     const svgWidth = svgRect.width;
     const svgHeight = svgRect.height;
 
     if (!this.skillTree || !this.svgContent) return;
 
-    // Calculate the bounding box of the entire graph
     let minX = Infinity,
       maxX = -Infinity;
     let minY = Infinity,

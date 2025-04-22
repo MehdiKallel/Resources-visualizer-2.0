@@ -22,8 +22,6 @@ class SVG {
   }
 
   dump(h = 100, w = 100) {
-
-
     return this._res;
   }
 
@@ -189,7 +187,6 @@ class SVG {
     this.add_text(x, y + 10, { cls: clsbody + " " + clsnumber }, () => {
       this.add_tspan({ x: x, y: y + 10, cls: clsnumbernormal }, () => number);
       this.add_tspan({ x: x, y: y + 10, cls: clsnumberspecial }, () => "");
-      return "";
     });
   }
 

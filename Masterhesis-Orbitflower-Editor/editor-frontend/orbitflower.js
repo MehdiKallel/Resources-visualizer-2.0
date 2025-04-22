@@ -18,8 +18,6 @@ class OrbitFlower {
       });
     }
     
-    // Load external CSS file
-    this.loadExternalCSS();
     
     // Set up event listeners for real-time updates
     if (!window.orbitflowerEventsInitialized) {
@@ -28,17 +26,7 @@ class OrbitFlower {
     }
   }
   
-  loadExternalCSS() {
-    if (!document.getElementById('orbitflower-styles')) {
-      const cssLink = document.createElement('link');
-      cssLink.id = 'orbitflower-styles';
-      cssLink.rel = 'stylesheet';
-      cssLink.type = 'text/css';
-      cssLink.href = 'orbitflower-styles.css';
-      document.head.appendChild(cssLink);
-      console.log("External CSS file loaded");
-    }
-  }
+ 
   
   show(orgModel) {
     console.log("OrbitFlower.show() called with model:", orgModel);
@@ -130,13 +118,13 @@ class OrbitFlower {
 
     gw.rank_long();
 
-    let textgap = 3;
+    let textgap = 8;
     let circumference = 0;
     let maxnoderadius = 0;
     let maxtextwidth = 0;
-    const maxradius = 25.0;
+    const maxradius = 80.0;
     const orbitgap = 5;
-    const nodegap = 10;
+    const nodegap = 30;
     const lineheight = 10 + textgap;
     let maxwidth = 0;
     let maxheight = 0;

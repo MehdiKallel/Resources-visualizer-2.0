@@ -1,6 +1,6 @@
 /* OrbitFlower main styles */
 text {
-  font-size: 10px;
+  font-size: 14px;
   font-style: normal;
   font-variant: normal;
   font-weight: normal;
@@ -61,6 +61,16 @@ text {
   stroke: #5c3566;
   stroke-width: 1.5;
   cursor: pointer;
+}
+
+.role .active-filter-element {
+  stroke: #ff0000; 
+  stroke-width: 3;
+}
+
+.unit .active-filter-element {
+  stroke: #ff0000; 
+  stroke-width: 3;
 }
 
 /* Connection styling */
@@ -132,7 +142,7 @@ text {
 }
 
 .subjecticon.number {
-  font-size: 7px;
+  font-size: 11px;
   font-style: normal;
   font-variant: normal;
   font-weight: normal;
@@ -240,9 +250,6 @@ text {
   flex-direction: column;
   gap: 10px;
   padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  background-color: #f9f9f9;
 }
 
 .manage-form label {
@@ -262,7 +269,6 @@ text {
   gap: 10px;
   align-items: center;
   padding: 5px;
-  background: #f8f8f8;
   border-radius: 4px;
   margin-bottom: 5px;
 }

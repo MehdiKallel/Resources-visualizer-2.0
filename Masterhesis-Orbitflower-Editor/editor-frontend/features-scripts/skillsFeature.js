@@ -11,13 +11,11 @@ class SkillsFeature {
     this.collapseTimeouts = new Map();
     this.svgStateHistory = [];
     
-    // Initialize global properties needed for backward compatibility
     window.skillId = null;
     window.currentEntityId = null;
     window.currentEntityType = null;
     window.isZoom = false;
     
-    // Initialize color function if not exists
     if (!window.getSkillIdColor) {
       window.getSkillIdColor = this.getSkillIdColor;
     }
@@ -27,14 +25,12 @@ class SkillsFeature {
   show(doc) {
     console.log("SkillsFeature.show() called with document:", doc);
     
-    // If we're given XML directly, use it
     if (doc) {
       this.serverData = doc;
       this.initialize();
       return;
     }
     
-    // If doc is already set (possibly from constructor)
     if (this.serverData) {
       this.initialize();
       return;
@@ -92,7 +88,6 @@ class SkillsFeature {
     return colorPalette[index];
   }
 
-  // Save original svg - simpler function
   saveOriginalSvg() {
     const svg = document.querySelector("#graph svg");
     if (svg) {
@@ -517,7 +512,7 @@ class SkillsFeature {
       border: 1px solid #cccccc;
       border-radius: 3px;
       font-family: 'Segoe UI', Arial, sans-serif;
-      font-size: 12px;
+      font-size: 15px;
       color: #333333;
       cursor: pointer;
       z-index: 100;
@@ -676,12 +671,12 @@ class SkillsFeature {
 
     const defaults = {
       level: 0,
-      innerRadius: r + 2 + (options.level || 0) * 7,
-      ringWidth: 5,
+      innerRadius: r + 4 + (options.level || 0) * 14,
+      ringWidth: 10,
       startAngle: 0,
       endAngle: 360,
       parent: null,
-      autoCollapseDelay: 5000, // Auto-collapse after 5 seconds by default
+      autoCollapseDelay: 10000, // Auto-collapse after 5 seconds by default
     };
 
     const config = { ...defaults, ...options };
@@ -836,46 +831,7 @@ class SkillsFeature {
           }
           self.svgStateHistory.push(svg.innerHTML);
           const mainGroup = this.closest('g[id^="u"], g[id^="r"]');
-          const currentUserColumn = document.getElementById("users");
-          const clonedUserColumn = self.originalSubjectsHTML.cloneNode(true);
-          currentUserColumn.parentNode.replaceChild(
-            clonedUserColumn,
-            currentUserColumn
-          );
-
-          // In the click event handler for the skill segment
-          const skillId = this.getAttribute("data-skill-id");
-          window.skillId = skillId;
-
-          // Filter subjects after resetting
-          const matchingSubjects = self.getSubjectsBySkillId(skillId);
-          clonedUserColumn.querySelectorAll(".subject").forEach((subject) => {
-            const subjectUid = subject.getAttribute("data-uid");
-            if (!matchingSubjects.some((s) => s.uid === subjectUid)) {
-              subject.remove();
-            }
-          });
-
-          // Highlight remaining subjects
-          matchingSubjects.forEach((subject) => {
-            const subjectElement = clonedUserColumn.querySelector(
-              `.subject[id="${subject.id}"]`
-            );
-            if (subjectElement) {
-              subjectElement.classList.add("highlight");
-            }
-          });
-
-          // Highlight matching subjects
-          matchingSubjects.forEach((subject) => {
-            const subjectElement = document.querySelector(
-              `#usercolumn .subject[id="${subject.id}"]`
-            );
-            if (subjectElement) {
-              subjectElement.classList.add("highlight");
-            }
-          });
-
+          
           document
             .querySelectorAll(".skill-segment.active-skill-filter")
             .forEach((el) => {
@@ -883,7 +839,6 @@ class SkillsFeature {
             });
           this.classList.add("active-skill-filter");
 
-          // Filter skill levels
           const clickedGroup = this.closest(".skill-level");
           const hierarchyGroups = self.collectHierarchyGroups(clickedGroup);
           mainGroup.querySelectorAll(".skill-level").forEach((g) => {
@@ -893,8 +848,6 @@ class SkillsFeature {
           self.createBackButton(svg);
           self.setTooltipZoomState(svg, true);
 
-          // Original subskill expansion behavior
-          // Proceed with sub-skill expansion if available
           if (skill.subSkills && skill.subSkills.length > 0) {
             const existingSubGroup = group.querySelector(
               `.skill-level[data-level="${config.level + 1}"][data-parent="${
@@ -933,31 +886,12 @@ class SkillsFeature {
       }
     });
 
-    // Only append the level group if it has children
     if (levelGroup.childNodes.length > 0) {
       group.appendChild(levelGroup);
       return levelGroup;
     }
 
     return null;
-  }
-
-  renderSubjectsInColumn(subjects) {
-    const column = this.originalSubjectsHTML;
-    if (!column) return;
-
-    // keep only subjects in the column
-    const existingSubjects = column.querySelectorAll(".subject");
-    existingSubjects.forEach((subject) => {
-      // keep only exisiting subjects with uid from subjects uid
-      const subjectId = subject.getAttribute("id");
-      const matchingSubject = subjects.find((s) => s.id === subjectId);
-      if (!matchingSubject) {
-        subject.remove();
-      }
-    });
-
-    return column;
   }
 
   addSkillDistributionRings() {
@@ -1155,17 +1089,6 @@ class SkillsFeature {
     }
   }
   
-  // Provide a method for external calls
-  localUpdateAfterClick() {
-    if (window.updateAfterClick) {
-      window.updateAfterClick();
-    } else {
-      console.log("updateAfterClick not available");
-      this.saveOriginalSvg();
-      this.saveUserColumn();
-      this.addSkillDistributionRings();
-    }
-  }
 }
 
 
