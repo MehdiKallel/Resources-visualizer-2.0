@@ -1,0 +1,72 @@
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes" ns="http://ns/organisation/1.0">
+    <start>
+        <element name="organisation">
+            <ref name="units" />
+            <ref name="roles" />
+            <ref name="subjects" />
+        </element>
+    </start>
+    <define name="units">
+        <element name="units">
+            <zeroOrMore>
+                <element name="unit">
+                    <ref name="thing" />
+                </element>
+            </zeroOrMore>
+        </element>
+    </define>
+    <define name="roles">
+        <element name="roles">
+            <zeroOrMore>
+                <element name="role">
+                    <ref name="thing" />
+                </element>
+            </zeroOrMore>
+        </element>
+    </define>
+    <define name="thing">
+        <attribute name="id">
+            <data type="string" />
+        </attribute>
+        <zeroOrMore>
+            <element name="parent">
+                <data type="string" />
+            </element>
+        </zeroOrMore>
+        <ref name="permissions" />
+    </define>
+    <define name="subjects">
+        <element name="subjects">
+            <zeroOrMore>
+                <ref name="subject" />
+            </zeroOrMore>
+        </element>
+    </define>
+    <define name="subject">
+        <element name="subject">
+            <attribute name="id">
+                <data type="string" />
+            </attribute>
+            <attribute name="uid">
+                <data type="string" />
+            </attribute>
+            <oneOrMore>
+                <choice>
+                    <element name="relation">
+                        <attribute name="role">
+                            <data type="string" />
+                        </attribute>
+                        <attribute name="unit">
+                            <data type="string" />
+                        </attribute>
+                    </element>
+                </choice>
+            </oneOrMore>
+        </element>
+    </define>
+    <define name="permissions">
+        <element name="permissions">
+            <empty />
+        </element>
+    </define>
+</grammar>

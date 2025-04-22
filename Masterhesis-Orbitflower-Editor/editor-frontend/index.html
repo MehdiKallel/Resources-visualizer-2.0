@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+  <head>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <style media="screen" type="text/css"></style>
+    <title>Masterthesis visualization</title>
+
+    <script type="text/javascript" src="https://cpee.org/js_libs/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cpee.org/js_libs/jquery.browser.js"></script>
+    <script type="text/javascript" src="https://cpee.org/js_libs/jquery.svg.min.js"></script>
+    <script type="text/javascript" src="https://cpee.org/js_libs/jquery.svgdom.min.js"></script>
+    <script type="text/javascript" src="https://cpee.org/js_libs/vkbeautify.js"></script>
+    <script type="text/javascript" src="https://cpee.org/js_libs/util.js"></script>
+    <script type="text/javascript" src="https://cpee.org/js_libs/printf.js"></script>
+    <script type="text/javascript" src="https://cpee.org/js_libs/strftime.min.js"></script>
+    <script type="text/javascript" src="https://cpee.org/js_libs/parsequery.js"></script>
+    <script type="text/javascript" src="https://cpee.org/js_libs/underscore.min.js"></script>
+    <script type="text/javascript" src="https://cpee.org/js_libs/jquery.caret.min.js"></script>
+    <script type="text/javascript" src="https://cpee.org/js_libs/jquery.cookie.js"></script>
+    <script type="text/javascript" src="https://cpee.org/js_libs/plotly.min.js"></script>
+    <script type="text/javascript" src="https://cpee.org/js_libs/uidash.js"></script>
+    <link   rel="stylesheet"      href="https://cpee.org/js_libs/uidash.css" type="text/css"/>
+    <link   rel="stylesheet"      href="https://cpee.org/js_libs/ui.css" type="text/css"/>
+
+    <script type="text/javascript" src="lib/html.js"></script>
+    <script type="text/javascript" src="lib/svg.js"></script>
+    <script type="text/javascript" src="lib/node.js"></script>
+    <script type="text/javascript" src="lib/skill.js"></script>
+    <script type="text/javascript" src="lib/subject.js"></script>
+    <script type="text/javascript" src="lib/utils.js"></script>
+    <script type="text/javascript" src="lib/worker.js"></script>
+    <script type="text/javascript" src="lib/relation.js"></script>
+    <script type="text/javascript" src="features-scripts/myUtils.js"></script>
+
+    <!--script type="text/javascript" src="orbitflower.js"></script-->
+    <script type="text/javascript" src="features-scripts/skillsFeature.js"></script>
+    <script type="text/javascript" src="features-scripts/expressionBuilder.js"></script>
+    <script type="text/javascript" src="features-scripts/expanderWorker.js" ></script>
+    <script type="text/javascript" src="features-scripts/worker.js"></script>
+    <script type="text/javascript" src="form-handlers/formHandler.js"></script>
+    <script type="text/javascript" src="orbitflower.js"></script>
+    <link rel="stylesheet" href="helpers/custom.css" type="text/css"/>
+    <link rel="stylesheet" href="helpers/test.css" type="text/css" />
+    <link rel="stylesheet" href="styles/dropdown.css" type="text/css" />
+    <link rel="stylesheet" href="orbitflower-styles.css" type="text/css" />
+
+    <script type="text/javascript">
+      var filter = "";
+      var viz;
+
+      // var skills;
+      // var serverlocation = "https://lehre.bpm.in.tum.de/ports/3000/"
+      var serverlocation = "http://localhost:3000/";
+      var currentorgmodel;
+
+      $(document).ready(function () {
+        $('svg').attr({
+          'width': '100%',
+          'height': '100%',
+        });
+        viz = new OrbitFlower($('svg'));
+
+        
+        $.ajax({
+          url: serverlocation + "organisation",
+          success: function(res) { 
+            currentorgmodel = res;
+            viz.show(currentorgmodel);
+            skills = new SkillsFeature($('svg'), currentorgmodel);
+            skills.initialize();
+          },
+          error: function(err) {
+            console.error("Failed to load organization model:", err);
+          }
+        });
+
+        var relatedText = null;
+        $('svg').on('click', function (e) {
+          var clickedElement = e.target;
+          if (clickedElement.classList.contains('skill-segment') && expressionBuilderPaused) {
+            splitGraphContainer(true);
+
+            var parentNodeId = clickedElement.parentNode.parentNode.getAttribute('id');
+            var parentNodeType = clickedElement.parentNode.parentNode.getAttribute('class');
+            var nodeToKeep = clickedElement.parentNode.parentNode;
+            if ( relatedText == null) {
+                relatedText = document.querySelector(`text[id="${parentNodeId}_text"]`).textContent;
+            }
+            const skillId = clickedElement.getAttribute('data-skill-id');
+
+                // worker graph instanciation
+            options = {
+              container: "detailed-graph-skills",
+            };
+
+            const workerGraph = new SkillTreeComponent(options);
+            workerGraph.reset("#detailed-graph-skills");
+
+            workerGraph.show(currentorgmodel, parentNodeType, relatedText, skillId);
+            isolateTargetGraphNode(parentNodeId, "main-svg", "detailed-graph-skills")
+
+
+            
+
+
+            
+
+            // const container = document.querySelector("#graph");
+            // if (!container) {
+            //   console.error("No element with class='graph' found");
+            //   return;
+            // }
+            // console.log("currentorgmodel: ################################", currentorgmodel);
+          }
+        });
+
+
+
+        // Initialize the visualization with the loaded orgmodel
+
+        // Additional initialization code can go here
+        // skills = new Skillz(serverlocation);
+
+        // $("#usercolumn").resizable({
+        //   handles: { w: "#handle2" },
+        //   resize: function (event, ui) {
+        //     if ($.browser.webkit) {
+        //       $("#handle2").offset({ left: ui.helper.offset().left + 3 });
+        //     }
+        //   },
+        // });
+      });
+
+      function relationstoggle() {
+        toggle($(".relation"), "inactive");
+      }
+      function subjectnumberstoggle() {
+        toggle($(".subjecticon.number tspan"), "inactive");
+      }
+      function orbittoggle() {
+        toggle($(".connect"), "inactive");
+      }
+      function changetspans(tspans, t1, t2) {
+        $.each(tspans, function (a, d) {
+          d.textContent = d.textContent == t1 ? t2 : t1;
+        });
+      }
+      function toggle(things, cls) {
+        $.each(things, function (a, d) {
+          $(d).toggleClass(cls);
+        });
+      }
+      function s_relationstoggle(nid) {
+        relationstoggle();
+        subjectnumberstoggle();
+        orbittoggle();
+
+        var togglers = [];
+        var tspans = [];
+        var units = [];
+        var roles = [];
+        $.each($(".relation." + $(nid).attr("id")), function (a, b) {
+          $(b)
+            .attr("class")
+            .match(/(u\d+) (r\d+)/);
+          u = RegExp.$1;
+          r = RegExp.$2;
+          togglers.push(b);
+          togglers.push("#" + r + " .subjecticon");
+          togglers.push("#" + u + " .subjecticon");
+          togglers.push("#" + r + " .role");
+          togglers.push("#" + u + " .unit");
+          tspans.push($("#" + r + " .subjecticon.number tspan.special")[0]);
+          tspans.push($("#" + u + " .subjecticon.number tspan.special")[0]);
+          units.push(u);
+          roles.push(r);
+        });
+        togglers = _.uniq(togglers);
+        tspans = _.uniq(tspans);
+        units = _.uniq(units);
+        roles = _.uniq(roles);
+        $.each(units, function (a, b) {
+          $.each(units, function (c, d) {
+            $(".connect.f" + b + ".t" + d).toggleClass("highlight");
+          });
+        });
+        $.each(roles, function (a, b) {
+          $.each(roles, function (c, d) {
+            $(".connect.f" + b + ".t" + d).toggleClass("highlight");
+          });
+        });
+        changetspans(tspans, "1", "");
+        toggle(togglers, "highlight");
+        toggle($(nid).find(".subjecticon"), "highlight");
+      }
+
+      function ur_filtertoggle(nid) {
+        var subjects = [];
+        $.each($(".relation." + $(nid).attr("id")), function (a, b) {
+          var res = $(b)
+            .attr("class")
+            .match(/(s\d+ )*(s\d+)/);
+          res = res[0].split(" ");
+          subjects = _.union(subjects, res);
+        });
+        subjects = _.uniq(subjects);
+        subjects = _.map(subjects, function (d) {
+          return "#" + d;
+        });
+        $.each($(".subject"), function (a, d) {
+          $(d).removeClass("hidden");
+        });
+        $.each($(".activefilter"), function (a, d) {
+          $(d).removeClass("activefilter");
+        });
+        if (filter == $(nid).attr("id")) {
+          filter = "";
+        } else {
+          filter = $(nid).attr("id");
+          $("#" + filter + "_text").addClass("activefilter");
+          var allsubjects = _.map($(".subject"), function (d) {
+            return "#" + $(d).attr("id");
+          });
+          $.each(_.difference(allsubjects, subjects), function (a, d) {
+            $(d).addClass("hidden");
+          });
+        }
+      }
+
+      function ur_relationstoggle(nid) {
+        relationstoggle();
+        subjectnumberstoggle();
+        orbittoggle();
+
+        var subjects = [];
+        $.each($(".relation." + $(nid).attr("id")), function (a, b) {
+          $(b).toggleClass($(nid).attr("class"));
+          var res = $(b)
+            .attr("class")
+            .match(/(s\d+ )*(s\d+)/);
+          res = res[0].split(" ");
+          var len = res.length;
+          subjects = _.union(subjects, res);
+          if ($(nid).hasClass("role")) {
+            var target = $(b)
+              .attr("class")
+              .match(/(u\d+)/)[1];
+          } else {
+            var target = $(b)
+              .attr("class")
+              .match(/(r\d+)/)[1];
+          }
+          changetspans(
+            $("#" + target + " .subjecticon.number tspan.special"),
+            len,
+            ""
+          );
+        });
+        subjects = _.uniq(subjects);
+        subjects = _.map(subjects, function (d) {
+          return "#" + d;
+        });
+        toggle(
+          subjects,
+          $(nid).hasClass("role") ? "highlightrole" : "highlightunit"
+        );
+        changetspans(
+          $("#" + $(nid).attr("id") + " .subjecticon.number tspan.special"),
+          $("#" + $(nid).attr("id") + " .subjecticon.number tspan.normal")[0]
+            .textContent,
+          ""
+        );
+
+        $.each($(".connect.f" + $(nid).attr("id")), function (a, b) {
+          toggle($(b), "highlight");
+        });
+      }
+    </script>
+  </head>
+  <body is="x-ui-">
+    <ui-rest id="main">
+      <ui-tabbar>
+        <ui-before></ui-before>
+        <ui-tab class="default" data-tab="graph">Home</ui-tab>
+        <ui-tab class="inactive" data-tab="manage-subjects">Add Subject</ui-tab>
+        <ui-tab class="inactive" data-tab="manage-units">Add Unit</ui-tab>
+        <ui-tab class="inactive" data-tab="manage-roles">Add Role</ui-tab>
+        <ui-tab class="inactive" data-tab="manage-skills">Add Skill</ui-tab>
+        <ui-behind></ui-behind>
+        <ui-last></ui-last>
+      </ui-tabbar>
+      <ui-content class="noselect">
+         <!-- Graph Visualization -->
+        <ui-area data-belongs-to-tab="graph" style="border-right: 1px solid var(--x-ui-border-color);">
+          <div class="x-ui-layout tab-content" id="graph" style="height: 100%; min-height: 500px;">
+            <svg style="width: 100%; height: 100%;"></svg>
+          </div>
+        </ui-area>
+        <ui-resizehandle data-belongs-to-tab="graph" data-label="drag to resize"></ui-resizehandle>
+        <ui-area data-belongs-to-tab="graph" style="border-right: 1px solid var(--x-ui-border-color); height: 100%;">
+          <div style="display: flex; flex-direction: column; height: 100%;">
+            <div id="users" style="flex: 1; min-height: 200px; border-bottom: 1px solid var(--x-ui-border-color); overflow: auto;  margin-left: 20px;">
+            </div>
+            <ui-resizehandle 
+              data-belongs-to-tab="graph"
+              data-label="drag to resize" 
+              style="height: 10px; cursor: row-resize; background: var(--x-ui-border-color);">
+            </ui-resizehandle>
+
+            <div id="expressionBuilder" style="flex: 1; min-height: 200px; overflow: auto;">
+            </div>
+          </div>
+        </ui-area>
+
+        <ui-area data-belongs-to-tab="manage-subjects" class="inactive">
+          <div class="x-ui-layout tab-content" id="manage-subjects">
+            <form id="manage-subjects-form" class="manage-form">
+              <div class="form-group">
+                <label for="subject-id">Subject ID:</label>
+               <input type="text" id="subject-id" placeholder="Subject ID">
+              </div>
+              <div id="unit-role-pairs" class="form-group">
+                <div class="unit-role-pair">
+                  <input type="text" class="unit-id" placeholder="Unit ID" required="">
+                  <input type="text" class="role-id" placeholder="Role ID" required="">
+                  <button type="button" class="remove-btn" onclick="this.parentElement.remove()">×</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <button type="button" id="add-unit-role-pair" onclick="addUnitRolePairToForm()">Add Another Unit-Role Pair</button>
+              </div>
+              <div class="form-group">
+                <button type="submit">Add Subject</button>
+              </div>
+              <div id="messages-subjects"></div>
+            </form>
+          </div>
+        </ui-area>
+        <ui-area data-belongs-to-tab="manage-units" class="inactive">
+          <div class="tab-content" id="manage-units">
+            <form id="manage-units-form" class="manage-form">
+              <div class="form-group">
+                <label for="unit-id">Unit ID:</label>
+                <input type="text" id="unit-id" placeholder="Unit ID">
+              </div>
+              <div class="form-group">
+                 <label for="unit-parent-id">Parent ID:</label>
+                 <input type="text" id="unit-parent-id" placeholder="Parent ID">
+              </div>
+              <div class="form-group">
+                <button type="submit">Add Unit</button>
+              </div>
+              <div id="messages-units"></div>
+            </form>
+          </div>
+        </ui-area>
+        <ui-area data-belongs-to-tab="manage-roles" class="inactive">
+          <div class="tab-content" id="manage-roles">
+            <form id="manage-roles-form" class="manage-form">
+              <div class="form-group">
+                <label for="role-id">Role ID:</label>
+                <input type="text" id="role-id" placeholder="Role ID">
+              </div>
+              <div id="role-parents" class="form-group">
+                <div class="role-parent-pair">
+                  <input type="text" class="role-parent-id" placeholder="Parent ID">
+                  <button type="button" class="remove-btn" onclick="this.parentElement.remove()">×</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <button type="button" id="add-role-parent" onclick="addRoleParentToForm()">Add Another Parent</button>
+              </div>
+              <div class="form-group">
+                <button type="submit">Add Role</button>
+              </div>
+              <div id="messages-roles"></div>
+            </form>
+          </div>
+        </ui-area>
+        <ui-area data-belongs-to-tab="manage-skills" class="inactive">
+          <div class="tab-content" id="manage-skills">
+            <form id="manage-skills-form" class="manage-form">
+              <div class="form-group">
+                <label for="skill-id">Skill ID:</label>
+                <input type="text" id="skill-id" placeholder="Skill ID" required="">
+              </div>
+              <!-- Relations container -->
+              <div id="relations-container">
+                <h4>Relations</h4>
+                <!-- You can start with one relation item, or leave it empty -->
+                <div class="relation-item">
+                  <input type="text" class="relation-id" placeholder="Related Skill ID">
+                  <input type="text" class="relation-value" placeholder="Relation Value">
+                  <button type="button" class="remove-relation-btn">Remove</button>
+                </div>
+              </div>
+              <button type="button" id="add-relation-btn">Add Relation</button>
+
+              <div class="form-group">
+                <button type="submit">Add Skill</button>
+              </div>
+              <div id="messages-skills"></div>
+            </form>
+          </div>
+        </ui-area>
+      </ui-content>
+    </ui-rest>
+  </body>
+</html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      ~                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ~                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ~

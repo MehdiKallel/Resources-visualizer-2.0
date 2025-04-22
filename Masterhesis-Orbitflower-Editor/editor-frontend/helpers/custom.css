@@ -1,0 +1,28 @@
+#usercolumn { width: 50%; }
+#usercolumn .column { padding-left: 2em; }
+#graphcolumn { margin: 0; padding: 0; border-right: 1pt solid ButtonShadow; min-width: 9em; }
+#graphcolumn .column { margin: 0; padding: 0; }
+
+#graphcolumn .column svg { margin:0; padding:0; }
+
+.ui-resizable-handle { 
+  z-index: 99999; 
+  color: ButtonShadow;
+  position: absolute;
+  white-space:nowrap;
+}
+.ui-resizable-w { 
+  cursor: w-resize; 
+  -webkit-transform: rotate(90deg); 
+  -webkit-transform-origin: 0% 100%; 
+  -moz-transform: rotate(90deg); 
+  -moz-transform-origin: left bottom; 
+  margin-top: -1em;
+  margin-left: 0.3em;
+}
+.ui-resizable-s { 
+  right:2em;
+  cursor: s-resize; 
+  text-align: right;
+  margin-top: 1.1em;
+}

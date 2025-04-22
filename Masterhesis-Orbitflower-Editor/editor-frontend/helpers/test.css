@@ -1,0 +1,296 @@
+html,
+body {
+  font-family: sans-serif, Verdana, Helvetica;
+  font-size: 0.85em;
+}
+
+body {
+  background-color: #ffffff;
+  padding: 0;
+  margin: 0;
+  color: #000000;
+  overflow: hidden;
+  -webkit-user-select: none;
+  -moz-user-select: -moz-none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Browser Bug, set textarea explicitly */
+textarea,
+input,
+select,
+button {
+  font-family: Verdana, Helvetica, sans-serif;
+  font-size: 1em;
+  resize: none;
+}
+
+input::-webkit-input-placeholder {
+  color: red;
+}
+input:-moz-placeholder {
+  color: red;
+}
+
+a:link {
+  color: #425d73;
+  text-decoration: none;
+}
+a:visited {
+  color: #425d73;
+  text-decoration: none;
+}
+a:hover {
+  color: #000000;
+  text-decoration: underline;
+}
+a:active {
+  color: #000000;
+  text-decoration: underline;
+}
+
+div.tabbed table.tabbar {
+  padding: 0;
+  margin: 0;
+  margin-left: 1em;
+  margin-right: 1em;
+  margin-top: 1em;
+  border-spacing: 0;
+  border-collapse: separate;
+}
+
+div.tabbed.rest table.tabbar {
+  padding: 0;
+  margin: 0;
+  margin-left: 0em;
+  margin-right: 0em;
+  margin-top: 1.3em;
+  border-spacing: 0;
+  border-collapse: separate;
+}
+
+div.tabbed table.tabbar h1 {
+  font-size: 1.4em;
+  margin-top: 0em;
+  padding-top: 0em;
+  padding-bottom: 0em;
+}
+
+div.tabbed table.tabbar .switch h1:before {
+  content: "â¬‡";
+  color: ButtonText;
+}
+div.tabbed table.tabbar .switch h1.margin:before {
+  content: "âž¡";
+  color: ButtonText;
+  vertical-align: top;
+}
+
+div.tabbed table.tabbar tr:first-child {
+  height: 2.6em;
+}
+div.tabbed table.tabbar .tab {
+  cursor: pointer;
+  padding: 0em;
+  padding-left: 1em;
+  padding-right: 1em;
+  border: 1pt solid ButtonShadow;
+  border-bottom: 1pt solid white;
+  border-radius: 1em;
+  border-bottom-left-radius: 0em;
+  border-bottom-right-radius: 0em;
+  width: 0%;
+  -moz-border-radius: 1em;
+  -moz-border-radius-bottomleft: 0em;
+  -moz-border-radius-bottomright: 0em;
+  -webkit-border-radius: 1em;
+  -webkit-border-bottom-left-radius: 0em;
+  -webkit-border-bottom-right-radius: 0em;
+}
+
+div.tabbed table.tabbar .tab h1 {
+    margin-top: 0em;
+    margin-bottom: 0em;
+    padding-top: 0em;
+    padding-bottom: 0em;
+  }
+  div.tabbed table.tabbar .tab h1 {
+    white-space: nowrap;
+  }
+  div.tabbed table.tabbar .tab.inactive {
+    border: 1pt solid ButtonShadow;
+    border-radius: 1em;
+    border-bottom-left-radius: 0em;
+    border-bottom-right-radius: 0em;
+    -moz-border-radius: 1em;
+    -moz-border-radius-bottomleft: 0em;
+    -moz-border-radius-bottomright: 0em;
+    -webkit-border-radius: 1em;
+    -webkit-border-bottom-left-radius: 0em;
+    -webkit-border-bottom-right-radius: 0em;
+  }
+  
+  div.tabbed table.tabbar td.tabbehind {
+    vertical-align: bottom;
+    padding: 0.2em 0em;
+    border-bottom: 1pt solid buttonshadow;
+    border-radius: 1em;
+    border-bottom-left-radius: 0em;
+    border-bottom-right-radius: 0em;
+    width: 100%;
+    -moz-border-radius: 1em;
+    -moz-border-radius-bottomleft: 0em;
+    -moz-border-radius-bottomright: 0em;
+    -webkit-border-radius: 1em;
+    -webkit-border-bottom-left-radius: 0em;
+    -webkit-border-bottom-right-radius: 0em;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  div.tabbed.rest table.tabbar td.tabbehind {
+    padding-right: 1em;
+  }
+  
+div.tabbed table.tabbar td.tabbefore {
+    border-bottom: 1pt solid buttonshadow;
+    padding-left: 1em;
+  }
+  
+  div.tabbed table.tabbar tr.border td {
+    height: 0.1em;
+    background-color: ButtonShadow;
+    border-left: 1pt solid ButtonShadow;
+    border-right: 1pt solid ButtonShadow;
+    border-bottom: 1pt solid ButtonShadow;
+  }
+  
+  div.tabbed table.tabbar td.switch {
+    background-color: ButtonFace;
+    border-bottom: 1pt solid ButtonShadow;
+  }
+  
+  div.tabbed .tabbelow {
+    margin-left: 1em;
+    margin-right: 1em;
+    padding: 1em;
+    border-bottom: 1pt solid ButtonShadow;
+    border-left: 1pt solid ButtonShadow;
+    border-right: 1pt solid ButtonShadow;
+    border-radius: 1em;
+    border-top-left-radius: 0em;
+    border-top-right-radius: 0em;
+    -moz-border-radius: 1em;
+    -moz-border-radius-topleft: 0em;
+    -moz-border-radius-topright: 0em;
+    -webkit-border-radius: 1em;
+    -webkit-border-top-left-radius: 0em;
+    -webkit-border-top-right-radius: 0em;
+  }
+  
+div.tabbed.rest .tabbelow {
+    /* to correctly set the height when resizing with changing height with $.height() -> include padding */
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+  
+    padding: 1em;
+    margin: 0;
+    border-radius: 0;
+    border: 0 none;
+    -moz-border-radius: 0;
+    -webkit-border-radius: 0;
+  
+    overflow: auto;
+  }
+  
+div.tabbed.rest .tabbelow.columns {
+    padding: 0;
+    overflow: hidden;
+    border-collapse: collapse;
+    border-spacing: 0;
+    width: 100%;
+  }
+
+  
+div.tabbed.rest .tabbelow.columns > tbody > tr > td {
+    margin: 0;
+    padding: 0;
+    border: 0 none;
+    vertical-align: top;
+  }
+  div.tabbed.rest .tabbelow.columns .column {
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+  
+    margin: 0;
+    padding: 1em;
+  
+    overflow: auto;
+    top: 0;
+  }
+  
+  div.tabbed .tabbelow .layout {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    border: 0 none;
+    padding: 0;
+    margin: 0;
+  }
+  div.tabbed .tabbelow .layout td {
+    border: 0 none;
+    padding: 0;
+    margin: 0;
+  }
+
+  div.tabbed .tabbelow .layout tr {
+    border: 0 none;
+    padding: 0;
+    margin: 0;
+  }
+  div.tabbed .tabbelow .compact {
+    border-collapse: collapse;
+    border-spacing: 0;
+    border: 0 none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  div.tabbed .tabbelow .compact td {
+    border: 0 none;
+    padding: 0;
+    margin: 0;
+  }
+  div.tabbed .tabbelow .compact tr {
+    border: 0 none;
+    padding: 0;
+    margin: 0;
+  }
+  div.tabbed .tabbelow .layout .fixed {
+    white-space: nowrap;
+  }
+  div.tabbed .tabbelow .layout .top {
+    vertical-align: top;
+  }
+  
+  .hidden {
+    display: none;
+  }
+  
+  .fixedstate {
+    background-color: white;
+    margin: 0;
+    padding: 1em;
+    position: fixed;
+    padding-top: 0em;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+  .fixedstate div.tabbed {
+    margin-bottom: 0;
+  }
+  
