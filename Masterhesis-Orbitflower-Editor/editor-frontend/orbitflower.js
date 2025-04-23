@@ -17,12 +17,6 @@ class OrbitFlower {
         id: "main-svg",
       });
     }
-
-    // Set up event listeners for real-time updates
-    if (!window.orbitflowerEventsInitialized) {
-      this.setupEventListeners();
-      window.orbitflowerEventsInitialized = true;
-    }
   }
 
   show(orgModel) {
@@ -81,44 +75,6 @@ class OrbitFlower {
       .catch((error) => {
         console.error("Error fetching organisation model:", error);
       });
-  }
-
-  setupEventListeners() {
-    const eventSource = new EventSource("http://localhost:3000/events");
-    console.log("Listening for real-time updates...");
-
-    eventSource.onopen = () => {
-      console.log("SSE connection established");
-    };
-
-    eventSource.addEventListener("update", (event) => {
-      console.log("Update event received:", event.data);
-      try {
-        const updateData = JSON.parse(event.data);
-        console.log("Update type:", updateData.type);
-        this.fetchAndRender();
-      } catch (error) {
-        console.error("Error parsing update data:", error);
-      }
-    });
-
-    eventSource.addEventListener("connected", (event) => {
-      console.log("Connected to SSE stream:", event.data);
-    });
-
-    eventSource.onmessage = (event) => {
-      console.log("Generic message received:", event.data);
-      this.fetchAndRender();
-    };
-
-    eventSource.onerror = (error) => {
-      console.error("EventSource error:", error);
-      setTimeout(() => {
-        console.log("Attempting to reconnect to event stream...");
-        eventSource.close();
-        new EventSource("http://localhost:3000/events");
-      }, 5000);
-    };
   }
 
   renderOrganisationGraph(doc) {

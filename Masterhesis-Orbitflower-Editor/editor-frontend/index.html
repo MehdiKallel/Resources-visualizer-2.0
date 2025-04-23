@@ -53,10 +53,78 @@
       // var serverlocation = "https://lehre.bpm.in.tum.de/ports/3000/"
       var serverlocation;
       var currentorgmodel;
+      var skillsFeature;
       
       function getSkills(who) {
         let skills = $("subject[uid=" + who + "] subjectSkills skillRef",currentorgmodel);
 	      console.log(skills);      
+      }
+
+      function setupSSEEventListeners() {
+        const eventSource = new EventSource(serverlocation + "/events");
+        console.log("Listening for real-time updates...");
+
+        eventSource.onopen = () => {
+          console.log("SSE connection established");
+        };
+
+        eventSource.addEventListener("update", (event) => {
+          console.log("Update event received:", event.data);
+          try {
+            const updateData = JSON.parse(event.data);
+            console.log("Update type:", updateData.type);
+            
+            $.ajax({
+              url: serverlocation + "/organisation",
+              success: function(res) {
+                currentorgmodel = res;
+                viz.show(currentorgmodel);
+                
+                if (skillsFeature) {
+                  skillsFeature = new SkillsFeature($('svg'), currentorgmodel);
+                  skillsFeature.initialize();
+                }
+              },
+              error: function(err) {
+                console.error("Failed to load updated organization model:", err);
+              }
+            });
+          } catch (error) {
+            console.error("Error parsing update data:", error);
+          }
+        });
+
+        eventSource.addEventListener("connected", (event) => {
+          console.log("Connected to SSE stream:", event.data);
+        });
+
+        eventSource.onmessage = (event) => {
+          console.log("Generic message received:", event.data);
+          $.ajax({
+            url: serverlocation + "/organisation",
+            success: function(res) {
+              currentorgmodel = res;
+              viz.show(currentorgmodel);
+              
+              if (skillsFeature) {
+                skillsFeature = new SkillsFeature($('svg'), currentorgmodel);
+                skillsFeature.initialize();
+              }
+            },
+            error: function(err) {
+              console.error("Failed to load updated organization model:", err);
+            }
+          });
+        };
+
+        eventSource.onerror = (error) => {
+          console.error("EventSource error:", error);
+          setTimeout(() => {
+            console.log("Attempting to reconnect to event stream...");
+            eventSource.close();
+            setupSSEEventListeners();
+          }, 5000);
+        };
       }
       
       $(document).ready(function () {
@@ -75,17 +143,22 @@
               url: serverlocation + "/organisation",
               success: function(res) {       
                 currentorgmodel = res;
-		getSkills('harapata97');	
-                viz.show(currentorgmodel);                                       
-                skills = new SkillsFeature($('svg'), currentorgmodel);           
-                skills.initialize();                                             
+		            getSkills('harapata97');	
+                viz.show(currentorgmodel);   
+                                                    
+                skillsFeature = new SkillsFeature($('svg'), currentorgmodel);           
+                skillsFeature.initialize();
+
+                // Set up SSE listeners after initial load
+                setupSSEEventListeners();
               },                                                                 
               error: function(err) {                                             
                 console.error("Failed to load organization model:", err);        
               }                                                                  
             });                                                                  
           }
-        }); 
+        });
+
         
         var relatedText = null;
         $('svg').on('click', function (e) {
@@ -101,7 +174,6 @@
             }
             const skillId = clickedElement.getAttribute('data-skill-id');
 
-                // worker graph instanciation
             options = {
               container: "detailed-graph-skills",
             };
@@ -111,183 +183,12 @@
 
             workerGraph.show(currentorgmodel, parentNodeType, relatedText, skillId);
             isolateTargetGraphNode(parentNodeId, "main-svg", "detailed-graph-skills")
-
-
-            
-
-
-            
-
-            // const container = document.querySelector("#graph");
-            // if (!container) {
-            //   console.error("No element with class='graph' found");
-            //   return;
-            // }
-            // console.log("currentorgmodel: ################################", currentorgmodel);
           }
         });
 
-
-
-        // Initialize the visualization with the loaded orgmodel
-
-        // Additional initialization code can go here
-        // skills = new Skillz(serverlocation);
-
-        // $("#usercolumn").resizable({
-        //   handles: { w: "#handle2" },
-        //   resize: function (event, ui) {
-        //     if ($.browser.webkit) {
-        //       $("#handle2").offset({ left: ui.helper.offset().left + 3 });
-        //     }
-        //   },
-        // });
       });
 
-      function relationstoggle() {
-        toggle($(".relation"), "inactive");
-      }
-      function subjectnumberstoggle() {
-        toggle($(".subjecticon.number tspan"), "inactive");
-      }
-      function orbittoggle() {
-        toggle($(".connect"), "inactive");
-      }
-      function changetspans(tspans, t1, t2) {
-        $.each(tspans, function (a, d) {
-          d.textContent = d.textContent == t1 ? t2 : t1;
-        });
-      }
-      function toggle(things, cls) {
-        $.each(things, function (a, d) {
-          $(d).toggleClass(cls);
-        });
-      }
-      function s_relationstoggle(nid) {
-        relationstoggle();
-        subjectnumberstoggle();
-        orbittoggle();
-
-        var togglers = [];
-        var tspans = [];
-        var units = [];
-        var roles = [];
-        $.each($(".relation." + $(nid).attr("id")), function (a, b) {
-          $(b)
-            .attr("class")
-            .match(/(u\d+) (r\d+)/);
-          u = RegExp.$1;
-          r = RegExp.$2;
-          togglers.push(b);
-          togglers.push("#" + r + " .subjecticon");
-          togglers.push("#" + u + " .subjecticon");
-          togglers.push("#" + r + " .role");
-          togglers.push("#" + u + " .unit");
-          tspans.push($("#" + r + " .subjecticon.number tspan.special")[0]);
-          tspans.push($("#" + u + " .subjecticon.number tspan.special")[0]);
-          units.push(u);
-          roles.push(r);
-        });
-        togglers = _.uniq(togglers);
-        tspans = _.uniq(tspans);
-        units = _.uniq(units);
-        roles = _.uniq(roles);
-        $.each(units, function (a, b) {
-          $.each(units, function (c, d) {
-            $(".connect.f" + b + ".t" + d).toggleClass("highlight");
-          });
-        });
-        $.each(roles, function (a, b) {
-          $.each(roles, function (c, d) {
-            $(".connect.f" + b + ".t" + d).toggleClass("highlight");
-          });
-        });
-        changetspans(tspans, "1", "");
-        toggle(togglers, "highlight");
-        toggle($(nid).find(".subjecticon"), "highlight");
-      }
-
-      function ur_filtertoggle(nid) {
-        var subjects = [];
-        $.each($(".relation." + $(nid).attr("id")), function (a, b) {
-          var res = $(b)
-            .attr("class")
-            .match(/(s\d+ )*(s\d+)/);
-          res = res[0].split(" ");
-          subjects = _.union(subjects, res);
-        });
-        subjects = _.uniq(subjects);
-        subjects = _.map(subjects, function (d) {
-          return "#" + d;
-        });
-        $.each($(".subject"), function (a, d) {
-          $(d).removeClass("hidden");
-        });
-        $.each($(".activefilter"), function (a, d) {
-          $(d).removeClass("activefilter");
-        });
-        if (filter == $(nid).attr("id")) {
-          filter = "";
-        } else {
-          filter = $(nid).attr("id");
-          $("#" + filter + "_text").addClass("activefilter");
-          var allsubjects = _.map($(".subject"), function (d) {
-            return "#" + $(d).attr("id");
-          });
-          $.each(_.difference(allsubjects, subjects), function (a, d) {
-            $(d).addClass("hidden");
-          });
-        }
-      }
-
-      function ur_relationstoggle(nid) {
-        relationstoggle();
-        subjectnumberstoggle();
-        orbittoggle();
-
-        var subjects = [];
-        $.each($(".relation." + $(nid).attr("id")), function (a, b) {
-          $(b).toggleClass($(nid).attr("class"));
-          var res = $(b)
-            .attr("class")
-            .match(/(s\d+ )*(s\d+)/);
-          res = res[0].split(" ");
-          var len = res.length;
-          subjects = _.union(subjects, res);
-          if ($(nid).hasClass("role")) {
-            var target = $(b)
-              .attr("class")
-              .match(/(u\d+)/)[1];
-          } else {
-            var target = $(b)
-              .attr("class")
-              .match(/(r\d+)/)[1];
-          }
-          changetspans(
-            $("#" + target + " .subjecticon.number tspan.special"),
-            len,
-            ""
-          );
-        });
-        subjects = _.uniq(subjects);
-        subjects = _.map(subjects, function (d) {
-          return "#" + d;
-        });
-        toggle(
-          subjects,
-          $(nid).hasClass("role") ? "highlightrole" : "highlightunit"
-        );
-        changetspans(
-          $("#" + $(nid).attr("id") + " .subjecticon.number tspan.special"),
-          $("#" + $(nid).attr("id") + " .subjecticon.number tspan.normal")[0]
-            .textContent,
-          ""
-        );
-
-        $.each($(".connect.f" + $(nid).attr("id")), function (a, b) {
-          toggle($(b), "highlight");
-        });
-      }
+     
     </script>
   </head>
   <body is="x-ui-">
