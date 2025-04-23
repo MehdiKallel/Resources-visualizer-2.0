@@ -548,8 +548,6 @@ function closeTabAndReturnToGraph(element) {
     const resp = await fetch("index.conf");
     if (!resp.ok) throw new Error(resp.statusText);
     const cfg = await resp.json();
-    apiBaseUrl = cfg.server;
-    console.log("API base URL set to:", apiBaseUrl);
   } catch (e) {
     console.error("Could not load index.conf:", e);
     return;
@@ -569,7 +567,6 @@ function closeTabAndReturnToGraph(element) {
     
     const subjectForm = document.getElementById("manage-subjects-form");
     if (subjectForm) {
-      console.log("Subject form found, attaching handler");
       // Remove any existing handlers to prevent duplicates
       subjectForm.removeEventListener("submit", handleSubjectFormSubmit);
       subjectForm.addEventListener("submit", handleSubjectFormSubmit);
@@ -583,13 +580,11 @@ function closeTabAndReturnToGraph(element) {
 
     const unitForm = document.getElementById("manage-units-form");
     if (unitForm) {
-      console.log("Unit form found, attaching handler");
       unitForm.addEventListener("submit", handleUnitFormSubmit);
     }
 
     const roleForm = document.getElementById("manage-roles-form");
     if (roleForm) {
-      console.log("Role form found, attaching handler");
       roleForm.addEventListener("submit", handleRoleFormSubmit);
 
       const addRoleParentBtn = document.getElementById("add-role-parent");
@@ -615,7 +610,6 @@ function closeTabAndReturnToGraph(element) {
 
     const skillForm = document.getElementById("manage-skills-form");
     if (skillForm) {
-      console.log("Skill form found, attaching handler");
       skillForm.addEventListener("submit", handleSkillFormSubmit);
       enhanceSkillForm();
     }
@@ -625,7 +619,6 @@ function closeTabAndReturnToGraph(element) {
 
     document.addEventListener("click", function (e) {
       if (e.target && e.target.matches("[data-tab]")) {
-        console.log("Tab clicked:", e.target.getAttribute("data-tab"));
 
         setTimeout(function () {
           const tabId = e.target.getAttribute("data-tab");
@@ -636,7 +629,6 @@ function closeTabAndReturnToGraph(element) {
   }
 
   function addRelationItem() {
-    console.log("Adding relation item");
     const container = document.getElementById("relations-container");
     const div = document.createElement("div");
     div.className = "relation-item";
@@ -655,7 +647,6 @@ function closeTabAndReturnToGraph(element) {
   window.setupTabFormHandlers = setupTabFormHandlers;
 
   function setupTabFormHandlers(tabId) {
-    console.log("Setting up form handlers for tab:", tabId);
 
     switch (tabId) {
       case "manage-subjects":
