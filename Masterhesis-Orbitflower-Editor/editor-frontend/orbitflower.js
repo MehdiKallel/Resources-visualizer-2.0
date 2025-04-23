@@ -7,63 +7,86 @@ class OrbitFlower {
     this.doc = null;
     this.initialized = false;
     console.log("OrbitFlower instance created with SVG element:", svgElement);
-    
+
     // Set initial size for SVG element
     if (this.svgElement && this.svgElement.length) {
       this.svgElement.attr({
-        'width': '100%',
-        'height': '100%',
-        'preserveAspectRatio': 'xMidYMid meet',
-        'id': 'main-svg',
+        width: "100%",
+        height: "100%",
+        preserveAspectRatio: "xMidYMid meet",
+        id: "main-svg",
       });
     }
-    
-    
+
     // Set up event listeners for real-time updates
     if (!window.orbitflowerEventsInitialized) {
       this.setupEventListeners();
       window.orbitflowerEventsInitialized = true;
     }
   }
-  
- 
-  
+
   show(orgModel) {
     console.log("OrbitFlower.show() called with model:", orgModel);
-    
+
     // If we're given XML directly, use it
-    if (orgModel && (orgModel.documentElement || 
-        (typeof orgModel === 'string' && orgModel.indexOf('<?xml') !== -1))) {
-      this.doc = typeof orgModel === 'string' ? 
-        new DOMParser().parseFromString(orgModel, "application/xml") : 
-        orgModel;
+    if (
+      orgModel &&
+      (orgModel.documentElement ||
+        (typeof orgModel === "string" && orgModel.indexOf("<?xml") !== -1))
+    ) {
+      this.doc =
+        typeof orgModel === "string"
+          ? new DOMParser().parseFromString(orgModel, "application/xml")
+          : orgModel;
       this.renderOrganisationGraph(this.doc);
       return;
     }
-    
+
     // If we have a JSON model, convert it to XML (or use as is if rendering supports JSON)
-    if (orgModel && typeof orgModel === 'object') {
+    if (orgModel && typeof orgModel === "object") {
       // For now, we'll just store it and render
       this.currentModel = orgModel;
       this.renderFromJSON(orgModel);
       return;
     }
-    
+
     // If no model provided, fetch from server
     if (!orgModel && !this.initialized) {
       this.fetchAndRender();
     }
   }
-  
+
   renderFromJSON(jsonModel) {
     console.log("Rendering from JSON model", jsonModel);
     this.fetchAndRender();
   }
-  
+
+  fetchAndRender() {
+    console.log("Fetching organisation model from server...");
+    fetch("http://localhost:3000/organisation")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(
+            "Network response was not ok: " + response.statusText
+          );
+        }
+        return response.text();
+      })
+      .then((data) => {
+        this.doc = new DOMParser().parseFromString(data, "application/xml");
+
+        console.log("Fetched organisation model:", this.doc);
+        this.renderOrganisationGraph(this.doc);
+      })
+      .catch((error) => {
+        console.error("Error fetching organisation model:", error);
+      });
+  }
+
   setupEventListeners() {
     const eventSource = new EventSource("http://localhost:3000/events");
     console.log("Listening for real-time updates...");
-    
+
     eventSource.onopen = () => {
       console.log("SSE connection established");
     };
@@ -97,11 +120,9 @@ class OrbitFlower {
       }, 5000);
     };
   }
-  
 
-  
   renderOrganisationGraph(doc) {
-    console.log("Rendering organisation graph from graph worker...");
+    console.error("************************************************ rendering doc:", doc);
     const gw = new GraphWorker(
       doc,
       "/o:organisation/o:units/o:unit|/o:organisation/o:roles/o:role",
@@ -468,15 +489,15 @@ class OrbitFlower {
       const opacity = (2.9 / maxsubjectintensity) * count + 0.5;
       s.add_path(`M ${x1} ${y1} Q ${center_x} ${center_y} ${x2} ${y2}`, {
         class: `relation ${arr.join(" ")}`,
-        style: `stroke-width: ${opacity};`
+        style: `stroke-width: ${opacity};`,
       });
 
       // Dynamically add necessary styles for current relations
       if (document.getElementById(`relation-${arr.join("-")}-style`)) {
         document.getElementById(`relation-${arr.join("-")}-style`).remove();
       }
-      
-      const styleEl = document.createElement('style');
+
+      const styleEl = document.createElement("style");
       styleEl.id = `relation-${arr.join("-")}-style`;
       styleEl.textContent = `
         .relation.highlight.${arr.join(".")} {
@@ -518,7 +539,12 @@ class OrbitFlower {
         }
       );
 
-      s.add_text(n.text_x, n.text_y, { cls: n.text_cls + " btext" }, () => n.id);
+      s.add_text(
+        n.text_x,
+        n.text_y,
+        { cls: n.text_cls + " btext" },
+        () => n.id
+      );
       s.add_text(
         n.text_x,
         n.text_y,
@@ -534,32 +560,40 @@ class OrbitFlower {
       }
     });
 
-    const graphSvg = this.svgElement && this.svgElement.length ? this.svgElement : $('#graph svg');
+    const graphSvg =
+      this.svgElement && this.svgElement.length
+        ? this.svgElement
+        : $("#graph svg");
     const usersSvg = document.querySelector("#users");
-    
+
     if (graphSvg && graphSvg.length) {
       // Clear existing content
       graphSvg.empty();
-      
+
       // Get SVG content and set dimensions
       const svgContent = s.dump(maxwidth, maxheight).trim();
-      
+
       // Create a properly sized viewport
       graphSvg.attr({
-        'width': '100%',
-        'height': '100%',
-        'viewBox': `0 0 ${maxwidth} ${maxheight}`,
-        'preserveAspectRatio': 'xMidYMid meet'
+        width: "100%",
+        height: "100%",
+        viewBox: `0 0 ${maxwidth} ${maxheight}`,
+        preserveAspectRatio: "xMidYMid meet",
       });
-      
+
       // Insert the content
       graphSvg.html(svgContent);
-      
-      console.log("Graph SVG updated with dimensions:", maxwidth, "×", maxheight);
+
+      console.log(
+        "Graph SVG updated with dimensions:",
+        maxwidth,
+        "×",
+        maxheight
+      );
     } else {
       console.warn("Graph SVG element not found");
     }
-    
+
     if (usersSvg) {
       usersSvg.innerHTML = subjects.join("\n");
       console.log("Users updated");
@@ -573,19 +607,18 @@ class OrbitFlower {
 }
 
 const renderOrganisationGraph = (doc) => {
-  const tempViz = new OrbitFlower($('svg'));
+  const tempViz = new OrbitFlower($("svg"));
   return tempViz.renderOrganisationGraph(doc);
 };
 
 async function renderGraph() {
-  try {    
-    const tempViz = new OrbitFlower($('svg'));
+  try {
+    const tempViz = new OrbitFlower($("svg"));
     tempViz.renderOrganisationGraph(doc);
   } catch (error) {
     console.error("Failed to update graph:", error);
   }
 }
-
 
 function documentReady(fn) {
   if (

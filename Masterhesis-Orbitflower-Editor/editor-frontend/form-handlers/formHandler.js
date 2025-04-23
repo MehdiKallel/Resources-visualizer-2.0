@@ -1,5 +1,6 @@
 var apiBaseUrl = null;
 
+
 // Form submission handlers for the management forms
 async function handleSubjectFormSubmit(e) {
   e.preventDefault();
@@ -60,6 +61,7 @@ async function handleSubjectFormSubmit(e) {
 }
 
 async function handleUnitFormSubmit(e) {
+  console.error("Unit form submitted");
   e.preventDefault();
   console.log("Unit form submitted");
   const unitId = document.getElementById("unit-id").value.trim();
@@ -244,6 +246,24 @@ function addUnitRolePair() {
     });
   }
 }
+
+function addRoleParent() {
+  const parentDiv = document.createElement("div");
+  parentDiv.className = "role-parent-pair";
+  parentDiv.innerHTML = `
+    <input type="text" class="role-parent-id" placeholder="Parent ID" required>
+    <button type="button" class="remove-btn">×</button>
+  `;
+  document.getElementById("role-parents").appendChild(parentDiv);
+
+  const removeBtn = parentDiv.querySelector(".remove-btn");
+  if (removeBtn) {
+    removeBtn.addEventListener("click", function () {
+      parentDiv.remove();
+    });
+  }
+}
+
 async function openSubjectEditor(uid) {
   try {
     const [subjectResponse, allSkills] = await Promise.all([
@@ -446,6 +466,7 @@ function addSkillAssignment() {
 }
 
 async function handleSubjectEditorSubmit(event) {
+  console.error("Subject editor form submitted");
   event.preventDefault();
   const form = event.target;
 
@@ -535,40 +556,29 @@ function closeTabAndReturnToGraph(element) {
   }
   console.error("API base URL:", apiBaseUrl);
 
-  document.addEventListener("DOMContentLoaded", function () {
+  // Ensure handlers are attached even if DOM is already loaded
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initializeFormHandlers);
+  } else {
+    // DOM already loaded, initialize right away
+    initializeFormHandlers();
+  }
+  
+  function initializeFormHandlers() {
     console.error("DOM fully loaded, initializing form handlers" + apiBaseUrl);
-
+    
     const subjectForm = document.getElementById("manage-subjects-form");
     if (subjectForm) {
       console.log("Subject form found, attaching handler");
+      // Remove any existing handlers to prevent duplicates
+      subjectForm.removeEventListener("submit", handleSubjectFormSubmit);
       subjectForm.addEventListener("submit", handleSubjectFormSubmit);
 
       const addUnitRolePairBtn = document.getElementById("add-unit-role-pair");
       if (addUnitRolePairBtn) {
-        addUnitRolePairBtn.addEventListener("click", function () {
-          const pairDiv = document.createElement("div");
-          pairDiv.className = "unit-role-pair";
-          pairDiv.innerHTML = `
-                <input type="text" class="unit-id" placeholder="Unit ID" required>
-                <input type="text" class="role-id" placeholder="Role ID" required>
-                <button type="button" class="remove-btn">×</button>
-              `;
-          document.getElementById("unit-role-pairs").appendChild(pairDiv);
-
-          const removeBtn = pairDiv.querySelector(".remove-btn");
-          if (removeBtn) {
-            removeBtn.addEventListener("click", function () {
-              pairDiv.remove();
-            });
-          }
-        });
+        addUnitRolePairBtn.removeEventListener("click", addUnitRolePair);
+        addUnitRolePairBtn.addEventListener("click", addUnitRolePair);
       }
-
-      document.querySelectorAll(".remove-btn").forEach((button) => {
-        button.addEventListener("click", function (e) {
-          e.target.closest(".unit-role-pair, .role-parent-pair").remove();
-        });
-      });
     }
 
     const unitForm = document.getElementById("manage-units-form");
@@ -623,7 +633,7 @@ function closeTabAndReturnToGraph(element) {
         }, 100);
       }
     });
-  });
+  }
 
   function addRelationItem() {
     console.log("Adding relation item");
@@ -640,6 +650,9 @@ function closeTabAndReturnToGraph(element) {
     });
     container.appendChild(div);
   }
+
+  // Expose the function to the window object while it's in scope
+  window.setupTabFormHandlers = setupTabFormHandlers;
 
   function setupTabFormHandlers(tabId) {
     console.log("Setting up form handlers for tab:", tabId);
@@ -723,3 +736,17 @@ function closeTabAndReturnToGraph(element) {
   }
 })();
 
+
+
+window.handleSubjectFormSubmit = handleSubjectFormSubmit;
+window.handleUnitFormSubmit = handleUnitFormSubmit;
+window.handleRoleFormSubmit = handleRoleFormSubmit;
+window.handleSkillFormSubmit = handleSkillFormSubmit;
+window.openSubjectEditor = openSubjectEditor;
+window.addUnitRolePair = addUnitRolePair;
+window.addSkillAssignment = addSkillAssignment;
+window.addSkillFromDropdown = addSkillFromDropdown;
+window.handleSubjectEditorSubmit = handleSubjectEditorSubmit;
+window.fetchAllSkills = fetchAllSkills;
+window.initializeSearchableDropdown = initializeSearchableDropdown;
+window.addSkillBackToDropdown = addSkillBackToDropdown;

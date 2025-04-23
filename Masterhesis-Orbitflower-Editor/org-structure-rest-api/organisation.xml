@@ -62,6 +62,51 @@
       <parent>Dekanat Informatik</parent>
       <permissions/>
     </unit>
+    <unit id="mehdi">
+      <permissions/>
+    </unit>
+    <unit id="dwdw">
+      <permissions/>
+    </unit>
+    <unit id="dwd">
+      <permissions/>
+    </unit>
+    <unit id="fee">
+      <permissions/>
+    </unit>
+    <unit id="fefe">
+      <permissions/>
+    </unit>
+    <unit id="dwdwww">
+      <permissions/>
+    </unit>
+    <unit id="dwdwwdw">
+      <permissions/>
+    </unit>
+    <unit id="fefeeee">
+      <permissions/>
+    </unit>
+    <unit id="dwdwwdwww">
+      <permissions/>
+    </unit>
+    <unit id="dwdwdw">
+      <permissions/>
+    </unit>
+    <unit id="fefefefe">
+      <permissions/>
+    </unit>
+    <unit id="fefefefefef">
+      <permissions/>
+    </unit>
+    <unit id="dwdwdwdw">
+      <permissions/>
+    </unit>
+    <unit id="fefeef">
+      <permissions/>
+    </unit>
+    <unit id="fefefe">
+      <permissions/>
+    </unit>
   </units>
   <roles>
     <role id="Regular">
