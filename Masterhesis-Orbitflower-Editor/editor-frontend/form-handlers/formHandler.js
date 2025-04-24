@@ -548,11 +548,14 @@ function closeTabAndReturnToGraph(element) {
     const resp = await fetch("index.conf");
     if (!resp.ok) throw new Error(resp.statusText);
     const cfg = await resp.json();
+apiBaseUrl = cfg.server;
+
+
   } catch (e) {
     console.error("Could not load index.conf:", e);
     return;
   }
-  console.error("API base URL:", apiBaseUrl);
+  
 
   // Ensure handlers are attached even if DOM is already loaded
   if (document.readyState === "loading") {
