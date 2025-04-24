@@ -60,20 +60,42 @@
         let skills = $("subject[uid=" + who + "] subjectSkills skillRef",currentorgmodel);
 	      console.log(skills);      
       }
+   
+
+      function fillSkillsContainer() {
+        let skills = $("skill",currentorgmodel);
+        let skillsContainer = $("#details-skills");
+        skillsContainer.empty(); // Clear previous content
+        const skillsArray = $.makeArray(skills);
+
+        skillsArray.forEach(element => {
+            let skill = 
+            `<table class="subject" id="${element.id}"  style="margin-bottom: 5px;">
+              <tbody>
+                <tr>
+                  <td class="labeltext">${element.id}</td>
+                </tr>
+              </tbody>
+            </table>	
+          `
+        skillsContainer.append(skill);
+       });
+
+      }
 
       function setupSSEEventListeners() {
         console.error("this is a test");
-	const eventSource = new EventSource(`${serverlocation.replace(/\/$/, '')}/events/`);
+	      const eventSource = new EventSource(`${serverlocation.replace(/\/$/, '')}/events/`);
         console.error("Listening for real-time updates...");
 
         eventSource.onopen = () => {
           console.error("SSE connection established");
-	  console.error("[SSE] Connection OPENED", new Date().toISOString());
+	        console.error("[SSE] Connection OPENED", new Date().toISOString());
         };
-	eventSource.addEventListener('error', (e) => {
-  		console.error("[SSE] Error state:", e.eventPhase); 
-  	// 0 = connecting, 2 = closed
-	});
+	      eventSource.addEventListener('error', (e) => {
+  		  console.error("[SSE] Error state:", e.eventPhase); 
+  	  // 0 = connecting, 2 = closed
+	      });
 
         eventSource.addEventListener("update", (event) => {
           console.error("Update event received:", event.data);
@@ -150,6 +172,7 @@
               url: serverlocation + "/organisation",
               success: function(res) {       
                 currentorgmodel = res;
+                fillSkillsContainer();
 		            getSkills('harapata97');	
                 viz.show(currentorgmodel);   
                                                     
@@ -157,7 +180,7 @@
                 skillsFeature.initialize();
 
                 // Set up SSE listeners after initial load
-             	setupSSEEventListeners();
+             	  setupSSEEventListeners();
               },                                                                 
               error: function(err) {                                             
                 console.error("Failed to load organization model:", err);        
@@ -211,7 +234,6 @@
         <ui-last></ui-last>
       </ui-tabbar>
       <ui-content class="noselect">
-         <!-- Graph Visualization -->
         <ui-area data-belongs-to-tab="graph" style="border-right: 1px solid var(--x-ui-border-color);">
           <div class="x-ui-layout tab-content" id="graph" style="height: 100%; min-height: 500px;">
             <svg style="width: 100%; height: 100%;"></svg>
@@ -219,9 +241,14 @@
         </ui-area>
         <ui-resizehandle data-belongs-to-tab="graph" data-label="drag to resize"></ui-resizehandle>
         <ui-area  is="x-ui-" data-belongs-to-tab="graph" style="border-right: 1px solid var(--x-ui-border-color); height: 100%;">
-            <div id="users" style="flex: 1; min-height: 200px; border-bottom: 1px solid var(--x-ui-border-color); overflow: auto;  margin-left: 20px;">
+            <div id="users-container" style="display: flex; flex-direction: row; min-height: 200px; border-bottom: 1px solid var(--x-ui-border-color);">
+                <div id="users" style="flex: 1; overflow: auto; margin-left: 20px;">
+                </div>
+                <div id="details-skills" style="flex: 1; overflow: auto; padding-left: 10px;">
+
+                </div>
             </div>
-	    <ui-resizehandle>drag to resize</ui-resizehandle>
+	          <ui-resizehandle>drag to resize</ui-resizehandle>
             <div id="expressionBuilder" style="flex: 1; min-height: 200px; overflow: auto;">
             </div>
         </ui-area>

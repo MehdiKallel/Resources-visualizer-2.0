@@ -3,8 +3,8 @@ const textMeasurements = {
   defaultHeight: 10,
 };
 
-const SVG_TEMPLATE = `<!-- width: -->
-<svg id="svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" version="1.1" width='%s' height='%s'>
+const SVG_TEMPLATE = `
+<svg id="svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" version="1.1" width='8' height='12'>
   <defs>
     <filter id="glow" x="-0.2" width="2" y="-0.1" height="2">
       <feGaussianBlur stdDeviation="0.5" id="feGaussianBlur3794"/>
@@ -22,7 +22,17 @@ class SVG {
   }
 
   dump(h = 100, w = 100) {
-    return this._res;
+    console.log("awww yess");
+    return `
+      <svg id="svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" version="1.1" width=${w} height='${h}'>
+        <defs>
+          <filter id="glow" x="-0.2" width="2" y="-0.1" height="2">
+            <feGaussianBlur stdDeviation="0.5" id="feGaussianBlur3794"/>
+          </filter>
+        </defs>
+        ${this._res}
+      </svg>
+      `;
   }
 
   add_group(nid, options = {}, block) {
