@@ -28,6 +28,7 @@ app.use(
       "http://localhost:3000",
       "http://localhost:8080",
       "http://127.0.0.1:5500",
+	"https://lehre.bpm.in.tum.de",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
@@ -76,7 +77,11 @@ app.use(express.json());
 app.use((req, res, next) => {
   next();
 });
-
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  next();
+});
 const readXML = () => {
   const xmlData = fs.readFileSync(XML_FILE, "utf-8");
   return ensureNamespace(new DOMParser().parseFromString(xmlData, "text/xml"));
@@ -112,7 +117,7 @@ const safeWriteXML = (doc, updateType = 'general') => {
 // Replace the existing writeXML function with our safer version
 const writeXML = safeWriteXML;
 
-app.use(express.static(path.join(__dirname, "public")));
+//app.use(express.static(path.join(__dirname, "public")));
 
 // Enhance the /events endpoint for better error handling and client experience
 app.get("/events", (req, res) => {
@@ -121,10 +126,9 @@ app.get("/events", (req, res) => {
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache",
     Connection: "keep-alive",
-    "Access-Control-Allow-Origin": "*" // Ensure CORS is properly handled
+    "Access-Control-Allow-Origin": "*",
+"X-Accel-Buffering": "no"
   });
-  res.flushHeaders();
-
   // Send initial connection message
   res.write(`id: ${Date.now()}\n`);
   res.write(`event: connected\n`);
@@ -133,6 +137,10 @@ app.get("/events", (req, res) => {
   // Define event handler
   const onUpdate = (data) => {
     const eventId = Date.now();
+
+
+
+	  console.log("*****************************************");
     res.write(`id: ${eventId}\n`);
     res.write(`event: update\n`);
     res.write(`data: ${JSON.stringify(data)}\n\n`);

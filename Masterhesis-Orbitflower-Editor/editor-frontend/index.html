@@ -62,15 +62,21 @@
       }
 
       function setupSSEEventListeners() {
-        const eventSource = new EventSource(serverlocation + "/events");
-        console.log("Listening for real-time updates...");
+        console.error("this is a test");
+	const eventSource = new EventSource(`${serverlocation.replace(/\/$/, '')}/events/`);
+        console.error("Listening for real-time updates...");
 
         eventSource.onopen = () => {
-          console.log("SSE connection established");
+          console.error("SSE connection established");
+	  console.error("[SSE] Connection OPENED", new Date().toISOString());
         };
+	eventSource.addEventListener('error', (e) => {
+  		console.error("[SSE] Error state:", e.eventPhase); 
+  	// 0 = connecting, 2 = closed
+	});
 
         eventSource.addEventListener("update", (event) => {
-          console.log("Update event received:", event.data);
+          console.error("Update event received:", event.data);
           try {
             const updateData = JSON.parse(event.data);
             console.log("Update type:", updateData.type);
@@ -151,7 +157,7 @@
                 skillsFeature.initialize();
 
                 // Set up SSE listeners after initial load
-                setupSSEEventListeners();
+             	setupSSEEventListeners();
               },                                                                 
               error: function(err) {                                             
                 console.error("Failed to load organization model:", err);        
