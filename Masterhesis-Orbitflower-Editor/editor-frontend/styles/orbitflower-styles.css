@@ -244,65 +244,69 @@ text {
   display: block;
 }
 
-/* Form styling */
+/* Form styling - simplified and symmetric */
 .manage-form {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  padding: 15px;
+  gap: 10px;
+  padding: 10px;
 }
 
 .manage-form .form-group {
   display: flex;
   flex-direction: column;
   gap: 5px;
+  margin-bottom: 5px;
+  width: 100%;
 }
 
 .manage-form label {
   font-weight: bold;
+  display: block;
+  margin-bottom: 3px;
 }
 
 .manage-form input, 
-.manage-form select, 
-.manage-form button {
-  padding: 8px;
+.manage-form select {
+  padding: 6px;
   border: 1px solid #ccc;
-  border-radius: 3px;
+  border-radius: 2px;
   font-size: 14px;
+  width: 300px;
 }
 
-.manage-form button[type="submit"] {
-  background-color: #4a86cf;
-  color: white;
-  border: none;
+.manage-form button {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  font-size: 14px;
   cursor: pointer;
-  padding: 8px 15px;
-  font-weight: bold;
-  align-self: flex-start;
+  margin-top: 5px;
 }
+
+
 
 .manage-form button[type="button"] {
   background-color: #f1f1f1;
-  border: 1px solid #ccc;
-  cursor: pointer;
-  align-self: flex-start;
 }
 
-/* Form element groups */
+/* Form element groups - symmetric styling */
 .unit-role-pair, 
 .role-parent-pair, 
 .relation-item {
   display: flex;
   gap: 10px;
   align-items: center;
-  padding: 5px 0;
+  padding: 3px 0;
   margin-bottom: 5px;
+  width: 100%;
 }
 
 .unit-role-pair input, 
 .role-parent-pair input,
 .relation-item input {
   flex: 1;
+  width: 140px;
 }
 
 .remove-btn,
@@ -312,37 +316,30 @@ text {
   cursor: pointer;
   font-size: 16px;
   color: #666;
+  padding: 0 5px;
 }
 
-/* Container styling */
+/* Container styling - consistent across all forms */
 #relations-container,
 #role-parents,
 #unit-role-pairs {
   padding: 5px 0;
   margin-bottom: 10px;
+  width: 100%;
 }
 
 #relations-container h4 {
-  margin-top: 0;
-  margin-bottom: 10px;
-  font-size: 16px;
+  margin: 0 0 5px 0;
+  font-size: 14px;
+  font-weight: bold;
 }
 
-/* Message display */
+/* Message display - consistent */
 #messages-subjects,
 #messages-units,
 #messages-roles,
 #messages-skills {
-  margin-top: 15px;
-  padding: 8px;
-  border-radius: 4px;
-}
-
-.error {
-  color: #c00;
-  background-color: #fff0f0;
-  padding: 8px;
-  border-radius: 4px;
+  margin-top: 10px;
 }
 
 /* Subject editor */
