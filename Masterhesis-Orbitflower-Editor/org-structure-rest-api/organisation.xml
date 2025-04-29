@@ -62,51 +62,6 @@
       <parent>Dekanat Informatik</parent>
       <permissions/>
     </unit>
-    <unit id="mehdi">
-      <permissions/>
-    </unit>
-    <unit id="dwdw">
-      <permissions/>
-    </unit>
-    <unit id="dwd">
-      <permissions/>
-    </unit>
-    <unit id="fee">
-      <permissions/>
-    </unit>
-    <unit id="fefe">
-      <permissions/>
-    </unit>
-    <unit id="dwdwww">
-      <permissions/>
-    </unit>
-    <unit id="dwdwwdw">
-      <permissions/>
-    </unit>
-    <unit id="fefeeee">
-      <permissions/>
-    </unit>
-    <unit id="dwdwwdwww">
-      <permissions/>
-    </unit>
-    <unit id="dwdwdw">
-      <permissions/>
-    </unit>
-    <unit id="fefefefe">
-      <permissions/>
-    </unit>
-    <unit id="fefefefefef">
-      <permissions/>
-    </unit>
-    <unit id="dwdwdwdw">
-      <permissions/>
-    </unit>
-    <unit id="fefeef">
-      <permissions/>
-    </unit>
-    <unit id="fefefe">
-      <permissions/>
-    </unit>
   </units>
   <roles>
     <role id="Regular">
@@ -557,6 +512,9 @@
       <relation unit="Knowledge Engineering" role="Teaching"/>
       <relation unit="Knowledge Engineering" role="Regular"/>
       <relation unit="Knowledge Engineering" role="Assistant"/>
+      <subjectSkills>
+        <skillRef id="Azure"/>
+      </subjectSkills>
     </subject>
     <subject id="Karlheinz Wachauer" uid="wachauk2">
       <relation unit="Knowledge Engineering" role="Regular"/>
@@ -830,10 +788,19 @@
     <subject id="Charlotte Zott" uid="zottc20">
       <relation unit="Data Mining" role="Regular"/>
       <relation unit="Data Mining" role="Staff"/>
+      <subjectSkills>
+        <skillRef id="Python"/>
+        <skillRef id="Machine Learning"/>
+      </subjectSkills>
     </subject>
     <subject id="Erion Çano" uid="erionc99">
       <relation unit="Data Mining" role="Regular"/>
       <relation unit="Data Mining" role="Assistant"/>
+      <subjectSkills>
+        <skillRef id="NLP"/>
+        <skillRef id="Python"/>
+        <skillRef id="Deep Learning"/>
+      </subjectSkills>
     </subject>
   </subjects>
   <skills>
@@ -844,12 +811,233 @@
     </skill>
     <skill id="AWS">
       <relation id="Azure" type="isRelatedTo" score="300"/>
-      <relation id="Azure" type="isRelatedTo" score="300"/>
       <relation id="GoogleCloud" type="isRelatedTo" score="100"/>
       <relation id="Cloud" type="Child"/>
     </skill>
     <skill id="Google Cloud">
       <relation id="Azure" type="RelatedTo"/>
+      <relation id="Cloud" type="Child"/>
+    </skill>
+    <skill id="Cloud">
+      <relation id="Azure" type="Parent"/>
+      <relation id="AWS" type="Parent"/>
+      <relation id="Google Cloud" type="Parent"/>
+      <relation id="IBM Cloud" type="Parent"/>
+      <relation id="Oracle Cloud" type="Parent"/>
+      <relation id="DevOps" type="isRelatedTo" score="200"/>
+    </skill>
+    <skill id=" IBM Cloud">
+      <relation id="Cloud" type="Child"/>
+      <relation id="AWS" type="isRelatedTo" score="150"/>
+    </skill>
+    <skill id="Oracle Cloud">
+      <relation id="Cloud" type="Child"/>
+      <relation id="Database" type="isRelatedTo" score="250"/>
+    </skill>
+    <skill id="Programming Languages">
+      <relation id="Java" type="Parent"/>
+      <relation id="Python" type="Parent"/>
+      <relation id="C#" type="Parent"/>
+      <relation id="JavaScript" type="Parent"/>
+      <relation id="TypeScript" type="Parent"/>
+      <relation id="Go" type="Parent"/>
+      <relation id="Rust" type="Parent"/>
+    </skill>
+    <skill id="Java">
+      <relation id="Programming Languages" type="Child"/>
+      <relation id="Spring" type="isRelatedTo" score="400"/>
+      <relation id="Android" type="isRelatedTo" score="250"/>
+    </skill>
+    <skill id="Python">
+      <relation id="Programming Languages" type="Child"/>
+      <relation id="Machine Learning" type="isRelatedTo" score="350"/>
+      <relation id="Data Science" type="isRelatedTo" score="400"/>
+    </skill>
+    <skill id="C#">
+      <relation id="Programming Languages" type="Child"/>
+      <relation id="ASP.NET" type="isRelatedTo" score="400"/>
+      <relation id="Unity" type="isRelatedTo" score="300"/>
+    </skill>
+    <skill id="JavaScript">
+      <relation id="Programming Languages" type="Child"/>
+      <relation id="Web Development" type="Child"/>
+      <relation id="TypeScript" type="isRelatedTo" score="500"/>
+      <relation id="Node.js" type="isRelatedTo" score="400"/>
+    </skill>
+    <skill id="TypeScript">
+      <relation id="Programming Languages" type="Child"/>
+      <relation id="JavaScript" type="isRelatedTo" score="500"/>
+      <relation id="Angular" type="isRelatedTo" score="350"/>
+    </skill>
+    <skill id="Go">
+      <relation id="Programming Languages" type="Child"/>
+      <relation id="Cloud" type="isRelatedTo" score="250"/>
+      <relation id="Microservices" type="isRelatedTo" score="300"/>
+    </skill>
+    <skill id="Rust">
+      <relation id="Programming Languages" type="Child"/>
+      <relation id="Systems Programming" type="isRelatedTo" score="400"/>
+      <relation id="WebAssembly" type="isRelatedTo" score="300"/>
+    </skill>
+    <skill id="Database">
+      <relation id="SQL" type="Parent"/>
+      <relation id="NoSQL" type="Parent"/>
+    </skill>
+    <skill id="SQL">
+      <relation id="Database" type="Child"/>
+      <relation id="PostgreSQL" type="Parent"/>
+      <relation id="MySQL" type="Parent"/>
+      <relation id="Oracle DB" type="Parent"/>
+      <relation id="SQL Server" type="Parent"/>
+    </skill>
+    <skill id="NoSQL">
+      <relation id="Database" type="Child"/>
+      <relation id="MongoDB" type="Parent"/>
+      <relation id="Cassandra" type="Parent"/>
+      <relation id="Redis" type="Parent"/>
+    </skill>
+    <skill id="PostgreSQL">
+      <relation id="SQL" type="Child"/>
+      <relation id="MySQL" type="isRelatedTo" score="200"/>
+    </skill>
+    <skill id="MySQL">
+      <relation id="SQL" type="Child"/>
+      <relation id="PostgreSQL" type="isRelatedTo" score="200"/>
+    </skill>
+    <skill id="MongoDB">
+      <relation id="NoSQL" type="Child"/>
+      <relation id="Document DB" type="isRelatedTo" score="400"/>
+    </skill>
+    <skill id="Web Development">
+      <relation id="HTML" type="Parent"/>
+      <relation id="CSS" type="Parent"/>
+      <relation id="JavaScript" type="Parent"/>
+      <relation id="React" type="Parent"/>
+      <relation id="Angular" type="Parent"/>
+      <relation id="Vue" type="Parent"/>
+      <relation id="Node.js" type="Parent"/>
+    </skill>
+    <skill id="HTML">
+      <relation id="Web Development" type="Child"/>
+      <relation id="CSS" type="isRelatedTo" score="400"/>
+    </skill>
+    <skill id="CSS">
+      <relation id="Web Development" type="Child"/>
+      <relation id="HTML" type="isRelatedTo" score="400"/>
+      <relation id="SASS" type="isRelatedTo" score="350"/>
+    </skill>
+    <skill id="React">
+      <relation id="Web Development" type="Child"/>
+      <relation id="JavaScript" type="isRelatedTo" score="400"/>
+      <relation id="React Native" type="isRelatedTo" score="350"/>
+    </skill>
+    <skill id="Angular">
+      <relation id="Web Development" type="Child"/>
+      <relation id="TypeScript" type="isRelatedTo" score="400"/>
+    </skill>
+    <skill id="Vue">
+      <relation id="Web Development" type="Child"/>
+      <relation id="JavaScript" type="isRelatedTo" score="350"/>
+    </skill>
+    <skill id="Node.js">
+      <relation id="Web Development" type="Child"/>
+      <relation id="JavaScript" type="isRelatedTo" score="400"/>
+      <relation id="Express" type="isRelatedTo" score="350"/>
+    </skill>
+    <skill id="AI/ML">
+      <relation id="Machine Learning" type="Parent"/>
+      <relation id="Deep Learning" type="Parent"/>
+      <relation id="NLP" type="Parent"/>
+      <relation id="Computer Vision" type="Parent"/>
+      <relation id="TensorFlow" type="Parent"/>
+      <relation id="PyTorch" type="Parent"/>
+      <relation id="Data Science" type="isRelatedTo" score="400"/>
+    </skill>
+    <skill id="Machine Learning">
+      <relation id="AI/ML" type="Child"/>
+      <relation id="Python" type="isRelatedTo" score="350"/>
+      <relation id="Data Science" type="isRelatedTo" score="400"/>
+    </skill>
+    <skill id="Deep Learning">
+      <relation id="AI/ML" type="Child"/>
+      <relation id="Neural Networks" type="isRelatedTo" score="450"/>
+      <relation id="TensorFlow" type="isRelatedTo" score="400"/>
+      <relation id="PyTorch" type="isRelatedTo" score="400"/>
+    </skill>
+    <skill id="NLP">
+      <relation id="AI/ML" type="Child"/>
+      <relation id="Text Processing" type="isRelatedTo" score="350"/>
+      <relation id="BERT" type="isRelatedTo" score="300"/>
+    </skill>
+    <skill id="Computer Vision">
+      <relation id="AI/ML" type="Child"/>
+      <relation id="Image Processing" type="isRelatedTo" score="350"/>
+      <relation id="OpenCV" type="isRelatedTo" score="300"/>
+    </skill>
+    <skill id="TensorFlow">
+      <relation id="AI/ML" type="Child"/>
+      <relation id="Deep Learning" type="isRelatedTo" score="400"/>
+      <relation id="PyTorch" type="isRelatedTo" score="200"/>
+    </skill>
+    <skill id="PyTorch">
+      <relation id="AI/ML" type="Child"/>
+      <relation id="Deep Learning" type="isRelatedTo" score="400"/>
+      <relation id="TensorFlow" type="isRelatedTo" score="200"/>
+    </skill>
+    <skill id="DevOps">
+      <relation id="Docker" type="Parent"/>
+      <relation id="Kubernetes" type="Parent"/>
+      <relation id="CI/CD" type="Parent"/>
+      <relation id="Jenkins" type="Parent"/>
+      <relation id="GitHub Actions" type="Parent"/>
+      <relation id="Cloud" type="isRelatedTo" score="350"/>
+    </skill>
+    <skill id="Docker">
+      <relation id="DevOps" type="Child"/>
+      <relation id="Containerization" type="isRelatedTo" score="450"/>
+      <relation id="Kubernetes" type="isRelatedTo" score="400"/>
+    </skill>
+    <skill id="Kubernetes">
+      <relation id="DevOps" type="Child"/>
+      <relation id="Docker" type="isRelatedTo" score="400"/>
+      <relation id="Container Orchestration" type="isRelatedTo" score="450"/>
+    </skill>
+    <skill id="CI/CD">
+      <relation id="DevOps" type="Child"/>
+      <relation id="Jenkins" type="isRelatedTo" score="350"/>
+      <relation id="GitHub Actions" type="isRelatedTo" score="350"/>
+    </skill>
+    <skill id="Mobile Development">
+      <relation id="Android" type="Parent"/>
+      <relation id="iOS" type="Parent"/>
+      <relation id="React Native" type="Parent"/>
+      <relation id="Flutter" type="Parent"/>
+    </skill>
+    <skill id="Android">
+      <relation id="Mobile Development" type="Child"/>
+      <relation id="Java" type="isRelatedTo" score="350"/>
+      <relation id="Kotlin" type="isRelatedTo" score="400"/>
+    </skill>
+    <skill id="iOS">
+      <relation id="Mobile Development" type="Child"/>
+      <relation id="Swift" type="isRelatedTo" score="400"/>
+      <relation id="Objective-C" type="isRelatedTo" score="250"/>
+    </skill>
+    <skill id="React Native">
+      <relation id="Mobile Development" type="Child"/>
+      <relation id="React" type="isRelatedTo" score="400"/>
+      <relation id="JavaScript" type="isRelatedTo" score="350"/>
+    </skill>
+    <skill id="Flutter">
+      <relation id="Mobile Development" type="Child"/>
+      <relation id="Dart" type="isRelatedTo" score="450"/>
+      <relation id="Cross-platform" type="isRelatedTo" score="400"/>
+    </skill>
+    <skill id="Project Management">
+      <relation id="Agile" type="Parent"/>
+      <relation id="Scrum" type="Parent"/>
+      <relation id="Kanban" type="Parent"/>
+      <relation id="JIRA" type="isRelatedTo" score="300"/>
     </skill>
   </skills>
 </organisation>
