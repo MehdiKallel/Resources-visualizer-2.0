@@ -202,7 +202,7 @@
         
         $('svg').on('click', function (e) {
           var clickedElement = e.target;
-          if ((clickedElement.classList.contains('skill-segment') || true )&&  (expressionBuilderPaused)) {
+          if (clickedElement.classList.contains('skill-segment')&&  expressionBuilderPaused && clickedElement.tagName === 'path') {
             splitGraphContainer(true);
 
             var parentNodeId = clickedElement.parentNode.parentNode.getAttribute('id');
