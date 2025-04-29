@@ -42,7 +42,6 @@ class SkillsFeature {
   initialize() {
     this.addStyleSheet();
     this.saveOriginalSvg();
-    this.saveUserColumn();
     
     try {
       console.log("Initializing skill distribution rings...");
@@ -193,12 +192,12 @@ class SkillsFeature {
     // Updated default colors - more professional, lighter palette
     if (!baseColors) {
       baseColors = [
-        "#60A5FA", // Soft blue
-        "#34D399", // Mint green
-        "#A78BFA", // Lavender
-        "#F87171", // Soft coral
-        "#FBBF24", // Golden yellow
-        "#6EE7B7", // Seafoam
+        "#60A5FA",
+        "#34D399", 
+        "#A78BFA", 
+        "#F87171", 
+        "#FBBF24", 
+        "#6EE7B7", 
       ];
     }
 
@@ -1078,16 +1077,6 @@ class SkillsFeature {
     return matches;
   }
 
-  saveUserColumn() {
-    if (this.isZoomed == false) {
-      console.log("saving current user column");
-      const column = document.querySelector("#users");
-      this.originalSubjectsHTML = column.cloneNode(true);
-      console.log("saving current", column);
-    } else {
-      console.log("not saving current");
-    }
-  }
   
 }
 
