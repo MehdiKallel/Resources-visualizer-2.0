@@ -474,7 +474,7 @@ class OrbitFlower {
           class: n.type,
           onmouseover: "ur_relationstoggle(this)",
           onmouseout: "ur_relationstoggle(this)",
-          onclick: "ur_filtertoggle(this)",
+          // onclick: "ur_filtertoggle(this)",
         },
         () => {
           s.add_circle(x, y, n.radius, n.type);

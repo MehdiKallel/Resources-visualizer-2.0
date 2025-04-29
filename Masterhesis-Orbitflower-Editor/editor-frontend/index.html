@@ -19,7 +19,6 @@
     <script type="text/javascript" src="https://cpee.org/js_libs/underscore.min.js"></script>
     <script type="text/javascript" src="https://cpee.org/js_libs/jquery.caret.min.js"></script>
     <script type="text/javascript" src="https://cpee.org/js_libs/jquery.cookie.js"></script>
-    <script type="text/javascript" src="https://cpee.org/js_libs/plotly.min.js"></script>
     <script type="text/javascript" src="https://cpee.org/js_libs/uidash.js"></script>
     <link   rel="stylesheet"      href="https://cpee.org/js_libs/uidash.css" type="text/css"/>
     <link   rel="stylesheet"      href="https://cpee.org/js_libs/ui.css" type="text/css"/>
@@ -41,6 +40,8 @@
     <script type="text/javascript" src="features-scripts/worker.js"></script>
     <script type="text/javascript" src="form-handlers/formHandler.js"></script>
     <script type="text/javascript" src="orbitflower.js"></script>
+    <script type="text/javascript" src="features-scripts/zooming.js"></script>
+
     <script type="text/javascript" src="helpers/orbitScript.js"></script>
     <link rel="stylesheet" href="helpers/custom.css" type="text/css"/>
     <link rel="stylesheet" href="styles/dropdown.css" type="text/css" />
@@ -108,11 +109,13 @@
               success: function(res) {
                 currentorgmodel = res;
                 viz.show(currentorgmodel);
+
                 
                 if (skillsFeature) {
                   skillsFeature = new SkillsFeature($('svg'), currentorgmodel);
                   skillsFeature.initialize();
                 }
+                
               },
               error: function(err) {
                 console.error("Failed to load updated organization model:", err);
@@ -179,8 +182,8 @@
                 skillsFeature = new SkillsFeature($('svg'), currentorgmodel);           
                 skillsFeature.initialize();
 
-                // Set up SSE listeners after initial load
              	  setupSSEEventListeners();
+                 initializeZooming();
               },                                                                 
               error: function(err) {                                             
                 console.error("Failed to load organization model:", err);        
@@ -191,35 +194,39 @@
 
         
         var relatedText = null;
+
+
+        // detect clicks on container with id detailed skills
+        // and check if the clicked element is a subject
+        
+        
         $('svg').on('click', function (e) {
           var clickedElement = e.target;
-          if (clickedElement.classList.contains('skill-segment') && expressionBuilderPaused) {
+          if ((clickedElement.classList.contains('skill-segment') || true )&&  (expressionBuilderPaused)) {
             splitGraphContainer(true);
 
             var parentNodeId = clickedElement.parentNode.parentNode.getAttribute('id');
             var parentNodeType = clickedElement.parentNode.parentNode.getAttribute('class');
-            var nodeToKeep = clickedElement.parentNode.parentNode;
-            if ( relatedText == null) {
-                relatedText = document.querySelector(`text[id="${parentNodeId}_text"]`).textContent;
-            }
+            // Always get fresh text content
+            var relatedText = document.querySelector(`text[id="${parentNodeId}_text"]`)?.textContent || "";
             const skillId = clickedElement.getAttribute('data-skill-id');
 
             options = {
               container: "detailed-graph-skills",
             };
-
             const workerGraph = new SkillTreeComponent(options);
             workerGraph.reset("#detailed-graph-skills");
-
             workerGraph.show(currentorgmodel, parentNodeType, relatedText, skillId);
-            isolateTargetGraphNode(parentNodeId, "main-svg", "detailed-graph-skills")
-          }
-        });
+            
+            isolateTargetGraphNode(parentNodeId, "svg", "main-svg");
+      }
+    });
 
       });
 
      
     </script>
+
   </head>
   <body is="x-ui-">
     <ui-rest id="main">
