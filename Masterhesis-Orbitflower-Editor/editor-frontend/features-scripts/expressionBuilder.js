@@ -6,40 +6,56 @@ class ExpressionBuilder {
     this.draggedItem = null;
     this.paused = false;
     this.savedExpressions = [];
-    
+
     // Bind methods to ensure correct 'this' context
     this.handleDocumentClick = this.handleDocumentClick.bind(this);
     this.onGraphRendered = this.onGraphRendered.bind(this);
-    
+
     // Set up event listeners
     document.addEventListener("graphRendered", this.onGraphRendered);
     document.addEventListener("click", this.handleDocumentClick);
-    
+
     // Initialize UI
     this.createExpressionBuilderUI();
-    
+
     // Load state from server
     this.loadStateFromServer();
   }
-  
+
   onGraphRendered() {
     console.log("Expression Builder Loaded correctly");
   }
-  
-  handleDocumentClick(event) {
-    if (this.paused) return;
 
-    if (event.target.tagName === "circle") {
+  handleDocumentClick(event) {
+    console.log("Clicked on document", event.target.tagName);
+    if (this.paused) return;
+    if (event.target.tagName === "tspan") {
+      const entityDocId =
+        event.target.parentElement.parentElement.getAttribute("id");
+      const entityType =
+        event.target.parentElement.parentElement.getAttribute("class");
+      const entityId = document.getElementById(
+        `${entityDocId}_text`
+      ).textContent;
+      console.log("yeeeeeess");
+      this.addEntityToExpression(entityId, entityType, event.target);
+    } else if (event.target.tagName === "circle") {
       const entityDocId = event.target.parentElement.getAttribute("id");
       const entityType = event.target.parentElement.getAttribute("class");
-      const entityId = document.getElementById(`${entityDocId}_text`).textContent;
+      const entityId = document.getElementById(
+        `${entityDocId}_text`
+      ).textContent;
 
       this.addEntityToExpression(entityId, entityType, event.target);
     } else if (event.target.tagName === "path") {
       const skillId = event.target.getAttribute("data-skill-id");
-      const entityDocId = event.target.parentElement.parentElement.getAttribute("id");
-      const entityId = document.getElementById(`${entityDocId}_text`).textContent;
-      const entityType = event.target.parentElement.parentElement.getAttribute("class");
+      const entityDocId =
+        event.target.parentElement.parentElement.getAttribute("id");
+      const entityId = document.getElementById(
+        `${entityDocId}_text`
+      ).textContent;
+      const entityType =
+        event.target.parentElement.parentElement.getAttribute("class");
 
       this.addSkillToExpression(skillId, event.target, entityId, entityType);
     }
@@ -51,8 +67,8 @@ class ExpressionBuilder {
       console.error(`Container with ID ${this.containerId} not found`);
       return;
     }
-    
-    container.innerHTML = ''; // Clear existing content
+
+    container.innerHTML = ""; // Clear existing content
     container.style.margin = "0";
     container.style.backgroundColor = "white";
     container.style.padding = "10px";
@@ -102,7 +118,7 @@ class ExpressionBuilder {
     expressionDisplay.style.overflowY = "auto";
     expressionDisplay.style.background = "#f9f9f9";
     expressionDisplay.textContent = "Click on elements to build expression";
-    
+
     expressionDisplay.addEventListener("dragover", (e) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
@@ -112,7 +128,12 @@ class ExpressionBuilder {
       if (!dropIndicator) {
         this.createDropIndicator(expressionDisplay, e.clientX, e.clientY);
       } else {
-        this.updateDropIndicatorPosition(dropIndicator, expressionDisplay, e.clientX, e.clientY);
+        this.updateDropIndicatorPosition(
+          dropIndicator,
+          expressionDisplay,
+          e.clientX,
+          e.clientY
+        );
       }
     });
 
@@ -129,11 +150,15 @@ class ExpressionBuilder {
 
       // Calculate drop position based on mouse position
       const children = Array.from(expressionDisplay.children).filter(
-        child => !child.id || child.id !== "drop-indicator"
+        (child) => !child.id || child.id !== "drop-indicator"
       );
       let targetIndex = children.length;
 
-      const dropPosition = this.getDropPosition(expressionDisplay, e.clientX, e.clientY);
+      const dropPosition = this.getDropPosition(
+        expressionDisplay,
+        e.clientX,
+        e.clientY
+      );
       if (dropPosition.index !== -1) {
         targetIndex = dropPosition.index;
       }
@@ -144,7 +169,8 @@ class ExpressionBuilder {
         dropIndicator.remove();
       }
 
-      if (sourceIndex === targetIndex || sourceIndex === targetIndex - 1) return;
+      if (sourceIndex === targetIndex || sourceIndex === targetIndex - 1)
+        return;
 
       const item = this.currentExpression.splice(sourceIndex, 1)[0];
 
@@ -173,7 +199,9 @@ class ExpressionBuilder {
     const andBtn = this.createOperatorButton("AND", () =>
       this.addOperatorToExpression("AND")
     );
-    const orBtn = this.createOperatorButton("OR", () => this.addOperatorToExpression("OR"));
+    const orBtn = this.createOperatorButton("OR", () =>
+      this.addOperatorToExpression("OR")
+    );
     const notBtn = this.createOperatorButton("NOT", () =>
       this.addOperatorToExpression("NOT")
     );
@@ -183,10 +211,18 @@ class ExpressionBuilder {
     const rightParenBtn = this.createOperatorButton(")", () =>
       this.addOperatorToExpression(")")
     );
-    const deleteBtn = this.createOperatorButton("Delete", () => this.deleteLastCondition());
-    const resetBtn = this.createOperatorButton("Reset", () => this.resetExpression());
-    const searchBtn = this.createOperatorButton("Search", () => this.executeSearch());
-    const undoBtn = this.createOperatorButton("Undo", () => this.undoLastAction());
+    const deleteBtn = this.createOperatorButton("Delete", () =>
+      this.deleteLastCondition()
+    );
+    const resetBtn = this.createOperatorButton("Reset", () =>
+      this.resetExpression()
+    );
+    const searchBtn = this.createOperatorButton("Search", () =>
+      this.executeSearch()
+    );
+    const undoBtn = this.createOperatorButton("Undo", () =>
+      this.undoLastAction()
+    );
 
     buttonsContainer.appendChild(andBtn);
     buttonsContainer.appendChild(orBtn);
@@ -237,11 +273,11 @@ class ExpressionBuilder {
 
     // Make the container draggable using the header as the drag handle.
     this.makeDraggable(container, headerContainer);
-    
+
     // Add CSS for dragging elements and highlight styling if not already added
-    if (!document.getElementById('expression-builder-styles')) {
+    if (!document.getElementById("expression-builder-styles")) {
       const style = document.createElement("style");
-      style.id = 'expression-builder-styles';
+      style.id = "expression-builder-styles";
       style.textContent = `
         .expr-item.dragging, .expr-block.dragging {
           opacity: 0.4;
@@ -254,13 +290,17 @@ class ExpressionBuilder {
           pointer-events: none;
           box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
         }
+        .highlight {
+          background-color: #fffacd;
+        }
       `;
       document.head.appendChild(style);
     }
   }
-  
+
   makeDraggable(dragElement, handleElement) {
-    let offsetX = 0, offsetY = 0;
+    let offsetX = 0,
+      offsetY = 0;
     let isMouseDown = false;
 
     handleElement.addEventListener("mousedown", (e) => {
@@ -269,19 +309,19 @@ class ExpressionBuilder {
       const rect = dragElement.getBoundingClientRect();
       offsetX = e.clientX - rect.left;
       offsetY = e.clientY - rect.top;
-      
+
       const mouseMoveHandler = (e) => {
         if (!isMouseDown) return;
-        dragElement.style.left = (e.clientX - offsetX) + "px";
-        dragElement.style.top = (e.clientY - offsetY) + "px";
+        dragElement.style.left = e.clientX - offsetX + "px";
+        dragElement.style.top = e.clientY - offsetY + "px";
       };
-      
+
       const mouseUpHandler = () => {
         isMouseDown = false;
         document.removeEventListener("mousemove", mouseMoveHandler);
         document.removeEventListener("mouseup", mouseUpHandler);
       };
-      
+
       document.addEventListener("mousemove", mouseMoveHandler);
       document.addEventListener("mouseup", mouseUpHandler);
       e.preventDefault();
@@ -312,7 +352,9 @@ class ExpressionBuilder {
 
     try {
       if (!this.validateExpression(this.currentExpression)) {
-        alert("The expression is invalid. Please check your expression structure.");
+        alert(
+          "The expression is invalid. Please check your expression structure."
+        );
         return;
       }
 
@@ -325,32 +367,36 @@ class ExpressionBuilder {
       this.notifyChange();
     } catch (error) {
       console.error("Error executing search:", error);
-      alert("An error occurred while evaluating the expression. Check the console for details.");
+      alert(
+        "An error occurred while evaluating the expression. Check the console for details."
+      );
     }
   }
 
   infixToPostfix(infix) {
+    // ...existing code...
     const output = [];
     const operatorStack = [];
     const precedence = { NOT: 3, AND: 2, OR: 1 };
 
     // Process each token in the infix expression
     for (const token of infix) {
-      if (token.type === 'andBlock') {
+      if (token.type === "andBlock") {
         // Expand AND block into individual items with implicit AND operators
         token.items.forEach((item, index) => {
           if (index > 0) {
             // Process implicit AND operator between block items
-            const andOperator = { 
-              type: 'operator', 
-              value: 'AND', 
-              displayValue: 'AND' 
+            const andOperator = {
+              type: "operator",
+              value: "AND",
+              displayValue: "AND",
             };
-            
+
             while (
               operatorStack.length > 0 &&
-              operatorStack[operatorStack.length - 1].value !== '(' &&
-              precedence[operatorStack[operatorStack.length - 1].value] >= precedence[andOperator.value]
+              operatorStack[operatorStack.length - 1].value !== "(" &&
+              precedence[operatorStack[operatorStack.length - 1].value] >=
+                precedence[andOperator.value]
             ) {
               output.push(operatorStack.pop());
             }
@@ -359,20 +405,24 @@ class ExpressionBuilder {
           // Add the actual item to output
           output.push(item);
         });
-      } else if (token.value === '(') {
+      } else if (token.value === "(") {
         operatorStack.push(token);
-      } else if (token.value === ')') {
+      } else if (token.value === ")") {
         // Pop until matching '(' is found
-        while (operatorStack.length > 0 && operatorStack[operatorStack.length - 1].value !== '(') {
+        while (
+          operatorStack.length > 0 &&
+          operatorStack[operatorStack.length - 1].value !== "("
+        ) {
           output.push(operatorStack.pop());
         }
         operatorStack.pop(); // Remove the '(' from stack
-      } else if (token.type === 'operator') {
+      } else if (token.type === "operator") {
         // Handle operator precedence
         while (
           operatorStack.length > 0 &&
-          operatorStack[operatorStack.length - 1].value !== '(' &&
-          precedence[operatorStack[operatorStack.length - 1].value] >= precedence[token.value]
+          operatorStack[operatorStack.length - 1].value !== "(" &&
+          precedence[operatorStack[operatorStack.length - 1].value] >=
+            precedence[token.value]
         ) {
           output.push(operatorStack.pop());
         }
@@ -392,6 +442,7 @@ class ExpressionBuilder {
   }
 
   evaluatePostfix(postfix) {
+    // ...existing code...
     const stack = [];
 
     postfix.forEach((token) => {
@@ -492,21 +543,23 @@ class ExpressionBuilder {
 
   addEntityToExpression(entityId, entityType, element) {
     this.saveExpressionState();
-    
+
     const newItem = {
       type: entityType,
       value: entityId,
       element: element,
-      displayValue: `${entityType.toUpperCase()}:${entityId}`
+      displayValue: `${entityType.toUpperCase()}:${entityId}`,
     };
 
     // Try to find the last AND block that's not followed by an operator
     let insertIndex = this.currentExpression.length;
     for (let i = this.currentExpression.length - 1; i >= 0; i--) {
-      if (this.currentExpression[i].type === 'andBlock') {
+      if (this.currentExpression[i].type === "andBlock") {
         // Check if there's an operator after the AND block
-        if (i === this.currentExpression.length - 1 || 
-            this.currentExpression[i + 1].type !== 'operator') {
+        if (
+          i === this.currentExpression.length - 1 ||
+          this.currentExpression[i + 1].type !== "operator"
+        ) {
           insertIndex = i;
           break;
         }
@@ -516,15 +569,20 @@ class ExpressionBuilder {
     if (insertIndex === this.currentExpression.length) {
       // Create new AND block if none found
       this.currentExpression.push({
-        type: 'andBlock',
-        items: [newItem]
+        type: "andBlock",
+        items: [newItem],
       });
     } else {
-      // Add to existing AND block
       this.currentExpression[insertIndex].items.push(newItem);
     }
 
-    element.classList.add("active-filter-element");
+    if (element.classList != "special") {
+      element.classList.add("active-filter-element");
+    } else {
+      const circleElement =
+        element.parentElement.parentElement.querySelector("circle");
+      circleElement.classList.add("active-filter-element");
+    }
     this.updateExpressionDisplay();
   }
 
@@ -537,15 +595,17 @@ class ExpressionBuilder {
       element: element,
       entityId: entityId,
       entityType: entityType,
-      displayValue: `Skill:${skillId} (of ${entityType.toUpperCase()}:${entityId})`
+      displayValue: `Skill:${skillId} (of ${entityType.toUpperCase()}:${entityId})`,
     };
 
     // Same insertion logic as addEntityToExpression
     let insertIndex = this.currentExpression.length;
     for (let i = this.currentExpression.length - 1; i >= 0; i--) {
-      if (this.currentExpression[i].type === 'andBlock') {
-        if (i === this.currentExpression.length - 1 || 
-            this.currentExpression[i + 1].type !== 'operator') {
+      if (this.currentExpression[i].type === "andBlock") {
+        if (
+          i === this.currentExpression.length - 1 ||
+          this.currentExpression[i + 1].type !== "operator"
+        ) {
           insertIndex = i;
           break;
         }
@@ -554,8 +614,8 @@ class ExpressionBuilder {
 
     if (insertIndex === this.currentExpression.length) {
       this.currentExpression.push({
-        type: 'andBlock',
-        items: [newItem]
+        type: "andBlock",
+        items: [newItem],
       });
     } else {
       this.currentExpression[insertIndex].items.push(newItem);
@@ -566,7 +626,9 @@ class ExpressionBuilder {
   }
 
   isOperator(item) {
-    return item?.type === 'operator' && item.value !== '(' && item.value !== ')';
+    return (
+      item?.type === "operator" && item.value !== "(" && item.value !== ")"
+    );
   }
 
   addOperatorToExpression(operator) {
@@ -590,28 +652,28 @@ class ExpressionBuilder {
   deleteLastCondition() {
     if (this.currentExpression.length === 0) return;
     this.saveExpressionState();
-    
+
     const lastItem = this.currentExpression[this.currentExpression.length - 1];
-    if (lastItem.type === 'andBlock') {
-      lastItem.items.forEach(item => {
-        if (item.element) item.element.classList.remove("active-filter-element");
+    if (lastItem.type === "andBlock") {
+      lastItem.items.forEach((item) => {
+        if (item.element)
+          item.element.classList.remove("active-filter-element");
       });
     } else {
-      if (lastItem.element) lastItem.element.classList.remove("active-filter-element");
+      if (lastItem.element)
+        lastItem.element.classList.remove("active-filter-element");
     }
-    
+
     this.currentExpression.pop();
     this.updateExpressionDisplay();
   }
 
   notifyChange() {
-    // Trigger custom event to notify of changes
-    const event = new CustomEvent('expressionBuilder:change', { 
-      detail: { builder: this }
+    const event = new CustomEvent("expressionBuilder:change", {
+      detail: { builder: this },
     });
     document.dispatchEvent(event);
-    
-    // Save state to server when expression changes
+
     this.saveStateToServer();
   }
 
@@ -658,8 +720,11 @@ class ExpressionBuilder {
   }
 
   getBackgroundColor(item) {
-    return item.type === "operator" ? "#d0d0ff" :
-           item.type === "skill" ? "#d0ffd0" : "#ffd0d0";
+    return item.type === "operator"
+      ? "#d0d0ff"
+      : item.type === "skill"
+      ? "#d0ffd0"
+      : "#ffd0d0";
   }
 
   createBlockItem(item, blockIndex, itemIndex) {
@@ -670,11 +735,10 @@ class ExpressionBuilder {
 
     const span = document.createElement("span");
     span.textContent = item.displayValue;
-    span.style.background = item.type === 'skill' ? "#d0ffd0" : "#ffd0d0";
+    span.style.background = item.type === "skill" ? "#d0ffd0" : "#ffd0d0";
     span.style.padding = "2px 4px";
     span.style.borderRadius = "2px";
 
-    // Add delete button for individual item
     const deleteBtn = document.createElement("span");
     deleteBtn.textContent = "×";
     deleteBtn.style.marginLeft = "2px";
@@ -686,16 +750,13 @@ class ExpressionBuilder {
     deleteBtn.onclick = (e) => {
       this.saveExpressionState();
 
-      // Remove element highlight if present
       if (item.element) {
         item.element.classList.remove("active-filter-element");
       }
 
-      // Remove item from block
       const block = this.currentExpression[blockIndex];
       block.items.splice(itemIndex, 1);
 
-      // If block is now empty, remove the block
       if (block.items.length === 0) {
         this.currentExpression.splice(blockIndex, 1);
       }
@@ -721,13 +782,11 @@ class ExpressionBuilder {
     wrapper.setAttribute("draggable", "true");
     wrapper.setAttribute("data-block-index", index);
 
-    // Add opening parenthesis
     const openParen = document.createElement("span");
     openParen.textContent = "(";
     openParen.style.marginRight = "2px";
     wrapper.appendChild(openParen);
 
-    // Add items with separators
     block.items.forEach((item, itemIndex) => {
       if (itemIndex > 0) {
         const andText = document.createElement("span");
@@ -739,13 +798,11 @@ class ExpressionBuilder {
       wrapper.appendChild(itemSpan);
     });
 
-    // Add closing parenthesis
     const closeParen = document.createElement("span");
     closeParen.textContent = ")";
     closeParen.style.marginLeft = "2px";
     wrapper.appendChild(closeParen);
 
-    // Add delete button for entire block
     const deleteBtn = document.createElement("span");
     deleteBtn.textContent = "×";
     deleteBtn.style.marginLeft = "4px";
@@ -754,8 +811,7 @@ class ExpressionBuilder {
     deleteBtn.onclick = (e) => {
       this.saveExpressionState();
 
-      // Remove highlights for all items in the block
-      block.items.forEach(item => {
+      block.items.forEach((item) => {
         if (item.element) {
           item.element.classList.remove("active-filter-element");
         }
@@ -765,7 +821,6 @@ class ExpressionBuilder {
       this.updateExpressionDisplay();
     };
 
-    // Drag and drop handlers
     wrapper.addEventListener("dragstart", (e) => {
       e.dataTransfer.setData("text/plain", index.toString());
       wrapper.classList.add("dragging");
@@ -775,7 +830,6 @@ class ExpressionBuilder {
     wrapper.addEventListener("dragend", (e) => {
       wrapper.classList.remove("dragging");
 
-      // Remove drop indicator if exists
       const dropIndicator = document.getElementById("drop-indicator");
       if (dropIndicator) {
         dropIndicator.remove();
@@ -841,11 +895,11 @@ class ExpressionBuilder {
   updateExpressionDisplay() {
     const display = document.getElementById("currentExpression");
     if (!display) return;
-    
+
     display.innerHTML = "";
 
     this.currentExpression.forEach((item, index) => {
-      if (item.type === 'andBlock') {
+      if (item.type === "andBlock") {
         const blockWrapper = this.createAndBlock(item, index);
         display.appendChild(blockWrapper);
       } else {
@@ -857,7 +911,7 @@ class ExpressionBuilder {
     if (this.currentExpression.length === 0) {
       display.textContent = "Click on elements to build expression";
     }
-    
+
     this.notifyChange();
   }
 
@@ -866,7 +920,7 @@ class ExpressionBuilder {
       alert("No expression to save");
       return;
     }
-    
+
     const expressionName = prompt(
       "Name this expression:",
       "Expression " + new Date().toLocaleTimeString()
@@ -874,32 +928,34 @@ class ExpressionBuilder {
     if (!expressionName) return;
 
     // Create a clean copy of the expression without DOM references
-    const cleanExpression = this.currentExpression.map(item => {
+    const cleanExpression = this.currentExpression.map((item) => {
       const { element, ...rest } = item;
       return rest;
     });
-    
+
     // Add to saved expressions array
     this.savedExpressions.push({
       name: expressionName,
       expression: cleanExpression,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     });
-    
+
     // Update the UI
     this.updateSavedExpressionsList();
-    
+
     // Save to server
     this.saveStateToServer();
   }
 
   updateSavedExpressionsList() {
-    const savedExpressionsList = document.getElementById("savedExpressionsList");
+    const savedExpressionsList = document.getElementById(
+      "savedExpressionsList"
+    );
     if (!savedExpressionsList) return;
-    
+
     // Clear existing list
-    savedExpressionsList.innerHTML = '';
-    
+    savedExpressionsList.innerHTML = "";
+
     // Populate with saved expressions
     this.savedExpressions.forEach((savedExpression, index) => {
       const expressionItem = document.createElement("div");
@@ -922,7 +978,9 @@ class ExpressionBuilder {
             item.element.classList.remove("active-filter-element");
           }
         });
-        this.currentExpression = JSON.parse(JSON.stringify(savedExpression.expression));
+        this.currentExpression = JSON.parse(
+          JSON.stringify(savedExpression.expression)
+        );
         this.updateExpressionDisplay();
       };
 
@@ -944,7 +1002,7 @@ class ExpressionBuilder {
       expressionItem.appendChild(expressionText);
       expressionItem.appendChild(loadButton);
       expressionItem.appendChild(deleteButton);
-      
+
       savedExpressionsList.appendChild(expressionItem);
     });
   }
@@ -988,7 +1046,7 @@ class ExpressionBuilder {
 
   getDropPosition(container, clientX, clientY) {
     const elements = Array.from(container.children).filter(
-      child => !child.id || child.id !== "drop-indicator"
+      (child) => !child.id || child.id !== "drop-indicator"
     );
 
     if (elements.length === 0) {
@@ -1008,10 +1066,10 @@ class ExpressionBuilder {
     }
 
     // If we get here, position at the end
-    return { 
-      index: elements.length, 
-      element: elements[elements.length - 1], 
-      before: false 
+    return {
+      index: elements.length,
+      element: elements[elements.length - 1],
+      before: false,
     };
   }
 
@@ -1093,16 +1151,20 @@ class ExpressionBuilder {
     return true;
   }
   
+  isPaused() {
+    return this.paused;
+  }
+  
   // State management methods
   getState() {
     return {
-      currentExpression: this.currentExpression.map(item => {
+      currentExpression: this.currentExpression.map((item) => {
         // Create a deep copy without element references
         const copy = JSON.parse(JSON.stringify(item));
         if (copy.element) delete copy.element;
         if (copy.items) {
-          copy.items = copy.items.map(subItem => {
-            const subCopy = {...subItem};
+          copy.items = copy.items.map((subItem) => {
+            const subCopy = { ...subItem };
             if (subCopy.element) delete subCopy.element;
             return subCopy;
           });
@@ -1111,148 +1173,148 @@ class ExpressionBuilder {
       }),
       expressionHistory: this.expressionHistory,
       paused: this.paused,
-      savedExpressions: this.savedExpressions
+      savedExpressions: this.savedExpressions,
     };
   }
-  
+
   setState(state) {
     if (state && state.currentExpression) {
       // First, clear any highlighting from current expression
-      this.currentExpression.forEach(item => {
+      this.currentExpression.forEach((item) => {
         if (item.element) {
           item.element.classList.remove("active-filter-element");
         }
         if (item.items) {
-          item.items.forEach(subItem => {
+          item.items.forEach((subItem) => {
             if (subItem.element) {
               subItem.element.classList.remove("active-filter-element");
             }
           });
         }
       });
-      
+
       this.currentExpression = state.currentExpression;
-      if (state.expressionHistory) this.expressionHistory = state.expressionHistory;
+      if (state.expressionHistory)
+        this.expressionHistory = state.expressionHistory;
       if (state.paused !== undefined) this.paused = state.paused;
-      if (state.savedExpressions) this.savedExpressions = state.savedExpressions;
-      
+      if (state.savedExpressions)
+        this.savedExpressions = state.savedExpressions;
+
       this.updateExpressionDisplay();
       this.updateSavedExpressionsList();
     }
   }
-  
+
   // Server persistence methods
   getSerializableState() {
     return {
-      currentExpression: this.currentExpression.map(item => {
+      currentExpression: this.currentExpression.map((item) => {
         // Create a clean copy without DOM references
-        const copy = {...item};
+        const copy = { ...item };
         if (copy.element) delete copy.element;
-        
+
         // Handle AND blocks with nested items
-        if (copy.type === 'andBlock' && copy.items) {
-          copy.items = copy.items.map(subItem => {
-            const subCopy = {...subItem};
+        if (copy.type === "andBlock" && copy.items) {
+          copy.items = copy.items.map((subItem) => {
+            const subCopy = { ...subItem };
             if (subCopy.element) delete subCopy.element;
             return subCopy;
           });
         }
         return copy;
       }),
-      expressionHistory: this.expressionHistory.map(historyItem => 
-        Array.isArray(historyItem) ? historyItem.map(item => {
-          const copy = {...item};
-          if (copy.element) delete copy.element;
-          
-          if (copy.type === 'andBlock' && copy.items) {
-            copy.items = copy.items.map(subItem => {
-              const subCopy = {...subItem};
-              if (subCopy.element) delete subCopy.element;
-              return subCopy;
-            });
-          }
-          return copy;
-        }) : []
+      expressionHistory: this.expressionHistory.map((historyItem) =>
+        Array.isArray(historyItem)
+          ? historyItem.map((item) => {
+              const copy = { ...item };
+              if (copy.element) delete copy.element;
+
+              if (copy.type === "andBlock" && copy.items) {
+                copy.items = copy.items.map((subItem) => {
+                  const subCopy = { ...subItem };
+                  if (subCopy.element) delete subCopy.element;
+                  return subCopy;
+                });
+              }
+              return copy;
+            })
+          : []
       ),
       paused: this.paused,
-      savedExpressions: this.savedExpressions
+      savedExpressions: this.savedExpressions,
     };
   }
-  
+
   saveStateToServer() {
     try {
       const stateToSave = this.getSerializableState();
-      
-      fetch('http://localhost:3000/expression-state', {
-        method: 'POST',
+
+      fetch("http://localhost:3000/expression-state", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(stateToSave),
-        credentials: 'include' // Important: send cookies for session identification
-      })
-      .catch(error => console.error('Error saving expression state to server:', error));
+        credentials: "include", // Important: send cookies for session identification
+      }).catch((error) =>
+        console.error("Error saving expression state to server:", error)
+      );
     } catch (error) {
-      console.error('Error serializing expression state:', error);
+      console.error("Error serializing expression state:", error);
     }
   }
-  
+
   loadStateFromServer() {
-    fetch('http://localhost:3000/expression-state', {
-      method: 'GET',
-      credentials: 'include' // Important: send cookies for session identification
+    fetch("http://localhost:3000/expression-state", {
+      method: "GET",
+      credentials: "include", // Important: send cookies for session identification
     })
-    .then(response => {
-      if (response.ok) {
-        return response.json();
-      }
-      throw new Error('Failed to load state from server');
-    })
-    .then(state => {
-      if (state && Object.keys(state).length > 0) {
-        this.restoreFromSerializedState(state);
-      }
-    })
-    .catch(error => console.error('Error loading expression state from server:', error));
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        }
+        throw new Error("Failed to load state from server");
+      })
+      .then((state) => {
+        if (state && Object.keys(state).length > 0) {
+          this.restoreFromSerializedState(state);
+        }
+      })
+      .catch((error) =>
+        console.error("Error loading expression state from server:", error)
+      );
   }
-  
+
   restoreFromSerializedState(state) {
     if (!state) return;
-    
+
     if (state.currentExpression) {
       this.currentExpression = state.currentExpression;
     }
-    
+
     if (state.expressionHistory) {
       this.expressionHistory = state.expressionHistory;
     }
-    
+
     if (state.paused !== undefined) {
       this.paused = state.paused;
       window.expressionBuilderPaused = this.paused;
     }
-    
+
     if (state.savedExpressions) {
       this.savedExpressions = state.savedExpressions;
       this.updateSavedExpressionsList();
     }
-    
+
     // Update the UI to reflect the loaded state
     this.updateExpressionDisplay();
-    
+
     // Update pause button if it exists
-    const pauseResumeBtn = document.querySelector(`#${this.containerId} button`);
+    const pauseResumeBtn = document.querySelector(
+      `#${this.containerId} button`
+    );
     if (pauseResumeBtn) {
       this.updatePauseButtonState(pauseResumeBtn);
     }
   }
 }
-
-// Initialize an instance of ExpressionBuilder when the document loads
-document.addEventListener("DOMContentLoaded", function() {
-  // This line can be replaced with code that uses the class
-  // For example: window.expressionBuilder = new ExpressionBuilder("expressionBuilder");
-});
-
-// For backwards compatibility
-window.expressionBuilderPaused = false;

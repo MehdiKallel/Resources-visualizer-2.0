@@ -99,6 +99,11 @@ const _graphBackup = {};
 
 function splitGraphContainer(doSplit = true) {
   const container = document.getElementById('graph');
+  if (!container) {
+    console.error('Graph container not found. Cannot split or restore.');
+    return;
+  }
+  
   if (doSplit) {
     if (_graphBackup.isSplit) return;
     _graphBackup.isSplit = true;

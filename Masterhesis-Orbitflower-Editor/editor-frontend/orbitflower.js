@@ -54,6 +54,65 @@ class OrbitFlower {
     console.log("Rendering from JSON model", jsonModel);
     this.fetchAndRender();
   }
+  addCenteredContainer(svgWidth, svgHeight) {
+    const ns = "http://www.w3.org/2000/svg";
+    const container = document.createElementNS(ns, "g");
+    container.setAttribute("id", "centered-container");
+    container.setAttribute("transform", `translate(${svgWidth/2}, ${svgHeight/2})`);
+    container.style.display = "none";
+  
+    // Background rectangle
+    const rect = document.createElementNS(ns, "rect");
+    rect.setAttribute("width", "600");
+    rect.setAttribute("height", "400");
+    rect.setAttribute("x", "-300"); // Center horizontally
+    rect.setAttribute("y", "-200"); // Center vertically
+    rect.setAttribute("rx", "10");
+    rect.setAttribute("fill", "white");
+    rect.setAttribute("stroke", "#666");
+    rect.setAttribute("stroke-width", "2");
+    rect.setAttribute("filter", "url(#drop-shadow)");
+  
+    // Close button
+    const closeBtn = document.createElementNS(ns, "text");
+    closeBtn.setAttribute("x", "280");
+    closeBtn.setAttribute("y", "-180");
+    closeBtn.setAttribute("class", "close-button");
+    closeBtn.textContent = "×";
+    closeBtn.style.cursor = "pointer";
+    closeBtn.addEventListener("click", () => this.hideCenteredContainer());
+  
+    // Add shadow filter definition
+    const defs = document.createElementNS(ns, "defs");
+    const filter = `<filter id="drop-shadow" height="130%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/> 
+      <feOffset dx="2" dy="2" result="offsetblur"/>
+      <feMerge> 
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/> 
+      </feMerge>
+    </filter>`;
+    defs.innerHTML = filter;
+  
+    container.appendChild(defs);
+    container.appendChild(rect);
+    container.appendChild(closeBtn);
+    
+    // Add to main SVG
+    const mainSVG = this.svgElement[0];
+    mainSVG.appendChild(container);
+  }
+  
+  showCenteredContainer() {
+    const container = this.svgElement.find("#centered-container");
+    container.style.display = "inline";
+  }
+  
+  hideCenteredContainer() {
+    const container = this.svgElement.find("#centered-container");
+    container.style.display = "none";
+    container.innerHTML = ""; // Clear previous content
+  }
 
   fetchAndRender() {
     console.log("Fetching organisation model from server...");
@@ -539,32 +598,15 @@ class OrbitFlower {
         viewBox: `0 0 ${maxwidth} ${maxheight}`,
         preserveAspectRatio: "xMidYMid meet",
       });
-
+      
       // Insert the content
       graphSvg.html(svgContent);
       // Add centered container directly to the SVG
-      const $centered = $(document.createElementNS("http://www.w3.org/2000/svg", "svg"))
-      .attr({
-        id: "centered-container",
-        x: maxwidth/2 - 100,  // Center horizontally based on viewBox
-        y: maxheight/2 - 100, // Center vertically based on viewBox
-        width: 200,
-        height: 200,
-        viewBox: "0 0 200 200"
-      })
-      .css({
-        "pointer-events": "none",
-        "overflow": "visible"
-      })
-      .appendTo(graphSvg);
+      
 
-    // Add visual elements
-    $centered.html(`
-      <rect width="100%" height="100%" fill="rgba(200,200,200,0.1)"
-            stroke="#999" stroke-width="2" stroke-dasharray="5 5"/>
-      <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
-            fill="#666" font-size="14">SVG Container</text>
-    `);
+   
+
+      
 
     console.log("Added centered container at", maxwidth/2, maxheight/2);
     } else {
@@ -578,7 +620,7 @@ class OrbitFlower {
 
     const renderedEvent = new Event("graphRendered");
     document.dispatchEvent(renderedEvent);
-
+    this.addCenteredContainer(maxwidth, maxheight);
     return { graphSvg, usersSvg };
   }
 }
@@ -596,6 +638,7 @@ async function renderGraph() {
     console.error("Failed to update graph:", error);
   }
 }
+
 
 function documentReady(fn) {
   if (

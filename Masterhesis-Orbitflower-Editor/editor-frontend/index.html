@@ -40,6 +40,9 @@
       <link rel="stylesheet" href="helpers/custom.css" type="text/css"/>
       <link rel="stylesheet" href="styles/dropdown.css" type="text/css" />
       <link rel="stylesheet" href="styles/orbitflower-styles.css" type="text/css" />
+      
+      
+      
       <script type="text/javascript">
          
      
@@ -269,8 +272,6 @@
              console.log("niceee you clicked a skill item", this);
              $('.skill-item').removeClass('selected'); // remove class from all
              $(this).addClass('selected');
-
-             console.log("Selected skill item:", $(this).data('skill-id'));
            });
 
 
@@ -291,6 +292,9 @@
          
           // append another svg to id svg and make it central (filled with black)
           
+
+
+       
            $('svg').on('click', '.skill-segment', function(e) {
              const skillSegment = $(this);
              const parentNode = skillSegment.closest('[id]');
@@ -377,18 +381,17 @@
              return Array.from(skills);
            }
          
-           // detect clicks on container with id detailed skills
-           // and check if the clicked element is a subject
          
            $('#details-skills').on('click', function (e) {
-             if (e.target.classList.contains("skill-item")  && expressionBuilderPaused) {
+             if (e.target.classList.contains("skill-item")  && expressionBuilder.isPaused()) {
                var targetSkilled = e.target.getAttribute('data-skill-id');
                options = {
                  container: "detailed-graph-skills",
                };
                const workerGraph = new SkillTreeComponent(options);
                workerGraph.reset("#detailed-graph-skills");
-               console.log("relatedText", relatedText);
+               console.log("nice you clicked on the skill details section");
+               console.log("showing graph worker with the following parameters", currentorgmodel, parentNodeType, relatedText , targetSkilled);
                workerGraph.show(currentorgmodel, parentNodeType, relatedText , targetSkilled);
              }
            });
@@ -399,7 +402,9 @@
            */
            $('svg').on('click', function (e) {
              var clickedElement = e.target;
-             if (clickedElement.classList.contains('skill-segment')&&  expressionBuilderPaused && clickedElement.tagName === 'path') {
+             console.log(" you have clicked on a interesting element")
+             console.log("current state of expression builder", expressionBuilderPaused);
+             if (clickedElement.classList.contains('skill-segment')&&  expressionBuilder.isPaused() && clickedElement.tagName === 'path') {
                splitGraphContainer(true);
                var parentNodeId = clickedElement.parentNode.parentNode.getAttribute('id');
                parentNodeType = clickedElement.parentNode.parentNode.getAttribute('class');
@@ -445,6 +450,7 @@
             <ui-area data-belongs-to-tab="graph" style="border-right: 1px solid var(--x-ui-border-color);">
                <div class="x-ui-layout tab-content" id="graph" style="height: 100%; min-height: 500px;">
                   <svg style="width: 100%; height: 100%;"></svg>
+                  <!-- Add the centered container for the skill graph -->
                </div>
             </ui-area>
             <ui-resizehandle data-belongs-to-tab="graph" data-label="drag to resize"></ui-resizehandle>

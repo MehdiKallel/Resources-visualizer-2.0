@@ -30,7 +30,7 @@ class SkillTreeComponent {
   constructor(options) {
     this.tooltip = document.createElement("div");
     this.tooltip.id = "tooltip";
-    
+
     if (!document.getElementById("skill-tree-component-styles")) {
       const style = document.createElement("style");
       style.id = "skill-tree-component-styles";
@@ -95,13 +95,24 @@ class SkillTreeComponent {
       `;
       document.head.appendChild(style);
     }
+    console.log("receiving the following options", options);
 
-    this.container = document.getElementById(`${options.container}`);
+    // Properly handle container - support both ID string and element
+    if (typeof options.container === "string") {
+      this.container = document.getElementById(options.container);
+      if (!this.container) {
+        console.error("Container element not found:", options.container);
+        this.container = document.querySelector(options.container);
+      }
+    } else {
+      this.container = options.container;
+    }
+
     this.filterType = options.filterType;
     this.filterId = options.filterId;
     this.skillId = options.skillId;
     this.xmlData = options.xmlData;
-
+    this.layoutType = options.layoutType || "hierarchical";
 
     this.skillTree = null;
     this.relationships = [];
@@ -135,7 +146,6 @@ class SkillTreeComponent {
     this.el.appendChild(this.particleCanvas);
     this.particleCtx = this.particleCanvas.getContext("2d");
 
-
     this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     this.svg.setAttribute("width", "100%");
     this.svg.setAttribute("height", "100%");
@@ -152,19 +162,18 @@ class SkillTreeComponent {
     if (this.container) {
       const containerWidth = this.container.clientWidth;
       const containerHeight = this.container.clientHeight;
-      
+
       this.el.style.width = `${containerWidth}px`;
       this.el.style.height = `${containerHeight}px`;
-      
+
       this.particleCanvas.width = containerWidth;
       this.particleCanvas.height = containerHeight;
-      
-      this.svg.setAttribute("viewBox", `0 0 ${containerWidth} ${containerHeight}`);
 
-      this.renderTree();
-
-      setTimeout(() => this.centerSVG(), 0);
-      
+      // Update SVG viewBox to fit container
+      this.svg.setAttribute(
+        "viewBox",
+        `0 0 ${containerWidth} ${containerHeight}`
+      );
     }
   }
 
@@ -173,11 +182,17 @@ class SkillTreeComponent {
     this.filterType = parentNodeType;
     this.filterId = relatedText;
     this.skillId = skillId;
-    
+
     // Determine if we should render the full graph
     this.renderFullGraph = Boolean(this.xmlData) && !this.skillId;
 
-    console.log("working showing with the following params", this.xmlData, this.filterType, this.filterId, this.skillId);
+    console.log(
+      "working showing with the following params",
+      this.xmlData,
+      this.filterType,
+      this.filterId,
+      this.skillId
+    );
     this.svgContent = document.createElementNS(
       "http://www.w3.org/2000/svg",
       "g"
@@ -185,19 +200,19 @@ class SkillTreeComponent {
     this.svg.appendChild(this.svgContent);
 
     this.el.appendChild(this.tooltip);
-    
+
     this.tooltip.style.position = "absolute";
     this.tooltip.style.zIndex = "1000";
-    this.tooltip.style.pointerEvents = "none"; 
+    this.tooltip.style.pointerEvents = "none";
 
     this.setupNavigation();
     this.parseXML();
-    
+
     // Only filter the tree by skill if we're not rendering the full graph
     if (!this.renderFullGraph && this.skillId) {
       this.filterTreeBySkill();
     }
-    
+
     this.computeLayout();
 
     this.render();
@@ -208,7 +223,7 @@ class SkillTreeComponent {
     this.isFirstRender = true;
 
     if (window.ResizeObserver) {
-      this.resizeObserver = new ResizeObserver(entries => {
+      this.resizeObserver = new ResizeObserver((entries) => {
         for (let entry of entries) {
           this.handleResize();
         }
@@ -216,7 +231,6 @@ class SkillTreeComponent {
       this.resizeObserver.observe(this.container);
     }
 
-    
     document.addEventListener("click", (event) => {
       if (this.wasDragging) {
         this.wasDragging = false;
@@ -234,11 +248,19 @@ class SkillTreeComponent {
   }
 
   reset(container) {
-    document.querySelector(`${container}`).innerHTML = ""; 
-    ;
-    console.error("reset called successfully");
+    if (typeof container === "string") {
+      const containerElem = document.querySelector(container);
+      if (containerElem) {
+        containerElem.innerHTML = "";
+        console.log("Container cleared:", container);
+      } else {
+        console.error("Container not found for reset:", container);
+      }
+    } else if (container && container.innerHTML !== undefined) {
+      container.innerHTML = "";
+    }
+    console.log("Reset called successfully");
   }
-
 
   getSkillColor(value) {
     if (this.currentSkillId) {
@@ -275,8 +297,6 @@ class SkillTreeComponent {
     };
     return colors[type] || "rgba(33, 150, 243, 0.4)"; // Default blue
   }
-
-
 
   parseXML() {
     const skills = {};
@@ -329,7 +349,7 @@ class SkillTreeComponent {
     for (let id in skills) {
       if (!childSet.has(id)) roots.push(skills[id]);
     }
-    
+
     if (roots.length === 1) {
       this.skillTree = roots[0];
     } else {
@@ -346,7 +366,7 @@ class SkillTreeComponent {
     for (let i = 0; i < subjectElements.length; i++) {
       const subj = subjectElements[i];
       let match = false;
-      
+
       // If we're rendering the full graph, include all subjects
       if (this.renderFullGraph) {
         match = true;
@@ -365,7 +385,7 @@ class SkillTreeComponent {
           }
         }
       }
-      
+
       if (match) {
         const subjectSkills = subj.getElementsByTagName("subjectSkills");
         for (let k = 0; k < subjectSkills.length; k++) {
@@ -396,7 +416,6 @@ class SkillTreeComponent {
         graph[id] = new Set();
       }
 
-    
       if (id != this.skillId) continue;
       const relElements = elem.getElementsByTagName("relation");
       for (let j = 0; j < relElements.length; j++) {
@@ -409,7 +428,6 @@ class SkillTreeComponent {
           graph[targetId].add(id);
         }
       }
-      
     }
 
     const visited = new Set();
@@ -465,12 +483,9 @@ class SkillTreeComponent {
     layout(this.skillTree, 0);
   }
 
-  // New radial layout implementation
   computeRadialLayout() {
-    // First, count nodes at each level to calculate proper spacing
     const levelCounts = {};
 
-    // Helper function to traverse tree and count nodes at each level
     const countNodesAtLevels = (node, level = 0) => {
       levelCounts[level] = (levelCounts[level] || 0) + 1;
       if (node.children) {
@@ -480,24 +495,22 @@ class SkillTreeComponent {
 
     countNodesAtLevels(this.skillTree);
 
-    // Calculate center position - we'll use this for the root node
-    // Base on SVG dimensions
     const svgRect = this.svg.getBoundingClientRect();
     const centerX = svgRect.width / 2;
     const centerY = svgRect.height / 2;
 
-    // Radius for each level of the tree
     const baseRadius = Math.min(svgRect.width, svgRect.height) * 0.15;
 
-    // Position nodes in a radial layout
-    const positionNodesRadially = (node, level = 0, angle = 0, arc = 2 * Math.PI) => {
-
+    const positionNodesRadially = (
+      node,
+      level = 0,
+      angle = 0,
+      arc = 2 * Math.PI
+    ) => {
       if (level === 0) {
-        // Root node at center
         node.x = centerX;
         node.y = centerY;
       } else {
-        // Calculate position based on level, angle, and parent position
         const radius = baseRadius * (level * 1.8 + 1);
         node.x = centerX + radius * Math.cos(angle);
         node.y = centerY + radius * Math.sin(angle);
@@ -519,8 +532,6 @@ class SkillTreeComponent {
     positionNodesRadially(this.skillTree);
   }
 
-  // --- Rendering ---
-
   renderTree() {
     while (this.svgContent.firstChild) {
       this.svgContent.removeChild(this.svgContent.firstChild);
@@ -532,7 +543,6 @@ class SkillTreeComponent {
       this.particleCanvas.height
     );
 
-    // Collect nodes via a simple tree traversal.
     const nodes = [];
     function traverse(node) {
       nodes.push(node);
@@ -540,7 +550,6 @@ class SkillTreeComponent {
     }
     traverse(this.skillTree);
 
-    // Set parent pointers.
     function setParents(node, parent) {
       node.parent = parent;
       if (node.children)
@@ -548,20 +557,15 @@ class SkillTreeComponent {
     }
     setParents(this.skillTree, null);
 
-    // Draw nodes with enhanced styling and add click handlers
     nodes.forEach((node) => {
       const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
       group.setAttribute("class", "node");
       group.setAttribute("transform", `translate(${node.x}, ${node.y})`);
 
-      // Add data attributes for entity type and skill ID
       group.setAttribute("data-skill-id", node.id || "");
       group.setAttribute("data-entity-type", this.filterType || "");
 
-      // Add click handler for nodes
       group.addEventListener("click", (event) => {
-        // Prevent event bubbling
-
         console.log("Node clicked:", {
           id: node.id,
           name: node.name,
@@ -579,10 +583,12 @@ class SkillTreeComponent {
       const baseRadius = 15;
       const count = this.skillEmployeeMap.get(node.id) || 0;
       const maxRadius = 45;
-      const radius = count === 0 ? baseRadius : 
-        baseRadius + (count / this.maxEmployeeCount) * (maxRadius - baseRadius);
+      const radius =
+        count === 0
+          ? baseRadius
+          : baseRadius +
+            (count / this.maxEmployeeCount) * (maxRadius - baseRadius);
 
-      // Store current node ID for color lookup
       this.currentSkillId = node.id;
       const color = node.id
         ? getSkillIdColor(node.id)
@@ -594,7 +600,6 @@ class SkillTreeComponent {
       circle.setAttribute("stroke-width", "1.5");
       group.appendChild(circle);
 
-      // Add count text inside the node instead of outside
       if (count > 0) {
         const countText = document.createElementNS(
           "http://www.w3.org/2000/svg",
@@ -610,7 +615,6 @@ class SkillTreeComponent {
         group.appendChild(countText);
       }
 
-      // Node name only - no employee count outside
       const text = document.createElementNS(
         "http://www.w3.org/2000/svg",
         "text"
@@ -668,21 +672,20 @@ class SkillTreeComponent {
 
       const dx = end.x - start.x;
       const dy = end.y - start.y;
-      const nx = -dy; // Perpendicular vector
+      const nx = -dy;
       const ny = dx;
       const normFactor = Math.sqrt(nx * nx + ny * ny) || 1;
 
       const controlX = midX + (nx / normFactor) * distance * offsetRatio;
       const controlY = midY + (ny / normFactor) * distance * offsetRatio;
 
-      // Create invisible but wider clickable path
       const clickablePath = document.createElementNS(
         "http://www.w3.org/2000/svg",
         "path"
       );
       const d = `M ${start.x} ${start.y} Q ${controlX} ${controlY}, ${end.x} ${end.y}`;
       clickablePath.setAttribute("d", d);
-      clickablePath.setAttribute("stroke-width", "10"); // Much wider for easier clicking
+      clickablePath.setAttribute("stroke-width", "10");
       clickablePath.setAttribute("stroke", "transparent");
       clickablePath.setAttribute("fill", "none");
       clickablePath.setAttribute("data-relation-from", rel.from);
@@ -691,11 +694,9 @@ class SkillTreeComponent {
       clickablePath.setAttribute("data-relation-score", rel.score);
       clickablePath.classList.add("clickable-relation");
 
-      // Add hover effect styles
       clickablePath.style.cursor = "pointer";
       clickablePath.style.transition = "stroke-opacity 0.3s ease";
 
-      // Add hover events to show relationship
       clickablePath.addEventListener("mouseover", (event) => {
         clickablePath.setAttribute(
           "stroke",
@@ -703,7 +704,6 @@ class SkillTreeComponent {
         );
         clickablePath.setAttribute("stroke-opacity", "0.4");
 
-        // Show tooltip with relationship details
         this.tooltip.innerHTML = `
           <div class="tooltip-title">Relationship</div>
           <div class="tooltip-content">
@@ -715,10 +715,11 @@ class SkillTreeComponent {
         `;
 
         this.tooltip.style.display = "block";
-        
-        // Fix positioning calculation - use mouse coordinates instead of path bounds
+
         const containerRect = this.el.getBoundingClientRect();
-        this.tooltip.style.left = `${event.clientX - containerRect.left + 10}px`;
+        this.tooltip.style.left = `${
+          event.clientX - containerRect.left + 10
+        }px`;
         this.tooltip.style.top = `${event.clientY - containerRect.top - 40}px`;
       });
 
@@ -727,9 +728,7 @@ class SkillTreeComponent {
         this.tooltip.style.display = "none";
       });
 
-      // Add click handler for the path
       clickablePath.addEventListener("click", (event) => {
-
         console.log("Relationship clicked:", {
           from: rel.from,
           to: rel.to,
@@ -737,7 +736,6 @@ class SkillTreeComponent {
           score: rel.score,
         });
 
-        // Temporary visual indication that the relationship was clicked
         clickablePath.setAttribute(
           "stroke",
           this.getRelationshipColor(rel.type)
@@ -745,34 +743,29 @@ class SkillTreeComponent {
         clickablePath.setAttribute("stroke-opacity", "0.8");
         clickablePath.setAttribute("stroke-width", "10");
 
-        // Reset after animation
         setTimeout(() => {
           clickablePath.setAttribute("stroke-opacity", "0");
           clickablePath.setAttribute("stroke-width", "1");
         }, 500);
       });
 
-      // Add the clickable path to the SVG
       this.svgContent.appendChild(clickablePath);
 
-      // Now add the regular path for appearance
       const path = document.createElementNS(
         "http://www.w3.org/2000/svg",
         "path"
       );
       path.setAttribute("d", d);
-      path.setAttribute("stroke", "transparent"); // Make completely invisible
+      path.setAttribute("stroke", "transparent");
       path.setAttribute("stroke-width", "0");
       path.setAttribute("fill", "none");
       path.classList.add("relationship-line");
       this.svgContent.appendChild(path);
     });
 
-    // Apply pan/zoom transform
     this.applyTransform();
   }
 
-  // Apply current transform.
   applyTransform() {
     this.svgContent.setAttribute(
       "transform",
@@ -792,7 +785,6 @@ class SkillTreeComponent {
     let minY = Infinity,
       maxY = -Infinity;
 
-    // Collect all nodes for bounding box calculation
     const nodes = [];
     const traverseForBounds = (node) => {
       if (node) {
@@ -810,38 +802,30 @@ class SkillTreeComponent {
 
     traverseForBounds(this.skillTree);
 
-    // Add padding
     const padding = 100;
     minX -= padding;
     maxX += padding;
     minY -= padding;
     maxY += padding;
 
-    // Calculate required scale to fit entire graph
     const graphWidth = maxX - minX;
     const graphHeight = maxY - minY;
     const scaleX = svgWidth / graphWidth;
     const scaleY = svgHeight / graphHeight;
 
-    // Use the smaller scale to ensure the entire graph fits
-    const fitScale = Math.min(scaleX, scaleY, 1); // Cap at 1 to prevent excessive zooming out
+    const fitScale = Math.min(scaleX, scaleY, 1);
 
-    // Calculate center point of the graph
     const centerX = (minX + maxX) / 2;
     const centerY = (minY + maxY) / 2;
 
-    // Set transform to center the graph and apply the scale
     this.transform.scale = fitScale;
     this.transform.x = svgWidth / 2 - centerX * fitScale;
     this.transform.y = svgHeight / 2 - centerY * fitScale;
 
     this.applyTransform();
-
   }
 
-  // Re-render with improved centering
   render() {
-    // Check if container exists and is a DOM element
     if (!this.container) {
       console.error("Container is undefined");
       return;
@@ -849,7 +833,6 @@ class SkillTreeComponent {
 
     if (typeof this.container.appendChild !== "function") {
       console.error("Container is not a valid DOM element:", this.container);
-      // Try to fix by getting element by ID or selector if it's a string
       if (typeof this.container === "string") {
         this.container =
           document.querySelector(this.container) ||
@@ -862,12 +845,12 @@ class SkillTreeComponent {
           return;
         }
       } else {
-        return; // Cannot proceed without valid container
+        return;
       }
     }
 
     this.particleCanvas.width = this.container.clientWidth || 300;
-    this.particleCanvas.height = this.container.clientHeight || 300 ; // Full height instead of half
+    this.particleCanvas.height = this.container.clientHeight || 300;
 
     if (!this.el.parentNode) {
       this.container.appendChild(this.el);
@@ -877,13 +860,10 @@ class SkillTreeComponent {
     this.renderTree();
     setTimeout(() => this.centerSVG(), 100);
   }
-  // --- Navigation (Pan & Zoom) ---
 
   setupNavigation() {
-    // Flag to track if drag just happened (to prevent click events)
     this.wasDragging = false;
 
-    // Mouse events for panning.
     this.svg.addEventListener("mousedown", (event) => {
       if (event.button === 0) {
         this.isDragging = true;
@@ -901,7 +881,6 @@ class SkillTreeComponent {
         this.transform.y += dy;
         this.lastMousePosition = { x: event.clientX, y: event.clientY };
         this.applyTransform();
-        // Set flag to indicate dragging occurred
         this.wasDragging = true;
         event.preventDefault();
       }
@@ -912,14 +891,12 @@ class SkillTreeComponent {
         this.isDragging = false;
         this.svg.style.cursor = "grab";
 
-        // Keep the wasDragging flag true for a short time to cancel the next click
         setTimeout(() => {
           this.wasDragging = false;
         }, 100);
       }
     });
 
-    // Mouse wheel for zooming.
     this.svg.addEventListener("wheel", (event) => {
       event.preventDefault();
       const svgRect = this.svg.getBoundingClientRect();
@@ -937,7 +914,6 @@ class SkillTreeComponent {
       }
     });
 
-    // Touch events for mobile devices.
     this.svg.addEventListener("touchstart", (event) => {
       if (event.touches.length === 1) {
         this.isDragging = true;
@@ -971,9 +947,6 @@ class SkillTreeComponent {
     this.svg.style.cursor = "grab";
   }
 
-  // --- Particle Animation ---
-
-  // Enhanced curved particle along a quadratic bezier curve
   CurvedParticle(
     start,
     end,
@@ -994,7 +967,7 @@ class SkillTreeComponent {
       curve: { start, end, control },
       size: this.particleBaseSize + Math.min(score, 6) * 0.1,
       relType: relType,
-      score: score, // Store the score directly
+      score: score,
       getTransform: getTransform,
       relationDetails: {
         type: relType,
@@ -1005,7 +978,6 @@ class SkillTreeComponent {
         this.progress = (this.progress + this.speed * dt) % 1;
         this.alpha *= this.fadeRate;
         if (isDragging) this.alpha *= 0.85;
-        // Remove size pulsing for more consistent small particles
         this.size = 1 + Math.min(score, 6) * 0.15;
       },
       getPosition() {
@@ -1029,7 +1001,7 @@ class SkillTreeComponent {
 
   animateParticles(timestamp) {
     if (!this.lastParticleTime) this.lastParticleTime = timestamp;
-    const dt = Math.min(timestamp - this.lastParticleTime, 100); // Cap dt to prevent huge jumps
+    const dt = Math.min(timestamp - this.lastParticleTime, 100);
     this.lastParticleTime = timestamp;
 
     this.particleCtx.clearRect(
@@ -1088,7 +1060,6 @@ class SkillTreeComponent {
             })
           );
 
-          // Add more detailed relation attributes
           particle.fromId = rel.from;
           particle.toId = rel.to;
           particle.relationData = {
@@ -1104,12 +1075,10 @@ class SkillTreeComponent {
       });
     }
 
-    // Update and draw particles with simpler rendering
     this.particles = this.particles.filter((p) => {
       p.update(dt, this.isDragging);
       const pos = p.getPosition();
 
-      // Skip drawing particles that are offscreen
       if (
         pos.x < 0 ||
         pos.y < 0 ||
@@ -1119,21 +1088,17 @@ class SkillTreeComponent {
         return p.alpha > 0.1;
       }
 
-      // Add to active particles for click detection if visible enough
       if (p.alpha > 0.2) {
-        // Store the current position with the particle for click detection
         p.currentPos = pos;
         this.activeParticles.push(p);
       }
 
-      // Extract color components for proper alpha blending
       const baseColor = this.getRelationshipColor(p.relType);
       const colorMatch = baseColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
       const [r, g, b] = colorMatch
         ? colorMatch.slice(1, 4).map(Number)
         : [100, 149, 237];
 
-      // Use direct fill style without gradient for smaller particles
       this.particleCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${p.alpha})`;
       this.particleCtx.beginPath();
       this.particleCtx.arc(pos.x, pos.y, p.size, 0, Math.PI * 2);
@@ -1156,7 +1121,6 @@ class SkillTreeComponent {
     requestAnimationFrame(this.animateParticles.bind(this));
   }
 
-  // Helper: find a node by id.
   findNodeById(node, id) {
     if (node.id === id) return node;
     if (node.children) {
@@ -1168,20 +1132,16 @@ class SkillTreeComponent {
     return null;
   }
 
-  // Add a public method to manually center the view if needed
   resetView() {
     this.centerSVG();
   }
 
-  // Add method to handle canvas clicks - improved version
   setupCanvasClickHandler() {
     this.particleCanvas.addEventListener("click", (event) => {
-      // Skip if this was part of a drag operation
       if (this.wasDragging) {
         return;
       }
 
-      // Calculate click position relative to canvas
       const rect = this.particleCanvas.getBoundingClientRect();
       const clickX = event.clientX - rect.left;
       const clickY = event.clientY - rect.top;
@@ -1190,15 +1150,12 @@ class SkillTreeComponent {
         `Canvas clicked at (${clickX}, ${clickY}), checking ${this.activeParticles.length} particles`
       );
 
-      // Check if any particle was clicked (within a small radius)
       let clickedParticle = null;
-      const clickRadius = 15; // Increased detection radius in pixels
+      const clickRadius = 15;
 
-      // Find the closest particle to the click position
       let closestDistance = Infinity;
 
       for (let particle of this.activeParticles) {
-        // Use the stored current position
         const pos = particle.currentPos;
         if (!pos) continue;
 
@@ -1206,14 +1163,12 @@ class SkillTreeComponent {
         const dy = clickY - pos.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        // Keep track of the closest particle within detection radius
         if (distance <= clickRadius && distance < closestDistance) {
           closestDistance = distance;
           clickedParticle = particle;
         }
       }
 
-      // Log if a particle was clicked
       if (clickedParticle) {
         console.log("Particle clicked:", {
           fromSkill: clickedParticle.fromId,
@@ -1232,7 +1187,6 @@ class SkillTreeComponent {
   }
 }
 
-// Add a global function to switch layouts
 window.switchSkillTreeLayout = function (layoutType) {
   if (window.treeComponent) {
     window.treeComponent.layoutType = layoutType || "radial";
@@ -1242,3 +1196,5 @@ window.switchSkillTreeLayout = function (layoutType) {
     );
   }
 };
+
+window.SkillTreeComponent = SkillTreeComponent;
