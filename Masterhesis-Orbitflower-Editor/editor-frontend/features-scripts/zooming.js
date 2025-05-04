@@ -342,7 +342,6 @@ function initializeZooming() {
     viewBox.w = originalW;
     viewBox.h = originalH;
 
-    console.log("current viewBox:", JSON.stringify(viewBox));
     svgElement.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
   }
 

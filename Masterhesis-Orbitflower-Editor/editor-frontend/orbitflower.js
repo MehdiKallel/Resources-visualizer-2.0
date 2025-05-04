@@ -78,7 +78,10 @@ class OrbitFlower {
   }
 
   renderOrganisationGraph(doc) {
-    console.error("************************************************ rendering doc:", doc);
+    console.error(
+      "************************************************ rendering doc:",
+      doc
+    );
     const gw = new GraphWorker(
       doc,
       "/o:organisation/o:units/o:unit|/o:organisation/o:roles/o:role",
@@ -539,13 +542,31 @@ class OrbitFlower {
 
       // Insert the content
       graphSvg.html(svgContent);
+      // Add centered container directly to the SVG
+      const $centered = $(document.createElementNS("http://www.w3.org/2000/svg", "svg"))
+      .attr({
+        id: "centered-container",
+        x: maxwidth/2 - 100,  // Center horizontally based on viewBox
+        y: maxheight/2 - 100, // Center vertically based on viewBox
+        width: 200,
+        height: 200,
+        viewBox: "0 0 200 200"
+      })
+      .css({
+        "pointer-events": "none",
+        "overflow": "visible"
+      })
+      .appendTo(graphSvg);
 
-      console.log(
-        "Graph SVG updated with dimensions:",
-        maxwidth,
-        "×",
-        maxheight
-      );
+    // Add visual elements
+    $centered.html(`
+      <rect width="100%" height="100%" fill="rgba(200,200,200,0.1)"
+            stroke="#999" stroke-width="2" stroke-dasharray="5 5"/>
+      <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
+            fill="#666" font-size="14">SVG Container</text>
+    `);
+
+    console.log("Added centered container at", maxwidth/2, maxheight/2);
     } else {
       console.warn("Graph SVG element not found");
     }

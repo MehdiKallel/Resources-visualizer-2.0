@@ -130,8 +130,8 @@ class SkillTreeComponent {
     this.particleCanvas.className = "particle-canvas";
     this.particleCanvas.style.width = "100%";
     this.particleCanvas.style.height = "100%";
-    this.particleCanvas.width = this.container.clientWidth || 300;
-    this.particleCanvas.height = this.container.clientHeight || 300; // Full height instead of half
+    this.particleCanvas.width = this.container.clientWidth;
+    this.particleCanvas.height = this.container.clientHeight; // Full height instead of half
     this.el.appendChild(this.particleCanvas);
     this.particleCtx = this.particleCanvas.getContext("2d");
 
@@ -173,11 +173,8 @@ class SkillTreeComponent {
     this.filterType = parentNodeType;
     this.filterId = relatedText;
     this.skillId = skillId;
-    
-    // Determine if we should render the full graph
-    this.renderFullGraph = Boolean(this.xmlData) && !this.skillId;
 
-    console.log("working showing with the following params", this.xmlData, this.filterType, this.filterId, this.skillId);
+    console.log("working showing with the following params",this.xmlData, this.filterType, this.filterId, this.skillId);
     this.svgContent = document.createElementNS(
       "http://www.w3.org/2000/svg",
       "g"
@@ -192,12 +189,7 @@ class SkillTreeComponent {
 
     this.setupNavigation();
     this.parseXML();
-    
-    // Only filter the tree by skill if we're not rendering the full graph
-    if (!this.renderFullGraph && this.skillId) {
-      this.filterTreeBySkill();
-    }
-    
+    this.filterTreeBySkill();
     this.computeLayout();
 
     this.render();
@@ -329,7 +321,6 @@ class SkillTreeComponent {
     for (let id in skills) {
       if (!childSet.has(id)) roots.push(skills[id]);
     }
-    
     if (roots.length === 1) {
       this.skillTree = roots[0];
     } else {
@@ -346,26 +337,19 @@ class SkillTreeComponent {
     for (let i = 0; i < subjectElements.length; i++) {
       const subj = subjectElements[i];
       let match = false;
-      
-      // If we're rendering the full graph, include all subjects
-      if (this.renderFullGraph) {
-        match = true;
-      } else {
-        const relationElements = subj.getElementsByTagName("relation");
-        for (let j = 0; j < relationElements.length; j++) {
-          const rel = relationElements[j];
-          if (
-            (this.filterType === "unit" &&
-              rel.getAttribute("unit") === this.filterId) ||
-            (this.filterType === "role" &&
-              rel.getAttribute("role") === this.filterId)
-          ) {
-            match = true;
-            break;
-          }
+      const relationElements = subj.getElementsByTagName("relation");
+      for (let j = 0; j < relationElements.length; j++) {
+        const rel = relationElements[j];
+        if (
+          (this.filterType === "unit" &&
+            rel.getAttribute("unit") === this.filterId) ||
+          (this.filterType === "role" &&
+            rel.getAttribute("role") === this.filterId)
+        ) {
+          match = true;
+          break;
         }
       }
-      
       if (match) {
         const subjectSkills = subj.getElementsByTagName("subjectSkills");
         for (let k = 0; k < subjectSkills.length; k++) {
@@ -384,7 +368,6 @@ class SkillTreeComponent {
       }
     }
   }
-
   filterTreeBySkill() {
     const skillElements = this.xmlData.getElementsByTagName("skill");
     const graph = {};
@@ -866,8 +849,8 @@ class SkillTreeComponent {
       }
     }
 
-    this.particleCanvas.width = this.container.clientWidth || 300;
-    this.particleCanvas.height = this.container.clientHeight || 300 ; // Full height instead of half
+    this.particleCanvas.width = this.container.clientWidth;
+    this.particleCanvas.height = this.container.clientHeight; // Full height instead of half
 
     if (!this.el.parentNode) {
       this.container.appendChild(this.el);

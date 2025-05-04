@@ -41,10 +41,6 @@
       <link rel="stylesheet" href="styles/dropdown.css" type="text/css" />
       <link rel="stylesheet" href="styles/orbitflower-styles.css" type="text/css" />
       <script type="text/javascript">
-         
-     
-    
-
          var filter = "";
          var viz;
          var serverlocation;
@@ -125,6 +121,15 @@
              }
            });
          }
+         
+         // Add click handler for skill items
+         $('#details-skills').on('click', '.skill-item', function() {
+           const skillId = $(this).data('skill-id');
+           const $svgSkill = $(`path[data-skill-id="${skillId}"]`);
+           if ($svgSkill.length) {
+             $svgSkill.trigger('click');
+           }
+         });
          
          function setupSSEEventListeners() {
            console.error("this is a test");
@@ -217,7 +222,7 @@
                  success: function(res) {       
                    currentorgmodel = res;
                    fillSkillsContainer();
-                  getSkills('harapata97');	
+                 getSkills('harapata97');	
                    viz.show(currentorgmodel);   
                                                        
                    skillsFeature = new SkillsFeature($('svg'), currentorgmodel);           
@@ -232,22 +237,11 @@
                });                                                                  
              }
            });
-
-           const expressionBuilder = new ExpressionBuilder("expressionBuilder");
-           // Sync the global pause state with the expressionBuilder instance
-           window.expressionBuilderPaused = expressionBuilder.paused;
-           
-           // Listen for changes in the expression builder state
-           document.addEventListener('expressionBuilder:change', function(event) {
-             window.expressionBuilderPaused = event.detail.builder.paused;
-           });
-           
+         
+         
+         
            let originalUserStates = [];
-           var relatedSkills = [];
-           let currentSkillFilter = null;
-           let originalSkillStates = [];
-           var unitId = null;
-           var isZoomed = false;
+         
            function storeOriginalUserStates() {
              originalUserStates = [];
              $('#users table').each(function() {
@@ -264,16 +258,10 @@
              });
            }
            
+           var relatedSkills = [];
+           let currentSkillFilter = null;
+           let originalSkillStates = [];
            
-           $('#details-skills').on('click', '.skill-item', function() {
-             console.log("niceee you clicked a skill item", this);
-             $('.skill-item').removeClass('selected'); // remove class from all
-             $(this).addClass('selected');
-
-             console.log("Selected skill item:", $(this).data('skill-id'));
-           });
-
-
            function storeOriginalSkillStates() {
              originalSkillStates = [];
              $('#details-skills .skill-item').each(function() {
@@ -289,17 +277,17 @@
              });
            }
          
-          // append another svg to id svg and make it central (filled with black)
-          
+         
            $('svg').on('click', '.skill-segment', function(e) {
+             e.stopPropagation();
+             
              const skillSegment = $(this);
              const parentNode = skillSegment.closest('[id]');
-             if (!isZoomed) {
-              unitId = document.querySelector(`text[id="${parentNode.attr('id')}_text"]`)?.textContent;
-             }
+             const unitId = document.querySelector(`text[id="${parentNode.attr('id')}_text"]`)?.textContent;
              const skillId = skillSegment.attr('data-skill-id');
              const key = `${unitId}_${skillId}`;
          
+             // Toggle skill state
              if (activeSkillSegments[key]) {
                delete activeSkillSegments[key];
                skillSegment.css('fill', '');
@@ -308,19 +296,23 @@
                  restoreOriginalUserStates();
                }
              } else {
+               // Store original state on first activation
                if (Object.keys(activeSkillSegments).length === 0) {
                  storeOriginalUserStates();
                }
                
+               // Clear existing active segments
                activeSkillSegments = {};
                $('.skill-segment').css('fill', '');
                
+               // Activate new segment
                activeSkillSegments[key] = true;
                relatedSkills = getAllRelatedSkills(skillId);
                filterUsersByUnitAndSkill(unitId, relatedSkills);
                skillSegment.css('fill', '#4CAF50');
              }
          
+             // Update skill list highlights
              $('#details-skills .skill-item').removeClass('active');
              relatedSkills.forEach(skillId => {
                $(`#details-skills .skill-item[data-skill-id="${skillId}"]`).addClass('active');
@@ -336,14 +328,17 @@
                const userId = $userRow.attr('data-uid');
                const inUnit = $(`subject[uid="${userId}"] relation[unit="${unitId}"], subject[uid="${userId}"] relation[role="${unitId}"]`, currentorgmodel).length > 0;
                let hasSkill = false;
+               
                skillIdsArray.forEach(skillId => {
                  if ($(`subject[uid="${userId}"] subjectSkills skillRef[id="${skillId}"]`, currentorgmodel).length > 0) {
                    hasSkill = true;
                  }
-               });         
+               });
+         
                $userRow.toggleClass('hidden', !(inUnit && hasSkill)).toggleClass('highlight-skill', inUnit && hasSkill);
              });
            }
+         
          
            function getAllRelatedSkills(skillId) {
              const skills = new Set();
@@ -381,32 +376,41 @@
            // and check if the clicked element is a subject
          
            $('#details-skills').on('click', function (e) {
-             if (e.target.classList.contains("skill-item")  && expressionBuilderPaused) {
-               var targetSkilled = e.target.getAttribute('data-skill-id');
+             if (e.target.className === 'labeltext' && expressionBuilderPaused) {
+               var targetSkilled = e.target.textContent;
                options = {
                  container: "detailed-graph-skills",
                };
                const workerGraph = new SkillTreeComponent(options);
                workerGraph.reset("#detailed-graph-skills");
-               console.log("relatedText", relatedText);
                workerGraph.show(currentorgmodel, parentNodeType, relatedText , targetSkilled);
              }
            });
-          
-           /*
-            In this view, target orbit is placed at the top and detailed sub graph of 
-            the clicked skill is shown in the bottom.
-           */
+         
+           // add click handler to skill segment elements
+           $('svg').on('click', function (e) {
+             var clickedElement = e.target;
+             if (clickedElement.classList.contains('skill-segment')) {
+              console.log("clickedElement", clickedElement);
+               var parentNodeId = clickedElement.parentNode.parentNode.getAttribute('id');
+               parentNodeType = clickedElement.parentNode.parentNode.getAttribute('class');
+               relatedText = document.querySelector(`text[id="${parentNodeId}_text"]`)?.textContent || "";
+               const skillId = clickedElement.getAttribute('data-skill-id');
+               console.log(" nice you clicked a skill segment", parentNodeId, parentNodeType, relatedText, skillId);
+             }
+           });
+           
+           
            $('svg').on('click', function (e) {
              var clickedElement = e.target;
              if (clickedElement.classList.contains('skill-segment')&&  expressionBuilderPaused && clickedElement.tagName === 'path') {
                splitGraphContainer(true);
+         
                var parentNodeId = clickedElement.parentNode.parentNode.getAttribute('id');
                parentNodeType = clickedElement.parentNode.parentNode.getAttribute('class');
-               if (!isZoomed) {
-                relatedText = document.querySelector(`text[id="${parentNodeId}_text"]`)?.textContent || "";
-              }
+               relatedText = document.querySelector(`text[id="${parentNodeId}_text"]`)?.textContent || "";
                const skillId = clickedElement.getAttribute('data-skill-id');
+         
                options = {
                  container: "detailed-graph-skills",
                };
@@ -417,10 +421,8 @@
                $('#users').find('table').each(function() {
                  if (!$(this).hasClass('highlightrole')) {
                    $(this).addClass('hidden');
-                 }  
+                 }
                });
-               isZoomed = true;
-
              }
            });
          

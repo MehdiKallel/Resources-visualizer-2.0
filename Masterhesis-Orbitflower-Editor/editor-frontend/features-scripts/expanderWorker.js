@@ -1,5 +1,5 @@
-const SHIFT_FACTOR = 20;
-const EXPANSION_FACTOR = 1.5;
+const SHIFT_FACTOR = 10;
+const EXPANSION_FACTOR = 1.2;
 const ANIMATION_DURATION = 200;
 let isExpanded = false;
 let originalPositions = {};
@@ -13,8 +13,6 @@ let skills = {};
 
 document.addEventListener("graphRendered", async function () {
   document.addEventListener("click", (e) => {
-    console.log(window.expressionBuilderPaused);
-    console.log("##############################click event", e.target);
     if (
       e.target.classList.contains("skill-segment") &&
       isExpanded === true &&
@@ -25,7 +23,6 @@ document.addEventListener("graphRendered", async function () {
     }
   });
 
-  console.log("call from expanderWorker.js", window.passData);
   center = estimateCenterOfCircles();
   createToggleButton();
   storeOriginalPositions();

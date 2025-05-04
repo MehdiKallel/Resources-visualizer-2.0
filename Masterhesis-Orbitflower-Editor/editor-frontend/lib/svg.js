@@ -21,15 +21,15 @@ class SVG {
     this._defs = "";
   }
 
-  dump(h = 100, w = 100) {
-    console.log("awww yess");
-    return `
-      <svg id="svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" version="1.1" width=${w} height='${h}'>
+  dump(h = 50, w = 50) {
+      console.log("awww yess");
+      return `
+        <svg id="svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" version="1.1" width=${w} height='${h}'>
         <defs>
           <filter id="glow" x="-0.2" width="2" y="-0.1" height="2">
             <feGaussianBlur stdDeviation="0.5" id="feGaussianBlur3794"/>
           </filter>
-        </defs>
+        </defs> 
         ${this._res}
       </svg>
       `;

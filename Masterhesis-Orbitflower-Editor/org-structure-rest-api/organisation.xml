@@ -104,11 +104,52 @@
     </role>
   </roles>
   <subjects>
+    <subject id="Leonhard Euler" uid="eulerl5">
+      <relation unit="Knowledge Engineering" role="Teaching"/>
+      <relation unit="Knowledge Engineering" role="Project"/>
+      <relation unit="Knowledge Engineering" role="Assistant"/>
+      <subjectSkills>
+        <skillRef id="Supervised Learning"/>
+      </subjectSkills>
+    </subject>
+    <subject id="Ada Lovelace" uid="lovela4">
+      <relation unit="Software Architectures" role="Univ.Prof."/>
+      <subjectSkills>
+        <skillRef id="Infrastructure Security"/>
+        <skillRef id="Network Security"/>
+      </subjectSkills>
+    </subject>
+    <subject id="Grace Hopper" uid="hopperg3">
+      <relation unit="Scientific Computing" role="Senior Lecturer"/>
+      <relation unit="Data Analytics and Computing" role="Teaching"/>
+      <subjectSkills>
+        <skillRef id="Cloud Security"/>
+        <skillRef id="DevOps"/>
+      </subjectSkills>
+    </subject>
+    <subject id="Alan Turing" uid="turina1">
+      <relation unit="Theory and Applications of Algorithms" role="Univ.Prof."/>
+      <relation unit="Theory and Applications of Algorithms" role="Teaching"/>
+      <subjectSkills>
+        <skillRef id="Machine Learning"/>
+        <skillRef id="Deep Learning"/>
+      </subjectSkills>
+    </subject>
+    <subject id="Margaret Hamilton" uid="hamiltonm7">
+      <relation unit="Workflow Systems and Technology" role="Ass.Prof."/>
+      <relation unit="Workflow Systems and Technology" role="Project"/>
+      <subjectSkills>
+        <skillRef id="Automation"/>
+      </subjectSkills>
+    </subject>
     <subject id="Simone Kriglstein" uid="kriglss9">
       <relation unit="Workflow Systems and Technology" role="Project"/>
       <relation unit="Workflow Systems and Technology" role="Assistant"/>
       <relation unit="Educational Technologies" role="Regular"/>
       <relation unit="Educational Technologies" role="Assistant"/>
+      <subjectSkills>
+        <skillRef id="Cloud"/>
+      </subjectSkills>
     </subject>
     <subject id="Juergen Manlger" uid="manglej6">
       <relation unit="Workflow Systems and Technology" role="Project"/>
@@ -290,12 +331,12 @@
       <relation unit="Theory and Applications of Algorithms" role="Assistant"/>
     </subject>
     <subject id="Atakan Aral" uid="arala86">
-      <relation unit="Scientific Computing" role="Teaching"/>
-      <relation unit="Scientific Computing" role="Project"/>
-      <relation unit="Scientific Computing" role="Assistant"/>
       <subjectSkills>
         <skillRef id="AWS"/>
       </subjectSkills>
+      <relation unit="Scientific Computing" role="Teaching"/>
+      <relation unit="Scientific Computing" role="Project"/>
+      <relation unit="Scientific Computing" role="Assistant"/>
     </subject>
     <subject id="Enes Bajrovic" uid="bajrove4">
       <relation unit="Scientific Computing" role="Teaching"/>
@@ -663,7 +704,6 @@
     <subject id="Albert Rafetseder" uid="rafetsa2">
       <subjectSkills>
         <skillRef id="AWS"/>
-        +
       </subjectSkills>
       <subjectSkills>
         <skillRef id="AWS"/>
@@ -1038,6 +1078,36 @@
       <relation id="Scrum" type="Parent"/>
       <relation id="Kanban" type="Parent"/>
       <relation id="JIRA" type="isRelatedTo" score="300"/>
+    </skill>
+    <skill id="Security">
+      <relation id="DevOps" type="isRelatedTo" score="300"/>
+      <relation id="Cloud Security" type="Child"/>
+    </skill>
+    <skill id="Cloud Security">
+      <relation id="Security" type="Parent"/>
+      <relation id="Infrastructure Security" type="Child"/>
+    </skill>
+    <skill id="Infrastructure Security">
+      <relation id="Cloud Security" type="Parent"/>
+      <relation id="Network Security" type="Child"/>
+    </skill>
+    <skill id="Network Security">
+      <relation id="Infrastructure Security" type="Parent"/>
+    </skill>
+    <skill id="Supervised Learning">
+      <relation id="Machine Learning" type="Parent"/>
+      <relation id="Regression" type="Child"/>
+      <relation id="Classification" type="Child"/>
+    </skill>
+    <skill id="Regression">
+      <relation id="Supervised Learning" type="Parent"/>
+    </skill>
+    <skill id="Classification">
+      <relation id="Supervised Learning" type="Parent"/>
+    </skill>
+    <skill id="Automation">
+      <relation id="Workflow Systems and Technology" type="isRelatedTo" score="200"/>
+      <relation id="DevOps" type="isRelatedTo" score="150"/>
     </skill>
   </skills>
 </organisation>

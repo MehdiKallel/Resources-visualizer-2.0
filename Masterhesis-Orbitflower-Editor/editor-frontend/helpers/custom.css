@@ -26,3 +26,39 @@
   text-align: right;
   margin-top: 1.1em;
 }
+
+.skill-item {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 3px;
+  border-radius: 3px;
+}
+
+.skill-item:hover {
+  background-color: #f0f0f0;
+}
+
+.skill-item.active {
+  background-color: #e3f2fd;
+  font-weight: 500;
+}
+
+.skill-item.selected {
+  background-color: #dabfd2;
+}
+
+#details-skills {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+/* In custom.css */
+#centered-container {
+  position: absolute;
+  z-index: 1000;
+}
+
+#centered-container rect {
+  vector-effect: non-scaling-stroke;
+}

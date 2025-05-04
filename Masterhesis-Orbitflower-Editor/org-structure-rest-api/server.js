@@ -1,4 +1,4 @@
-const morgan = require('morgan')
+const morgan = require("morgan");
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
@@ -9,33 +9,99 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 require("body-parser-xml")(bodyParser);
 const EventEmitter = require("events");
+const cookieParser = require('cookie-parser');
 
 // Define the namespace once for consistent use throughout the application
 const XML_NAMESPACE = "http://ns/organisation/1.0";
 const NS_PREFIX = "ns";
+const expressionBuilderStates = new Map();
 
 class UpdateEmitter extends EventEmitter {}
 const updateEmitter = new UpdateEmitter();
 
 const app = express();
-app.use(morgan('tiny'));
-app.use(cors());
+app.use(morgan("tiny"));
+
+// CORS configuration - remove any other CORS configurations
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:8000",
+  "http://localhost:8080", 
+  "http://127.0.0.1:5500",
+  "https://lehre.bpm.in.tum.de"
+];
+
+app.use(cors({
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, etc)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, origin);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  credentials: true
+}));
+
+// CORS debugging middleware
+app.use((req, res, next) => {
+  console.log(`[CORS Debug] Request from origin: ${req.headers.origin || 'unknown'}`);
+  next();
+});
+
+// Add OPTIONS pre-flight handler for all routes
+app.options('*', (req, res) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,UPDATE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.status(200).send();
+  } else {
+    res.status(403).send();
+  }
+});
+
 const PORT = 3000;
 const XML_FILE = path.join(__dirname, "organisation.xml");
-app.use(
-  cors({
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:8080",
-      "http://127.0.0.1:5500",
-	"https://lehre.bpm.in.tum.de",
-    ],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-    credentials: true,
-  })
-);
 
+app.use(cookieParser());
+
+// Add session middleware
+app.use((req, res, next) => {
+  let sessionId = req.cookies.sessionId;
+  if (!sessionId || !expressionBuilderStates.has(sessionId)) {
+    sessionId = require('crypto').randomBytes(16).toString('hex');
+    res.cookie('sessionId', sessionId, { 
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      httpOnly: true,
+      sameSite: 'strict'
+    });
+    expressionBuilderStates.set(sessionId, {
+      currentExpression: [],
+      expressionHistory: [],
+      paused: false,
+      savedExpressions: []
+    });
+  }
+  req.sessionId = sessionId;
+  next();
+});
+
+// Add state endpoints
+app.get('/expression-state', (req, res) => {
+  res.json(expressionBuilderStates.get(req.sessionId));
+});
+
+app.post('/expression-state', express.json(), (req, res) => {
+  expressionBuilderStates.set(req.sessionId, req.body);
+  res.sendStatus(200);
+});
 // Create a namespace-aware select function to use throughout the application
 const select = xpath.useNamespaces({
   [NS_PREFIX]: XML_NAMESPACE,
@@ -77,18 +143,12 @@ app.use(express.json());
 app.use((req, res, next) => {
   next();
 });
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Content-Type");
-  next();
-});
 const readXML = () => {
   const xmlData = fs.readFileSync(XML_FILE, "utf-8");
   return ensureNamespace(new DOMParser().parseFromString(xmlData, "text/xml"));
 };
 
-// Improve the safeWriteXML function to include update type information
-const safeWriteXML = (doc, updateType = 'general') => {
+const safeWriteXML = (doc, updateType = "general") => {
   try {
     const xml = new XMLSerializer().serializeToString(doc);
     const formattedXML = format(xml, {
@@ -97,15 +157,13 @@ const safeWriteXML = (doc, updateType = 'general') => {
       lineSeparator: "\n",
     });
 
-    // Write synchronously to ensure the file is fully saved before continuing
     fs.writeFileSync(XML_FILE, formattedXML);
     console.log(`XML file updated successfully (${updateType} change)`);
 
-    // Emit update event with more detailed information
-    updateEmitter.emit("update", { 
+    updateEmitter.emit("update", {
       timestamp: Date.now(),
       type: updateType,
-      message: `Organization structure updated: ${updateType}`
+      message: `Organization structure updated: ${updateType}`,
     });
     return true;
   } catch (error) {
@@ -114,21 +172,23 @@ const safeWriteXML = (doc, updateType = 'general') => {
   }
 };
 
-// Replace the existing writeXML function with our safer version
 const writeXML = safeWriteXML;
 
-//app.use(express.static(path.join(__dirname, "public")));
-
-// Enhance the /events endpoint for better error handling and client experience
 app.get("/events", (req, res) => {
+  // Get the requesting origin
+  const origin = req.headers.origin;
+  
   // Set headers for SSE
   res.set({
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache",
     Connection: "keep-alive",
-    "Access-Control-Allow-Origin": "*",
-"X-Accel-Buffering": "no"
+    // Use the actual origin instead of wildcard
+    "Access-Control-Allow-Origin": allowedOrigins.includes(origin) ? origin : '',
+    "Access-Control-Allow-Credentials": "true",
+    "X-Accel-Buffering": "no",
   });
+  
   // Send initial connection message
   res.write(`id: ${Date.now()}\n`);
   res.write(`event: connected\n`);
@@ -137,10 +197,6 @@ app.get("/events", (req, res) => {
   // Define event handler
   const onUpdate = (data) => {
     const eventId = Date.now();
-
-
-
-	  console.log("*****************************************");
     res.write(`id: ${eventId}\n`);
     res.write(`event: update\n`);
     res.write(`data: ${JSON.stringify(data)}\n\n`);
@@ -171,13 +227,23 @@ app.get("/events", (req, res) => {
   });
 });
 
-
 app.get("/organisation", (req, res) => {
   try {
+    // Log request information for debugging
+    console.log(`[GET /organisation] Request from origin: ${req.headers.origin || 'unknown'}, with credentials: ${req.headers.cookie ? 'yes' : 'no'}`);
+    
+    // Set proper CORS headers explicitly for this endpoint
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Access-Control-Allow-Credentials', 'true');
+    }
+    
     const doc = readXML();
     const xml = new XMLSerializer().serializeToString(doc);
     res.type("application/xml").send(xml);
   } catch (error) {
+    console.error("[GET /organisation] Error:", error.message);
     res.status(500).send(error.message);
   }
 });
@@ -305,7 +371,7 @@ app.post("/units", (req, res) => {
     newUnit.appendChild(permissionsNode);
 
     unitsNode.appendChild(newUnit);
-    writeXML(doc, 'unit-added'); // Specify update type
+    writeXML(doc, "unit-added"); // Specify update type
 
     console.log(`Unit '${id}' created successfully`);
     res.status(201).send("Unit added successfully");
@@ -343,7 +409,7 @@ app.put("/units/:id", (req, res) => {
       unitNode.appendChild(parentNode);
     }
 
-    writeXML(doc, 'unit-updated');
+    writeXML(doc, "unit-updated");
     res.send("Unit updated successfully");
   } catch (error) {
     res.status(500).send(error.message);
@@ -361,7 +427,7 @@ app.delete("/units/:id", (req, res) => {
     if (!unitNode) return res.status(404).send("Unit not found");
 
     unitNode.parentNode.removeChild(unitNode);
-    writeXML(doc, 'unit-deleted');
+    writeXML(doc, "unit-deleted");
 
     res.send("Unit deleted successfully");
   } catch (error) {
@@ -612,7 +678,7 @@ app.post("/roles", (req, res) => {
     newRole.appendChild(permissionsNode);
     rolesNode.appendChild(newRole);
 
-    writeXML(doc, 'role-added');
+    writeXML(doc, "role-added");
     res.status(201).send("Role added successfully");
   } catch (error) {
     res.status(500).send(error.message);
@@ -674,7 +740,7 @@ app.put("/roles/:id", (req, res) => {
       }
     }
 
-    writeXML(doc, 'role-updated');
+    writeXML(doc, "role-updated");
     res.send("Role updated successfully");
   } catch (error) {
     res.status(500).send(error.message);
@@ -720,7 +786,7 @@ app.delete("/roles/:id", (req, res) => {
     });
 
     roleNode.parentNode.removeChild(roleNode);
-    writeXML(doc, 'role-deleted');
+    writeXML(doc, "role-deleted");
 
     res.send("Role, associated subjects, and child roles deleted successfully");
   } catch (error) {
@@ -953,7 +1019,7 @@ app.post("/skills", (req, res) => {
       skillNode.appendChild(relationNode);
     }
     skillsNode.appendChild(skillNode);
-    if (!writeXML(doc, 'skill-added')) {
+    if (!writeXML(doc, "skill-added")) {
       return res.status(500).send("Failed to save skill to file.");
     }
     return res.status(201).send("Skill created successfully");
@@ -1155,7 +1221,7 @@ app.post("/subjects", (req, res) => {
     });
 
     // Save the updated XML document
-    writeXML(doc, 'subject-added');
+    writeXML(doc, "subject-added");
 
     res.status(201).send("Subject created successfully");
   } catch (error) {
@@ -1163,7 +1229,6 @@ app.post("/subjects", (req, res) => {
     res.status(500).send("Internal Server Error: " + error.message);
   }
 });
-
 
 app.put("/subjects/:id", (req, res) => {
   try {
@@ -1250,7 +1315,7 @@ app.put("/subjects/:id", (req, res) => {
       subjectNode.appendChild(skillsNode);
     }
 
-    writeXML(doc, 'subject-updated');
+    writeXML(doc, "subject-updated");
     res.send("Subject updated successfully");
   } catch (error) {
     res.status(500).send(error.message);
@@ -1268,7 +1333,7 @@ app.delete("/subjects/:id", (req, res) => {
     if (!subjectNode) return res.status(404).send("Subject not found");
 
     subjectNode.parentNode.removeChild(subjectNode);
-    writeXML(doc, 'subject-deleted');
+    writeXML(doc, "subject-deleted");
     res.send("Subject deleted successfully");
   } catch (error) {
     res.status(500).send(error.message);
