@@ -236,8 +236,7 @@
              }
            });
 
-           const expressionBuilder = new ExpressionBuilder("expressionBuilder");
-           // Sync the global pause state with the expressionBuilder instance
+           const expressionBuilder = new ExpressionBuilder("expressionBuilder", serverlocation);
            window.expressionBuilderPaused = expressionBuilder.paused;
            
            // Listen for changes in the expression builder state

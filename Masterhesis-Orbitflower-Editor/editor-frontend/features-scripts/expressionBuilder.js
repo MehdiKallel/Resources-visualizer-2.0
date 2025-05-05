@@ -1,11 +1,13 @@
 class ExpressionBuilder {
-  constructor(containerId) {
+  constructor(containerId, apiBaseUrl) {
     this.containerId = containerId;
     this.currentExpression = [];
     this.expressionHistory = [];
     this.draggedItem = null;
     this.paused = false;
     this.savedExpressions = [];
+    this.apiBaseUrl = apiBaseUrl;
+    
 
     // Bind methods to ensure correct 'this' context
     this.handleDocumentClick = this.handleDocumentClick.bind(this);
@@ -27,7 +29,7 @@ class ExpressionBuilder {
   }
 
   handleDocumentClick(event) {
-    console.log("Clicked on document", event.target.tagName);
+    console.log("Expression builder detecting click")
     if (this.paused) return;
     if (event.target.tagName === "tspan") {
       const entityDocId =
@@ -1249,7 +1251,7 @@ class ExpressionBuilder {
     try {
       const stateToSave = this.getSerializableState();
 
-      fetch("http://localhost:3000/expression-state", {
+      fetch(`${apiBaseUrl}/expression-state`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1265,7 +1267,7 @@ class ExpressionBuilder {
   }
 
   loadStateFromServer() {
-    fetch("http://localhost:3000/expression-state", {
+    fetch(`${apiBaseUrl}/expression-state`, {
       method: "GET",
       credentials: "include", // Important: send cookies for session identification
     })
