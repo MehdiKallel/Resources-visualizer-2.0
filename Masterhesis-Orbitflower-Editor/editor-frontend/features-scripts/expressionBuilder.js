@@ -1,14 +1,13 @@
 class ExpressionBuilder {
-  constructor(containerId, apiBaseUrl) {
+  constructor(containerId) {
     this.containerId = containerId;
     this.currentExpression = [];
     this.expressionHistory = [];
     this.draggedItem = null;
     this.paused = false;
     this.savedExpressions = [];
-    this.apiBaseUrl = apiBaseUrl;
+    this.apiBaseUrl = '';
     
-
     // Bind methods to ensure correct 'this' context
     this.handleDocumentClick = this.handleDocumentClick.bind(this);
     this.onGraphRendered = this.onGraphRendered.bind(this);
@@ -17,11 +16,24 @@ class ExpressionBuilder {
     document.addEventListener("graphRendered", this.onGraphRendered);
     document.addEventListener("click", this.handleDocumentClick);
 
-    // Initialize UI
-    this.createExpressionBuilderUI();
+    // Load server location from index.conf
+    $.ajax({
+      url: 'index.conf',
+      dataType: 'json',
+      success: (res) => { 
+        this.apiBaseUrl = res.server;
+        console.log("ExpressionBuilder initialized with server:", this.apiBaseUrl);
+        
+        // Initialize UI
+        this.createExpressionBuilderUI();
 
-    // Load state from server
-    this.loadStateFromServer();
+        // Load state from server
+        this.loadStateFromServer();
+      },
+      error: (err) => {
+        console.error("Failed to load server configuration for ExpressionBuilder:", err);
+      }
+    });
   }
 
   onGraphRendered() {

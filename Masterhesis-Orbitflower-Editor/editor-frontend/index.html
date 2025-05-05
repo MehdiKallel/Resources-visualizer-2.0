@@ -235,8 +235,9 @@
                });                                                                  
              }
            });
+           console.error("Server location:'''''''''''''''''''", serverlocation);
 
-           const expressionBuilder = new ExpressionBuilder("expressionBuilder", serverlocation);
+           const expressionBuilder = new ExpressionBuilder("expressionBuilder");
            window.expressionBuilderPaused = expressionBuilder.paused;
            
            // Listen for changes in the expression builder state
