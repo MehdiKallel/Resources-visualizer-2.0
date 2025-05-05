@@ -1251,7 +1251,7 @@ class ExpressionBuilder {
     try {
       const stateToSave = this.getSerializableState();
 
-      fetch(`${apiBaseUrl}/expression-state`, {
+      fetch(`${this.apiBaseUrl}/expression-state`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1267,7 +1267,7 @@ class ExpressionBuilder {
   }
 
   loadStateFromServer() {
-    fetch(`${apiBaseUrl}/expression-state`, {
+    fetch(`${this.apiBaseUrl}/expression-state`, {
       method: "GET",
       credentials: "include", // Important: send cookies for session identification
     })
