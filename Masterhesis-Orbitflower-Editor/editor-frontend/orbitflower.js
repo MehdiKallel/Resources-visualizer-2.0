@@ -58,9 +58,12 @@ class OrbitFlower {
     const ns = "http://www.w3.org/2000/svg";
     const container = document.createElementNS(ns, "g");
     container.setAttribute("id", "centered-container");
-    container.setAttribute("transform", `translate(${svgWidth/2}, ${svgHeight/2})`);
+    container.setAttribute(
+      "transform",
+      `translate(${svgWidth / 2}, ${svgHeight / 2})`
+    );
     container.style.display = "none";
-  
+
     // Background rectangle
     const rect = document.createElementNS(ns, "rect");
     rect.setAttribute("width", "600");
@@ -72,7 +75,7 @@ class OrbitFlower {
     rect.setAttribute("stroke", "#666");
     rect.setAttribute("stroke-width", "2");
     rect.setAttribute("filter", "url(#drop-shadow)");
-  
+
     // Close button
     const closeBtn = document.createElementNS(ns, "text");
     closeBtn.setAttribute("x", "280");
@@ -81,7 +84,7 @@ class OrbitFlower {
     closeBtn.textContent = "×";
     closeBtn.style.cursor = "pointer";
     closeBtn.addEventListener("click", () => this.hideCenteredContainer());
-  
+
     // Add shadow filter definition
     const defs = document.createElementNS(ns, "defs");
     const filter = `<filter id="drop-shadow" height="130%">
@@ -93,21 +96,21 @@ class OrbitFlower {
       </feMerge>
     </filter>`;
     defs.innerHTML = filter;
-  
+
     container.appendChild(defs);
     container.appendChild(rect);
     container.appendChild(closeBtn);
-    
+
     // Add to main SVG
     const mainSVG = this.svgElement[0];
     mainSVG.appendChild(container);
   }
-  
+
   showCenteredContainer() {
     const container = this.svgElement.find("#centered-container");
     container.style.display = "inline";
   }
-  
+
   hideCenteredContainer() {
     const container = this.svgElement.find("#centered-container");
     container.style.display = "none";
@@ -598,24 +601,156 @@ class OrbitFlower {
         viewBox: `0 0 ${maxwidth} ${maxheight}`,
         preserveAspectRatio: "xMidYMid meet",
       });
-      
+
       // Insert the content
       graphSvg.html(svgContent);
       // Add centered container directly to the SVG
-      
 
-   
+      const svgRoot = graphSvg[0]; // the actual <svg> DOM node
+      // Add this after creating circles:
+      // === OUTER SCOPE (once per graph render) ===
+      let dragging = null;
+      let startPoint = { x: 0, y: 0 };
 
-      
+      // One pair of listeners, installed once:
+      document.addEventListener("mousemove", (e) => {
+        if (!dragging) return;
 
-    console.log("Added centered container at", maxwidth/2, maxheight/2);
+        // Update the ghost box position if it exists
+        const ghostBox = document.getElementById("circle-drag-ghost");
+        if (ghostBox) {
+          ghostBox.style.left = `${e.clientX}px`;
+          ghostBox.style.top = `${e.clientY}px`;
+        }
+      });
+
+      // installed once, after your render
+      document.addEventListener("mouseup", (e) => {
+        if (!dragging) return;
+
+        const ghostBox = document.getElementById("circle-drag-ghost");
+        if (ghostBox) {
+          // Add drop animation beforef removing
+          ghostBox.parentNode.removeChild(ghostBox);
+        }
+
+        // clear the reference
+        dragging = null;
+      });
+
+      svgRoot.querySelectorAll("circle").forEach((circle) => {
+        circle.style.cursor = "grab";
+
+        circle.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+
+          // Get the parent group that contains the circle
+          const group = circle.parentNode;
+          // Set dragging reference to track the drag state
+          dragging = group.id;
+
+          // 5. Store where the pointer was
+          startPoint.x = e.clientX;
+          startPoint.y = e.clientY;
+
+          // Create a drag ghost box similar to skills feature
+          const ghostBox = document.createElement("div");
+          const circleType = group.classList.contains("unit") ? "Unit" : "Role";
+          const nodeText = svg.querySelector(`#${group.id}_text`).textContent;
+
+          // Apply styling to make it a visible box
+          Object.assign(ghostBox.style, {
+            position: "absolute",
+            padding: "8px 12px",
+            backgroundColor: window.getComputedStyle(circle).fill || "#60A5FA",
+            color: "#fff",
+            borderRadius: "4px",
+            fontFamily: "Arial, sans-serif",
+            fontSize: "14px",
+            fontWeight: "normal",
+            pointerEvents: "none",
+            zIndex: "9999",
+            transform: "translate(-50%, -50%)",
+            boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
+            animation: "dropPulse 1s infinite", // Using the same animation name
+            whiteSpace: "nowrap",
+            transition: "opacity 0.3s, transform 0.3s",
+            left: `${e.clientX}px`,
+            top: `${e.clientY}px`,
+          });
+          ghostBox.textContent = `${circleType}: ${nodeText}`;
+          ghostBox.id = "circle-drag-ghost";
+          document.body.appendChild(ghostBox);
+
+          // Update the mouse move handler to also move the ghost box
+          const existingMouseMove = document.onmousemove;
+          document.onmousemove = function (e) {
+            if (existingMouseMove) existingMouseMove(e);
+            if (ghostBox) {
+              ghostBox.style.left = `${e.clientX}px`;
+              ghostBox.style.top = `${e.clientY}px`;
+            }
+          };
+
+          // Update the mouse up handler to clean up the ghost box
+          const existingMouseUp = document.onmouseup;
+          document.onmouseup = function (e) {
+            if (existingMouseUp) existingMouseUp(e);
+            if (ghostBox && ghostBox.parentNode) {
+              // Optional: Add drop animation before removing
+              ghostBox.classList.add("drop-effect");
+              setTimeout(() => {
+                if (ghostBox.parentNode)
+                  ghostBox.parentNode.removeChild(ghostBox);
+              }, 300);
+            }
+
+            // Dispatch a custom event for drag end similar to skills
+            const dropEvent = new CustomEvent("circledragend", {
+              detail: {
+                nodeId: group.id,
+                nodeType: circleType.toLowerCase(),
+                nodeName: nodeText,
+                x: e.clientX,
+                y: e.clientY,
+              },
+            });
+            window.dispatchEvent(dropEvent);
+
+            // Restore original handlers
+            document.onmousemove = existingMouseMove;
+            document.onmouseup = existingMouseUp;
+          };
+        });
+      });
+
+      console.log("Added centered container at", maxwidth / 2, maxheight / 2);
     } else {
       console.warn("Graph SVG element not found");
     }
 
+    // … inside renderOrganisationGraph, after usersSvg.innerHTML = subjects.join("\n");
     if (usersSvg) {
       usersSvg.innerHTML = subjects.join("\n");
       console.log("Users updated");
+
+      // === Make each labeltext draggable ===
+      usersSvg
+        .querySelectorAll("table.subject .labeltext")
+        .forEach((labelTd) => {
+          labelTd.setAttribute("draggable", "true");
+          labelTd.addEventListener("dragstart", (e) => {
+            const subjectUid = labelTd.closest("table.subject").dataset.uid;
+            const subjectText = labelTd.textContent;
+            const payload = JSON.stringify({
+              type: "external-entity", // Changed from external-subject to external-entity
+              entityType: "subject",
+              nodeText: subjectText,
+              entityId: subjectUid,
+            });
+            e.dataTransfer.setData("application/json", payload);
+          });
+        });
     }
 
     const renderedEvent = new Event("graphRendered");
@@ -638,7 +773,6 @@ async function renderGraph() {
     console.error("Failed to update graph:", error);
   }
 }
-
 
 function documentReady(fn) {
   if (
