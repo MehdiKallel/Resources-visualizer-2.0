@@ -19,7 +19,6 @@ function initializeZooming() {
   const initialH = h;
 
 
-  console.log("initial viewBox values:", initialX, initialY, initialW, initialH);
   
   // Use these values to create the initial viewBox object
   const initialViewBox = {
@@ -44,7 +43,8 @@ function initializeZooming() {
   };
 
   console.log('Initial viewBox:', viewBox);
-  
+  window.zoomingViewBox = viewBox;
+
   svgElement.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
   
   const controlPanel = document.createElement('div');
@@ -175,8 +175,8 @@ function initializeZooming() {
     
     // Pan the SVG based on stored joystick position - don't modify width/height (no zooming)
     const panSpeed = 2;
-    const panAmountX = joystickNormalizedX * viewBox.w * panSpeed * 0.01;
-    const panAmountY = joystickNormalizedY * viewBox.h * panSpeed * 0.01;
+    const panAmountX = joystickNormalizedX * initialW * panSpeed * 0.01;
+    const panAmountY = joystickNormalizedY * initialH * panSpeed * 0.01;
     
     viewBox.x += panAmountX;
     viewBox.y += panAmountY;
@@ -294,7 +294,7 @@ function initializeZooming() {
   }
   
   function startPan(e) {
-    // Prevent default to avoid any browser zooming behavior
+
     e.preventDefault();
     
     // Check for left mouse button or touch event
@@ -407,14 +407,26 @@ function initializeZooming() {
   }
   
   function resetView() {
-    // Create a fresh copy of initialViewBox without reference to the original
-    viewBox = {
-      x: initialViewBox.x,
-      y: initialViewBox.y,
-      w: initialViewBox.w,
-      h: initialViewBox.h
-    };
+    // Update both SVG attribute and internal state
+    viewBox.x = initialViewBox.x;
+    viewBox.y = initialViewBox.y;
+    viewBox.w = initialViewBox.w;
+    viewBox.h = initialViewBox.h;
     svgElement.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+    
+    // remove all hidden classes from children
+    const targetSvg = document.querySelector(`svg[id="svg"]`);
+    const children = targetSvg.children;
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      if (child.classList.contains('hidden')) {
+        child.classList.remove('hidden');
+      }
+    }
+    // Clear isolation state if needed
+    if (window._isolationState) {
+      window._isolationState.isIsolated = false;
+    }
   }
   
   // Fix event listeners for control buttons - use ID selectors instead of class selectors
@@ -468,7 +480,6 @@ function initializeZooming() {
   svgElement.addEventListener('mouseup', endPan);
   svgElement.addEventListener('mouseleave', endPan);
 
-  // Add touch support for panning
   svgElement.addEventListener('touchstart', function(e) {
       e.preventDefault(); 
       if (e.touches.length === 1) {
