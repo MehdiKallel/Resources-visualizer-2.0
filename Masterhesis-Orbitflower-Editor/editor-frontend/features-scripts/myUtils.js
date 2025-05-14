@@ -1,5 +1,5 @@
 // Track isolated node state
-const _isolationState = {
+var _isolationState = {
   isIsolated: false,
   currentNodeId: null,
   originalViewBox: null,
@@ -13,40 +13,36 @@ function isolateTargetGraphNode(nodeId, sourceContainer, targetContainer) {
       return;
   }
   
-  const svgElement = document.querySelector(`svg[id="${sourceContainer}"]`);
+  const svgElement = document.querySelector(`svg[id="main-svg"]`);
   if (!svgElement) {
       console.error(`SVG element with ID ${sourceContainer} not found.`);
       return;
   }
   
-  // If we're already isolated on this node, don't do anything
-  if (_isolationState.isIsolated && _isolationState.currentNodeId === nodeId) {
-      console.log(`Node ${nodeId} is already isolated, skipping viewBox change.`);
-      return;
-  }
   
-  // Save original viewBox if first time isolating
+  console.error(svgElement)
+  console.log("current stored viewBox: ", _isolationState.originalViewBox);
   if (!_isolationState.isIsolated) {
-      _isolationState.originalViewBox = svgElement.getAttribute('viewBox');
       _isolationState.isIsolated = true;
+      _isolationState.originalViewBox = svgElement.getAttribute('viewBox');
+
   }
-  
   // Update current node ID
   _isolationState.currentNodeId = nodeId;
   
-  const children = svgElement.children;
+  const targetSvg = document.querySelector(`svg[id="svg"]`);
+  const children = targetSvg.children;
   let tooltipContainer = svgElement.querySelector(".skill-tooltip-container");
   
   // Clear previous saved removed children
   _isolationState.removedChildren = [];
   
-  // Remove all children except the target node and tooltip/defs
   for (let i = children.length - 1; i >= 0; i--) {
       const child = children[i];
       if (child.id !== nodeId && child.tagName !== 'defs' && !child.classList.contains('skill-tooltip-container')) {
           _isolationState.removedChildren.push(child.cloneNode(true));
-          child.remove();
-      }
+          child.classList.add('hidden');
+        }
   }
   
   const remainingElement = document.getElementById(nodeId);
@@ -57,11 +53,17 @@ function isolateTargetGraphNode(nodeId, sourceContainer, targetContainer) {
   
   // Calculate and set viewBox to center the element without scaling it
   const bbox = remainingElement.getBBox();
+  console.log("bbox: ", bbox);
   const padding = 20; // Add some padding around the element
   
-  // Set the SVG's viewBox to center the element with padding
-  svgElement.setAttribute('viewBox', `${bbox.x - padding} ${bbox.y - padding} ${bbox.width + padding*2} ${bbox.height + padding*2}`);
+  const newViewBox = `${bbox.x - padding} ${bbox.y - padding} ${bbox.width + padding*2} ${bbox.height + padding*2}`;
+  svgElement.setAttribute('viewBox', newViewBox);
   
+   // Update zooming system's viewBox state
+   if (window.zoomingViewBox) {
+    const [x, y, w, h] = newViewBox.split(' ').map(Number);
+    Object.assign(window.zoomingViewBox, { x, y, w, h });
+  }
   // Re-append tooltip if necessary
   if (!svgElement.querySelector(".skill-tooltip-container") && tooltipContainer) {
       svgElement.appendChild(tooltipContainer);
@@ -83,10 +85,6 @@ function restoreGraphView(sourceContainer) {
     svgElement.setAttribute('viewBox', _isolationState.originalViewBox);
   }
   
-  // Restore removed children
-  for (const child of _isolationState.removedChildren) {
-    svgElement.appendChild(child);
-  }
   
   // Reset state
   _isolationState.isIsolated = false;
