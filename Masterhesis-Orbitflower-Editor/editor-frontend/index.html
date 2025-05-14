@@ -42,7 +42,6 @@
       <link rel="stylesheet" href="styles/orbitflower-styles.css" type="text/css" />
       
       
-      
       <script type="text/javascript">
          
      
@@ -297,13 +296,14 @@
        
            $('svg').on('click', '.skill-segment', function(e) {
              const skillSegment = $(this);
-             const parentNode = skillSegment.closest('[id]');
-             if (!isZoomed) {
-              unitId = document.querySelector(`text[id="${parentNode.attr('id')}_text"]`)?.textContent;
-             }
+             const parentNode = skillSegment.closest('g').parent();
+             const parentId = parentNode.attr('id');
+             console.error("this is the parent node", parentId);  
+             const unitId = document.querySelector(`text[id="${parentId}_text"]`)?.textContent;
+             
              const skillId = skillSegment.attr('data-skill-id');
              const key = `${unitId}_${skillId}`;
-         
+             console.error("this what we are getting from the skill segment", key, skillId);
              if (activeSkillSegments[key]) {
                delete activeSkillSegments[key];
                skillSegment.css('fill', '');
@@ -321,6 +321,7 @@
                
                activeSkillSegments[key] = true;
                relatedSkills = getAllRelatedSkills(skillId);
+                console.error("related skills", relatedSkills);
                filterUsersByUnitAndSkill(unitId, relatedSkills);
                skillSegment.css('fill', '#4CAF50');
              }
@@ -402,7 +403,6 @@
            */
            $('svg').on('click', function (e) {
              var clickedElement = e.target;
-             console.log(" you have clicked on a interesting element")
              console.log("current state of expression builder", expressionBuilderPaused);
              if (clickedElement.classList.contains('skill-segment')&&  expressionBuilder.isPaused() && clickedElement.tagName === 'path') {
                splitGraphContainer(true);
