@@ -10,39 +10,33 @@ class SkillsFeature {
     this.zoomedNodeId = null;
     this.collapseTimeouts = new Map();
     this.svgStateHistory = [];
-    
-    window.skillId = null;
-    window.currentEntityId = null;
-    window.currentEntityType = null;
     window.isZoom = false;
-    
     if (!window.getSkillIdColor) {
       window.getSkillIdColor = this.getSkillIdColor;
     }
-    
   }
-  
+
   show(doc) {
     console.log("SkillsFeature.show() called with document:", doc);
-    
+
     if (doc) {
       this.serverData = doc;
       this.initialize();
       return;
     }
-    
+
     if (this.serverData) {
       this.initialize();
       return;
     }
-    
+
     console.warn("No document provided to SkillsFeature.show()");
   }
-  
+
   initialize() {
     this.addStyleSheet();
     this.saveOriginalSvg();
-    
+
     try {
       console.log("Initializing skill distribution rings...");
       if (!this.serverData) {
@@ -50,7 +44,7 @@ class SkillsFeature {
         return;
       }
       this.addSkillDistributionRings();
-      
+
       if (typeof window.storeOriginalPositions === "function") {
         window.storeOriginalPositions();
       }
@@ -58,7 +52,7 @@ class SkillsFeature {
       console.error("Initialization failed:", error);
     }
   }
-  
+
   getSkillIdColor(skillId) {
     const colorPalette = [
       "#60A5FA", // Soft blue
@@ -193,11 +187,11 @@ class SkillsFeature {
     if (!baseColors) {
       baseColors = [
         "#60A5FA",
-        "#34D399", 
-        "#A78BFA", 
-        "#F87171", 
-        "#FBBF24", 
-        "#6EE7B7", 
+        "#34D399",
+        "#A78BFA",
+        "#F87171",
+        "#FBBF24",
+        "#6EE7B7",
       ];
     }
 
@@ -275,7 +269,7 @@ class SkillsFeature {
     if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
     return p;
   }
-  
+
   addStyleSheet() {
     const style = document.createElement("style");
     style.textContent = `
@@ -296,6 +290,7 @@ class SkillsFeature {
         stroke-width: 2px !important;
         filter: drop-shadow(0px 1px 3px rgba(164, 0, 0, 0.3));
       }
+        
 
       #usercolumn .subject.highlight {
         background-color: #ffeb3b;
@@ -354,6 +349,10 @@ class SkillsFeature {
       #usercolumn .subject.highlight {
         background-color: #ffeb3b;
       }
+        .skill-segment.dragging {
+    opacity: 0.7;
+    filter: brightness(0.9);
+  }
     `;
     document.head.appendChild(style);
   }
@@ -364,7 +363,6 @@ class SkillsFeature {
     this.isZoomed = false;
     window.isZoom = false;
     window.detailedView = false;
-
     window.location.reload();
   }
 
@@ -372,47 +370,50 @@ class SkillsFeature {
   updateTooltip(tooltip, skill, value, percent, x, y) {
     tooltip.style.visibility = "hidden";
     tooltip.style.display = "block";
-  
+
     const title = tooltip.querySelector(".tooltip-title");
     title.textContent = skill;
-  
+
     const valueText = tooltip.querySelector(".tooltip-value");
     valueText.textContent = `Value: ${value}`;
-  
+
     const percentText = tooltip.querySelectorAll(".tooltip-value")[1];
     percentText.textContent = `${percent}% of total`;
-  
+
     // Detect if we're in split view by checking container width
     const container = document.getElementById("graph");
     const isSplitView = window.innerWidth < 1200; // Adjust breakpoint as needed
-  
+
     // Use dynamic font sizes based on view state
     const baseFontSize = isSplitView ? 8 : 10;
     const detailFontSize = isSplitView ? 6 : 8;
-  
+
     title.style.fontSize = `${baseFontSize}px`;
     valueText.style.fontSize = `${detailFontSize}px`;
     percentText.style.fontSize = `${detailFontSize}px`;
-  
+
     // Calculate dimensions based on text content
     const titleWidth = title.getComputedTextLength();
     const valueWidth = valueText.getComputedTextLength();
     const percentWidth = percentText.getComputedTextLength();
     const maxTextWidth = Math.max(titleWidth, valueWidth, percentWidth);
-  
+
     const paddingX = isSplitView ? 8 : 16;
     const paddingY = isSplitView ? 4 : 8;
     const lineHeight = isSplitView ? 10 : 12;
-  
-    const newWidth = Math.max(maxTextWidth + paddingX * 2, isSplitView ? 90 : 120);
+
+    const newWidth = Math.max(
+      maxTextWidth + paddingX * 2,
+      isSplitView ? 90 : 120
+    );
     const newHeight = isSplitView ? 30 : 45;
-  
+
     const bg = tooltip.querySelector(".tooltip-bg");
     bg.setAttribute("width", newWidth);
     bg.setAttribute("height", newHeight);
     bg.setAttribute("rx", isSplitView ? 2 : 4);
     bg.setAttribute("ry", isSplitView ? 2 : 4);
-  
+
     // Position elements dynamically
     title.setAttribute("x", paddingX);
     title.setAttribute("y", paddingY + baseFontSize);
@@ -420,7 +421,7 @@ class SkillsFeature {
     valueText.setAttribute("y", paddingY + baseFontSize + lineHeight);
     percentText.setAttribute("x", paddingX);
     percentText.setAttribute("y", paddingY + baseFontSize + lineHeight * 2);
-  
+
     // Adjust position for split view
     const svg = tooltip.ownerSVGElement;
     if (svg) {
@@ -432,7 +433,7 @@ class SkillsFeature {
         tooltip.setAttribute("transform", `translate(${newX},${newY})`);
       }
     }
-  
+
     tooltip.setAttribute("transform", `translate(${x},${y})`);
     tooltip.style.visibility = "visible";
   }
@@ -501,7 +502,7 @@ class SkillsFeature {
     // Create HTML button
     const backButton = document.createElement("button");
     backButton.id = "skills-back-button";
-    backButton.textContent = "Back";
+    backButton.textContent = "Single View";
     backButton.style.cssText = `
       position: absolute;
       top: 10px;
@@ -592,13 +593,7 @@ class SkillsFeature {
   }
 
   // Set a timeout to auto-collapse expanded skills
-  setCollapseTimeout(
-    group,
-    skillName,
-    levelGroup,
-    parentNode,
-    delay = 10000
-  ) {
+  setCollapseTimeout(group, skillName, levelGroup, parentNode, delay = 10000) {
     const key = `${group.id}-${skillName}`;
     this.clearCollapseTimeout(group.id, skillName);
 
@@ -648,10 +643,9 @@ class SkillsFeature {
     return hierarchy;
   }
 
-
   renderSkillSegments(group, skillsData, options = {}) {
     if (!skillsData || skillsData.length === 0) return null;
-    
+
     const self = this; // Store reference to this for use in event handlers
     const svg = group.ownerSVGElement;
     const tooltip = this.createTooltip(svg);
@@ -711,10 +705,9 @@ class SkillsFeature {
       const endA = currAngle + angleSpan;
       currAngle = endA;
 
-      const gradId = `grad-${group.id}-level${config.level}-${skill.skill.replace(
-        /\s+/g,
-        ""
-      )}`;
+      const gradId = `grad-${group.id}-level${
+        config.level
+      }-${skill.skill.replace(/\s+/g, "")}`;
       const grad = document.createElementNS(
         "http://www.w3.org/2000/svg",
         "linearGradient"
@@ -751,7 +744,10 @@ class SkillsFeature {
       defs.appendChild(grad);
 
       // Create skill segment
-      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      const path = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "path"
+      );
       const pathData = self.describeArc(cx, cy, outerR, innerR, startA, endA);
 
       // Only set path data if it's valid
@@ -762,26 +758,130 @@ class SkillsFeature {
         path.setAttribute("data-skill", skill.skill);
         path.setAttribute("data-skill-id", skill.skill);
         path.setAttribute("data-value", skill.value);
+        path.setAttribute(
+          "id",
+          `${group.id}-${skill.skill.replace(/\s+/g, "")}`
+        );
 
-        if (skill.subSkills && skill.subSkills.length > 0) {
-          const midAngle = (startA + endA) / 2;
-          const indicatorR = outerR - 2;
-          const indicatorPos = self.polarToCartesian(cx, cy, indicatorR, midAngle);
+        // find entity name and type
+        const entityType = group.id.startsWith("u") ? "unit" : "role";
+        const entityName = svg.querySelector(
+          `text#${group.id}_text`
+        ).textContent;
+        const pathId = `${group.id}-${skill.skill.replace(/\s+/g, "")}`;
 
-          const indicator = document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "circle"
-          );
-          indicator.setAttribute("cx", indicatorPos.x);
-          indicator.setAttribute("cy", indicatorPos.y);
-          indicator.setAttribute("r", 1.5);
-          indicator.classList.add("skill-indicator");
-          levelGroup.appendChild(indicator);
+        // Add drag functionality
+        let isDragging = false;
+        let dragTooltip = null;
+        let startX = 0;
+        let startY = 0;
+        const DRAG_THRESH = 10; // px
+
+        path.addEventListener("pointerdown", startDrag);
+
+        function startDrag(e) {
+          startX = e.clientX;
+          startY = e.clientY;
+
+          const svg = path.ownerSVGElement;
+          svg.setPointerCapture(e.pointerId);
+
+          svg.addEventListener("pointermove", drag);
+          svg.addEventListener("pointerup", stopDrag);
+          svg.addEventListener("pointercancel", stopDrag);
         }
 
+        function drag(e) {
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (!isDragging && distance > DRAG_THRESH) {
+            isDragging = true;
+
+            // Create an SVG tooltip container for dragging
+            dragTooltip = document.createElement("div");
+            Object.assign(dragTooltip.style, {
+              position: "absolute",
+              padding: "8px 12px",
+              backgroundColor: skill.color, // Use the skill segment's color
+              color: "#fff",
+              borderRadius: "4px",
+              fontFamily: "Arial, sans-serif",
+              fontSize: "14px",
+              fontWeight: "normal",
+              pointerEvents: "none",
+              zIndex: "9999",
+              transform: "translate(-50%, -50%)",
+              whiteSpace: "nowrap",
+              boxShadow: `0 4px 8px ${self.shadeColor(skill.color, -20)}`, // Add a shadow with a darker shade of the color
+              animation: "pulse 1s infinite", // Add a pulsing animation
+            });
+            dragTooltip.textContent = `Skill:${skill.skill} (of ${entityType} ${entityName})`;
+            document.body.appendChild(dragTooltip);
+
+            // Add a cool touch: scale up the skill segment slightly
+            path.classList.add("dragging");
+          }
+
+          if (isDragging) {
+            updateDragPosition(e);
+          }
+        }
+
+        function stopDrag(e) {
+          const svg = path.ownerSVGElement;
+          svg.releasePointerCapture(e.pointerId);
+          svg.removeEventListener("pointermove", drag);
+          svg.removeEventListener("pointerup", stopDrag);
+          svg.removeEventListener("pointercancel", stopDrag);
+
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (isDragging) {
+            isDragging = false;
+
+            // Dispatch drop event
+            if (dragTooltip) {
+              const dropEvent = new CustomEvent("skilldragend", {
+                detail: {
+                  skillId: skill.skill,
+                  entityName: entityName,
+                  entityType: entityType,
+                  pathId: pathId,
+                  x: e.clientX,
+                  y: e.clientY,
+                },
+              });
+              window.dispatchEvent(dropEvent);
+              document.body.removeChild(dragTooltip);
+              dragTooltip = null;
+            }
+
+            // Remove the scaling effect
+            path.classList.remove("dragging");
+          } else if (distance <= DRAG_THRESH) {
+            path.dispatchEvent(new Event("click"));
+          }
+        }
+
+        function updateDragPosition(e) {
+          // Position the tooltip under the cursor
+          if (dragTooltip) {
+            dragTooltip.style.left = `${e.clientX}px`;
+            dragTooltip.style.top = `${e.clientY}px`;
+          }
+        }
         path.addEventListener("mouseenter", function (e) {
           const midAngle = (startA + endA) / 2;
-          const tooltipPos = self.polarToCartesian(cx, cy, outerR + 15, midAngle);
+          const tooltipPos = self.polarToCartesian(
+            cx,
+            cy,
+            outerR + 15,
+            midAngle
+          );
           self.updateTooltip(
             tooltip,
             skill.skill,
@@ -823,14 +923,14 @@ class SkillsFeature {
 
         path.addEventListener("click", function (e) {
           const svg = this.ownerSVGElement;
-          
+          console.error("helllooooo");
           if (!svg) {
             console.error("SVG element not found.");
             return;
           }
           self.svgStateHistory.push(svg.innerHTML);
           const mainGroup = this.closest('g[id^="u"], g[id^="r"]');
-          
+
           document
             .querySelectorAll(".skill-segment.active-skill-filter")
             .forEach((el) => {
@@ -860,13 +960,17 @@ class SkillsFeature {
               self.clearCollapseTimeout(group.id, skill.skill);
             } else {
               path.parentNode.setAttribute("data-expanded", "true");
-              const childGroup = self.renderSkillSegments(group, skill.subSkills, {
-                level: config.level + 1,
-                startAngle: startA,
-                endAngle: endA,
-                parent: skill.skill,
-                autoCollapseDelay: config.autoCollapseDelay,
-              });
+              const childGroup = self.renderSkillSegments(
+                group,
+                skill.subSkills,
+                {
+                  level: config.level + 1,
+                  startAngle: startA,
+                  endAngle: endA,
+                  parent: skill.skill,
+                  autoCollapseDelay: config.autoCollapseDelay,
+                }
+              );
               self.setCollapseTimeout(
                 group,
                 skill.skill,
@@ -947,7 +1051,6 @@ class SkillsFeature {
   buildSkillTree(skillSubjects, serverData) {
     const skillsMap = new Map();
 
-    // Initialize the map with each skill that appears in a subject.
     Object.entries(skillSubjects).forEach(([id, subjSet]) => {
       skillsMap.set(id, {
         id,
@@ -957,12 +1060,10 @@ class SkillsFeature {
       });
     });
 
-    // Process parent–child relationships from the XML.
     const skillElements = serverData.querySelectorAll("skill");
     skillElements.forEach((skillEl) => {
       const skillId = skillEl.getAttribute("id");
       if (!skillsMap.has(skillId)) {
-        // Create an entry if the skill wasn't referenced directly by any subject.
         skillsMap.set(skillId, {
           id: skillId,
           subjects: new Set(),
@@ -999,7 +1100,9 @@ class SkillsFeature {
       (skill) => !skill.parent
     );
     const palette = this.generateColorPalette();
-    return rootSkills.map((skill) => this.buildSkillNode(skill, skillsMap, palette));
+    return rootSkills.map((skill) =>
+      this.buildSkillNode(skill, skillsMap, palette)
+    );
   }
 
   buildSkillNode(skill, skillsMap, palette, colorIndex = { index: 0 }) {
@@ -1012,7 +1115,9 @@ class SkillsFeature {
 
     skill.children.forEach((childId) => {
       const child = skillsMap.get(childId);
-      node.subSkills.push(this.buildSkillNode(child, skillsMap, palette, colorIndex));
+      node.subSkills.push(
+        this.buildSkillNode(child, skillsMap, palette, colorIndex)
+      );
     });
     return node;
   }
@@ -1050,7 +1155,7 @@ class SkillsFeature {
 
     return Array.from(descendants);
   }
-  
+
   getSubjectsBySkillId(skillId) {
     if (!this.serverData) return [];
     const subjects = this.serverData.querySelectorAll("subject");
@@ -1076,8 +1181,4 @@ class SkillsFeature {
 
     return matches;
   }
-
-  
 }
-
-
