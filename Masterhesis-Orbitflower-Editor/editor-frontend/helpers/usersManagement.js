@@ -86,7 +86,7 @@ function storeOriginalUserStates() {
       const inUnit = $(`subject[uid="${userId}"] relation[unit="${unitId}"], subject[uid="${userId}"] relation[role="${unitId}"]`, currentorgmodel).length > 0;
       let hasSkill = false;
       skillIdsArray.forEach(skillId => {
-        if ($(`subject[uid="${userId}"] subjectSkills skillRef[id="${skillId}"]`, currentorgmodel).length > 0) {
+        if ($(`subject[uid="${userId}"] subjectSkills ref[id="${skillId}"]`, currentorgmodel).length > 0) {
           hasSkill = true;
         }
       });         
@@ -104,7 +104,6 @@ function storeOriginalUserStates() {
       visited.add(currentSkillId);
       skills.add(currentSkillId);
 
-      // Find Parent relations in the current skill
       $(`skill[id="${currentSkillId}"] relation[type="Parent"]`, currentorgmodel).each(function() {
         const parentId = $(this).attr('id');
         if (parentId && !visited.has(parentId)) {
@@ -112,7 +111,6 @@ function storeOriginalUserStates() {
         }
       });
 
-      // Find skills that have Child relations pointing to the current skill (current skill is their parent)
       $(`skill relation[type="Child"][id="${currentSkillId}"]`, currentorgmodel).each(function() {
         const parentSkillId = $(this).closest('skill').attr('id');
         if (parentSkillId && !visited.has(parentSkillId)) {

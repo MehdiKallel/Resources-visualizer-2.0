@@ -47,196 +47,6 @@ function initializeZooming() {
 
   svgElement.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
   
-  const controlPanel = document.createElement('div');
-  controlPanel.className = 'svg-navigation-controls';
-  controlPanel.innerHTML = `
-    <div class="joystick-base">
-      <div class="joystick-handle" id="joystick-handle"></div>
-    </div>
-    <div class="zoom-controls">
-      <div class="zoom-button" id="zoom-in">+</div>
-      <div class="zoom-button" id="reset-view">⌂</div>
-      <div class="zoom-button" id="zoom-out">−</div>
-    </div>
-  `;
-  
-  const svgContainer = svgElement.parentNode;
-  svgContainer.style.position = 'relative';
-  svgContainer.appendChild(controlPanel);
-  
-  const style = document.createElement('style');
-  style.textContent = `
-    .svg-navigation-controls {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      align-items: center;
-      z-index: 1000;
-    }
-    
-    .joystick-base {
-      width: 80px;
-      height: 80px;
-      background-color: rgba(50, 50, 50, 0.3);
-      border-radius: 50%;
-      position: relative;
-      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
-    }
-    
-    .joystick-handle {
-      width: 30px;
-      height: 30px;
-      background-color: rgba(200, 200, 200, 0.9);
-      border-radius: 50%;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      cursor: grab;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-    }
-    
-    .joystick-handle:active {
-      cursor: grabbing;
-      background-color: rgba(180, 180, 180, 0.9);
-    }
-    
-    .zoom-controls {
-      display: flex;
-      gap: 10px;
-    }
-    
-    .zoom-button {
-      width: 25px;
-      height: 25px;
-      background-color: rgba(200, 200, 200, 0.8);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: bold;
-      user-select: none;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-    }
-    
-    .zoom-button:hover {
-      background-color: rgba(220, 220, 220, 0.9);
-    }
-    
-    .zoom-button:active {
-      transform: scale(0.95);
-      background-color: rgba(180, 180, 180, 0.9);
-    }
-  `;
-  document.head.appendChild(style);
-  
-  // Joystick functionality
-  const joystickHandle = document.getElementById('joystick-handle');
-  const joystickBase = document.querySelector('.joystick-base');
-  let isDragging = false;
-  let panInterval = null;
-  let joystickNormalizedX = 0;
-  let joystickNormalizedY = 0;
-  
-  joystickHandle.addEventListener('mousedown', startDrag);
-  document.addEventListener('mousemove', dragJoystick);
-  document.addEventListener('mouseup', stopDrag);
-  
-  joystickHandle.addEventListener('touchstart', e => {
-    e.preventDefault();
-    startDrag(e.touches[0]);
-  });
-  document.addEventListener('touchmove', e => {
-    e.preventDefault();
-    dragJoystick(e.touches[0]);
-  });
-  document.addEventListener('touchend', stopDrag);
-  
-  function startDrag(e) {
-    isDragging = true;
-    joystickHandle.style.transition = 'none';
-    clearInterval(panInterval);
-
-    // Reset normalized positions at the start of drag
-    joystickNormalizedX = 0;
-    joystickNormalizedY = 0;
-    
-    // Start continuous panning based on joystick position
-    panInterval = setInterval(updatePanFromJoystick, 16); // ~60fps
-  }
-  
-  function updatePanFromJoystick() {
-    if (!isDragging) return;
-    
-    // Pan the SVG based on stored joystick position - don't modify width/height (no zooming)
-    const panSpeed = 2;
-    const panAmountX = joystickNormalizedX * initialW * panSpeed * 0.01;
-    const panAmountY = joystickNormalizedY * initialH * panSpeed * 0.01;
-    
-    viewBox.x += panAmountX;
-    viewBox.y += panAmountY;
-    
-    // Only update x and y, don't modify w and h to prevent zooming
-    svgElement.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
-  }
-  
-  function dragJoystick(e) {
-    if (!isDragging) return;
-    
-    const baseRect = joystickBase.getBoundingClientRect();
-    const baseX = baseRect.left + baseRect.width/2;
-    const baseY = baseRect.top + baseRect.height/2;
-    
-    let moveX = e.clientX - baseX;
-    let moveY = e.clientY - baseY;
-    
-    // Calculate distance from center
-    const distance = Math.sqrt(moveX * moveX + moveY * moveY);
-    const maxDistance = baseRect.width/2 - joystickHandle.offsetWidth/2;
-    
-    // Limit movement to circle
-    if (distance > maxDistance) {
-      const ratio = maxDistance / distance;
-      moveX *= ratio;
-      moveY *= ratio;
-    }
-    
-    // Move joystick handle
-    joystickHandle.style.left = `calc(50% + ${moveX}px)`;
-    joystickHandle.style.top = `calc(50% + ${moveY}px)`;
-    
-    // Store normalized positions for continuous panning
-    joystickNormalizedX = moveX / maxDistance;
-    joystickNormalizedY = moveY / maxDistance;
-  }
-  
-  function stopDrag() {
-    if (!isDragging) return;
-    isDragging = false;
-    
-    // Stop continuous panning
-    clearInterval(panInterval);
-    
-    // Reset normalized positions
-    joystickNormalizedX = 0;
-    joystickNormalizedY = 0;
-    
-    // Return joystick to center with animation
-    joystickHandle.style.transition = 'all 0.2s ease-out';
-    joystickHandle.style.left = '50%';
-    joystickHandle.style.top = '50%';
-  }
-  
-  // Zoom controls
-  document.getElementById('zoom-in').addEventListener('click', zoomIn);
-  document.getElementById('zoom-out').addEventListener('click', zoomOut);
-  document.getElementById('reset-view').addEventListener('click', resetView);
-  
   // Set default cursor style
   svgElement.style.cursor = 'grab';
 
@@ -354,58 +164,6 @@ function initializeZooming() {
     document.removeEventListener('mousemove', pan);
   }
   
-  // New navigation functions
-  function zoomIn() {
-    const zoomFactor = 0.8; // Zoom in by reducing view size
-    const centerX = viewBox.x + viewBox.w / 2;
-    const centerY = viewBox.y + viewBox.h / 2;
-    
-    const newW = viewBox.w * zoomFactor;
-    const newH = viewBox.h * zoomFactor;
-    
-    viewBox.x = centerX - newW / 2;
-    viewBox.y = centerY - newH / 2;
-    viewBox.w = newW;
-    viewBox.h = newH;
-    
-    svgElement.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
-  }
-  
-  function zoomOut() {
-    const zoomFactor = 1.2; // Zoom out by increasing view size
-    const centerX = viewBox.x + viewBox.w / 2;
-    const centerY = viewBox.y + viewBox.h / 2;
-    
-    const newW = viewBox.w * zoomFactor;
-    const newH = viewBox.h * zoomFactor;
-    
-    viewBox.x = centerX - newW / 2;
-    viewBox.y = centerY - newH / 2;
-    viewBox.w = newW;
-    viewBox.h = newH;
-    
-    svgElement.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
-  }
-  
-  function moveView(direction) {
-    const moveAmount = 0.1; // Move by 10% of the current view
-    switch(direction) {
-      case 'left':
-        viewBox.x -= viewBox.w * moveAmount;
-        break;
-      case 'right':
-        viewBox.x += viewBox.w * moveAmount;
-        break;
-      case 'up':
-        viewBox.y -= viewBox.h * moveAmount;
-        break;
-      case 'down':
-        viewBox.y += viewBox.h * moveAmount;
-        break;
-    }
-    svgElement.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
-  }
-  
   function resetView() {
     // Update both SVG attribute and internal state
     viewBox.x = initialViewBox.x;
@@ -429,44 +187,12 @@ function initializeZooming() {
     }
   }
   
-  // Fix event listeners for control buttons - use ID selectors instead of class selectors
-  // And only include buttons that actually exist in the DOM
-  document.getElementById('zoom-in').addEventListener('click', zoomIn);
-  document.getElementById('zoom-out').addEventListener('click', zoomOut);
-  document.getElementById('reset-view').addEventListener('click', resetView);
-  
   // Add keyboard navigation support
   document.addEventListener('keydown', function(e) {
     // Skip if we're in an input field
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
     
     switch(e.key) {
-      case '+':
-      case '=':
-        zoomIn();
-        e.preventDefault();
-        break;
-      case '-':
-      case '_':
-        zoomOut();
-        e.preventDefault();
-        break;
-      case 'ArrowLeft':
-        moveView('left');
-        e.preventDefault();
-        break;
-      case 'ArrowRight':
-        moveView('right');
-        e.preventDefault();
-        break;
-      case 'ArrowUp':
-        moveView('up');
-        e.preventDefault();
-        break;
-      case 'ArrowDown':
-        moveView('down');
-        e.preventDefault();
-        break;
       case '0':
       case 'r':
         resetView();
@@ -475,11 +201,13 @@ function initializeZooming() {
     }
   });
 
+  // Add event listeners
   svgElement.addEventListener('wheel', handleWheel);
   svgElement.addEventListener('mousedown', startPan);
   svgElement.addEventListener('mouseup', endPan);
   svgElement.addEventListener('mouseleave', endPan);
 
+  // Touch events
   svgElement.addEventListener('touchstart', function(e) {
       e.preventDefault(); 
       if (e.touches.length === 1) {

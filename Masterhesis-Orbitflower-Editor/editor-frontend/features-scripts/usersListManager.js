@@ -47,7 +47,7 @@ class UsersManager {
         if (!hasEntity) return false;
 
         // must have a skillRef in our relevant set
-        return Array.from(sub.querySelectorAll("skillRef")).some((ref) =>
+        return Array.from(sub.querySelectorAll("ref")).some((ref) =>
           relevant.has(ref.getAttribute("id"))
         );
       })

@@ -21,8 +21,6 @@ class OrbitFlower {
 
   show(orgModel) {
     console.log("OrbitFlower.show() called with model:", orgModel);
-
-    // If we're given XML directly, use it
     if (
       orgModel &&
       (orgModel.documentElement ||
@@ -35,25 +33,8 @@ class OrbitFlower {
       this.renderOrganisationGraph(this.doc);
       return;
     }
-
-    // If we have a JSON model, convert it to XML (or use as is if rendering supports JSON)
-    if (orgModel && typeof orgModel === "object") {
-      // For now, we'll just store it and render
-      this.currentModel = orgModel;
-      this.renderFromJSON(orgModel);
-      return;
-    }
-
-    // If no model provided, fetch from server
-    if (!orgModel && !this.initialized) {
-      this.fetchAndRender();
-    }
   }
 
-  renderFromJSON(jsonModel) {
-    console.log("Rendering from JSON model", jsonModel);
-    this.fetchAndRender();
-  }
   addCenteredContainer(svgWidth, svgHeight) {
     const ns = "http://www.w3.org/2000/svg";
     const container = document.createElementNS(ns, "g");
@@ -115,28 +96,6 @@ class OrbitFlower {
     const container = this.svgElement.find("#centered-container");
     container.style.display = "none";
     container.innerHTML = ""; // Clear previous content
-  }
-
-  fetchAndRender() {
-    console.log("Fetching organisation model from server...");
-    fetch("http://localhost:3000/organisation")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(
-            "Network response was not ok: " + response.statusText
-          );
-        }
-        return response.text();
-      })
-      .then((data) => {
-        this.doc = new DOMParser().parseFromString(data, "application/xml");
-
-        console.log("Fetched organisation model:", this.doc);
-        this.renderOrganisationGraph(this.doc);
-      })
-      .catch((error) => {
-        console.error("Error fetching organisation model:", error);
-      });
   }
 
   renderOrganisationGraph(doc) {
@@ -456,15 +415,15 @@ class OrbitFlower {
         const svgMarkup = si.dump(12, 12);
 
         subjects.push(`
-    <table class="subject" id="${u.id}" data-uid="${u.uid}" onmouseover="s_relationstoggle(this)" onmouseout="s_relationstoggle(this)" onclick="openSubjectEditor('${u.uid}')" style="margin-bottom: 5px;">
-        <tbody>
-        <tr>
-            <td>${svgMarkup}</td>
-            <td class="labeltext">${u.shortid}</td>
-        </tr>
-        </tbody>
-    </table>
-    `);
+          <table class="subject" id="${u.id}" data-uid="${u.uid}" onmouseover="s_relationstoggle(this)" onmouseout="s_relationstoggle(this)" onclick="openSubjectEditor('${u.uid}')" style="margin-bottom: 5px;">
+              <tbody>
+              <tr>
+                  <td>${svgMarkup}</td>
+                  <td class="labeltext">${u.shortid}</td>
+              </tr>
+              </tbody>
+          </table>
+      `);
 
         u.relations.forEach((r) => {
           const [x1, y1] = SVG.circle_point(
@@ -704,7 +663,6 @@ class OrbitFlower {
                   ghostBox.parentNode.removeChild(ghostBox);
               }, 300);
             }
-
             // Dispatch a custom event for drag end similar to skills
             const dropEvent = new CustomEvent("circledragend", {
               detail: {
@@ -765,6 +723,12 @@ const renderOrganisationGraph = (doc) => {
   return tempViz.renderOrganisationGraph(doc);
 };
 
+const resetGraph = () => {
+  const graphSvg = $("svg");
+  if (graphSvg) {
+    graphSvg.empty();
+  }
+};
 async function renderGraph() {
   try {
     const tempViz = new OrbitFlower($("svg"));

@@ -1036,7 +1036,7 @@ class SkillsFeature {
     subjects.forEach((subject) => {
       // Use the subject's id as its unique identifier.
       const subjectId = subject.getAttribute("id");
-      const skillRefs = subject.querySelectorAll("subjectSkills skillRef");
+      const skillRefs = subject.querySelectorAll("subjectSkills ref");
       skillRefs.forEach((ref) => {
         const skillId = ref.getAttribute("id");
         if (!skillSubjects[skillId]) {
@@ -1163,7 +1163,7 @@ class SkillsFeature {
     const matches = [];
 
     subjects.forEach((subject) => {
-      const skillRefs = subject.querySelectorAll("subjectSkills skillRef");
+      const skillRefs = subject.querySelectorAll("subjectSkills ref");
       let hasMatch = false;
       skillRefs.forEach((ref) => {
         if (descendantIds.includes(ref.getAttribute("id"))) {

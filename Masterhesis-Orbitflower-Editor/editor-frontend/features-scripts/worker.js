@@ -30,6 +30,9 @@ class SkillTreeComponent {
   constructor(options) {
     this.tooltip = document.createElement("div");
     this.tooltip.id = "tooltip";
+    this.nodeSize = 80; // Reduced node spacing
+    this.chargeStrength = -120; // Increased repulsion
+    this.linkDistance = 60; // Shorter links
 
     if (!document.getElementById("skill-tree-component-styles")) {
       const style = document.createElement("style");
@@ -40,16 +43,21 @@ class SkillTreeComponent {
           height: 100% !important; /* Changed from 50% to 100% */
           overflow: hidden;
           position: relative;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
         
         .particle-canvas {
         }
 
         .node circle {
-          stroke: #fff;
-          stroke-width: 1.5;
-          transition: r 0.3s ease, fill 0.3s ease;
-          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  stroke: #ffffff;
+  stroke-width: 2;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+        .particle-canvas {
+          pointer-events: none;
         }
 
         .node text {
@@ -68,19 +76,18 @@ class SkillTreeComponent {
         }
 
         .relationship-line {
-          stroke-opacity: 0; /* Make paths completely transparent */
+          stroke: rgba(100, 100, 100, 0.1);
+          stroke-width: 1;
         }
 
         #tooltip {
-          background: #ffffff;
-          border: 1px solid #e2e8f0;
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(4px);
+          border: 1px solid #e0e0e0;
           border-radius: 6px;
           padding: 12px;
-          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-          font-size: 14px;
-          color: #334155;
-          pointer-events: none;
-          max-width: 280px;
+          font-size: 13px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         .tooltip-title {
@@ -112,7 +119,7 @@ class SkillTreeComponent {
     this.filterId = options.filterId;
     this.skillId = options.skillId;
     this.xmlData = options.xmlData;
-    this.layoutType = options.layoutType || "hierarchical";
+    this.layoutType =  "hierarchical";
 
     this.skillTree = null;
     this.relationships = [];
@@ -156,6 +163,11 @@ class SkillTreeComponent {
     this.svg.style.height = "100%";
     this.svg.setAttribute("id", "testing-svg");
     this.el.appendChild(this.svg);
+     // Add these properties
+     this.nodeSize = 80; // Reduced node spacing
+     this.chargeStrength = -120; // Increased repulsion
+     this.linkDistance = 60; // Shorter links
+    this.setupZoomPan();
   }
 
   handleResize() {
@@ -244,7 +256,7 @@ class SkillTreeComponent {
 
     this.setupCanvasClickHandler();
 
-    this.layoutType = options.layoutType || "radial";
+    this.layoutType = "radial";
   }
 
   reset(container) {
@@ -353,12 +365,24 @@ class SkillTreeComponent {
     if (roots.length === 1) {
       this.skillTree = roots[0];
     } else {
+      // Create synthetic root and connect it to children via relationships
       this.skillTree = {
         id: "root",
-        name: "",
+        name: "Skills",
         children: roots,
         isSynthetic: true,
       };
+
+      // Add relationships between root and all its children
+      roots.forEach(root => {
+        this.relationships.push({
+          from: "root",
+          to: root.id,
+          score: 5,
+          speed: 0.002,
+          type: "isA"
+        });
+      });
     }
 
     this.skillEmployeeMap.clear();
@@ -484,54 +508,19 @@ class SkillTreeComponent {
   }
 
   computeRadialLayout() {
-    const levelCounts = {};
+    const root = d3.hierarchy(this.skillTree);
+    const treeLayout = d3.tree()
+      .size([2 * Math.PI, Math.min(this.container.clientWidth, this.container.clientHeight) * 0.4])
+      .separation((a, b) => (a.parent === root || b.parent === root) ? 2 : 1);
 
-    const countNodesAtLevels = (node, level = 0) => {
-      levelCounts[level] = (levelCounts[level] || 0) + 1;
-      if (node.children) {
-        node.children.forEach((child) => countNodesAtLevels(child, level + 1));
-      }
-    };
+    treeLayout(root);
 
-    countNodesAtLevels(this.skillTree);
-
-    const svgRect = this.svg.getBoundingClientRect();
-    const centerX = svgRect.width / 2;
-    const centerY = svgRect.height / 2;
-
-    const baseRadius = Math.min(svgRect.width, svgRect.height) * 0.15;
-
-    const positionNodesRadially = (
-      node,
-      level = 0,
-      angle = 0,
-      arc = 2 * Math.PI
-    ) => {
-      if (level === 0) {
-        node.x = centerX;
-        node.y = centerY;
-      } else {
-        const radius = baseRadius * (level * 1.8 + 1);
-        node.x = centerX + radius * Math.cos(angle);
-        node.y = centerY + radius * Math.sin(angle);
-      }
-
-      if (node.children && node.children.length > 0) {
-        const childCount = node.children.length;
-        const childArc = arc / childCount;
-
-        let startAngle = angle - arc / 2 + childArc / 2;
-
-        node.children.forEach((child, index) => {
-          const childAngle = startAngle + index * childArc;
-          positionNodesRadially(child, level + 1, childAngle, childArc);
-        });
-      }
-    };
-
-    positionNodesRadially(this.skillTree);
+    root.each(node => {
+      const [theta, radius] = [node.x, node.y];
+      node.x = Math.cos(theta) * radius + this.container.clientWidth/2;
+      node.y = Math.sin(theta) * radius + this.container.clientHeight/2;
+    });
   }
-
   renderTree() {
     while (this.svgContent.firstChild) {
       this.svgContent.removeChild(this.svgContent.firstChild);
@@ -685,7 +674,7 @@ class SkillTreeComponent {
       );
       const d = `M ${start.x} ${start.y} Q ${controlX} ${controlY}, ${end.x} ${end.y}`;
       clickablePath.setAttribute("d", d);
-      clickablePath.setAttribute("stroke-width", "10");
+      clickablePath.setAttribute("stroke-width", "5");
       clickablePath.setAttribute("stroke", "transparent");
       clickablePath.setAttribute("fill", "none");
       clickablePath.setAttribute("data-relation-from", rel.from);
@@ -774,32 +763,36 @@ class SkillTreeComponent {
   }
 
   centerSVG() {
-    const svgRect = this.svg.getBoundingClientRect();
-    const svgWidth = svgRect.width;
-    const svgHeight = svgRect.height;
+  const svgRect = this.svg.getBoundingClientRect();
+  const svgWidth = svgRect.width;
+  const svgHeight = svgRect.height;
 
-    if (!this.skillTree || !this.svgContent) return;
+  if (!this.skillTree || !this.svgContent) return;
 
-    let minX = Infinity,
-      maxX = -Infinity;
-    let minY = Infinity,
-      maxY = -Infinity;
+  if (this.renderFullGraph) {
+    // Center on the root node with a higher zoom level
+    const root = this.skillTree;
+    const rootX = root.x;
+    const rootY = root.y;
 
-    const nodes = [];
+    // Set a higher scale for zoom
+    this.transform.scale = 1.5; // Adjust this value as needed for zoom level
+    this.transform.x = svgWidth / 2 - rootX * this.transform.scale;
+    this.transform.y = svgHeight / 2 - rootY * this.transform.scale;
+  } else {
+    // Existing code to fit all nodes
+    let minX = Infinity, maxX = -Infinity;
+    let minY = Infinity, maxY = -Infinity;
+
     const traverseForBounds = (node) => {
       if (node) {
-        nodes.push(node);
         minX = Math.min(minX, node.x);
         maxX = Math.max(maxX, node.x);
         minY = Math.min(minY, node.y);
         maxY = Math.max(maxY, node.y);
-
-        if (node.children) {
-          node.children.forEach(traverseForBounds);
-        }
+        if (node.children) node.children.forEach(traverseForBounds);
       }
     };
-
     traverseForBounds(this.skillTree);
 
     const padding = 100;
@@ -812,7 +805,6 @@ class SkillTreeComponent {
     const graphHeight = maxY - minY;
     const scaleX = svgWidth / graphWidth;
     const scaleY = svgHeight / graphHeight;
-
     const fitScale = Math.min(scaleX, scaleY, 1);
 
     const centerX = (minX + maxX) / 2;
@@ -821,10 +813,10 @@ class SkillTreeComponent {
     this.transform.scale = fitScale;
     this.transform.x = svgWidth / 2 - centerX * fitScale;
     this.transform.y = svgHeight / 2 - centerY * fitScale;
-
-    this.applyTransform();
   }
 
+  this.applyTransform();
+}
   render() {
     if (!this.container) {
       console.error("Container is undefined");
@@ -899,6 +891,7 @@ class SkillTreeComponent {
 
     this.svg.addEventListener("wheel", (event) => {
       event.preventDefault();
+      console.log("Zooming in/out");
       const svgRect = this.svg.getBoundingClientRect();
       const mouseX = event.clientX - svgRect.left;
       const mouseY = event.clientY - svgRect.top;
@@ -946,6 +939,49 @@ class SkillTreeComponent {
 
     this.svg.style.cursor = "grab";
   }
+  setupZoomPan() {
+    let isPanning = false;
+    let startX, startY;
+    const zoomIntensity = 0.1;
+  
+    // Mouse wheel zoom
+    this.svg.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const rect = this.svg.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      
+      const zoomFactor = 1 + (e.deltaY < 0 ? zoomIntensity : -zoomIntensity);
+      this.transform.scale *= zoomFactor;
+      
+      // Adjust transform based on mouse position
+      this.transform.x = mouseX - (mouseX - this.transform.x) * zoomFactor;
+      this.transform.y = mouseY - (mouseY - this.transform.y) * zoomFactor;
+      
+      this.applyTransform();
+    });
+  
+    // Panning handlers
+    this.svg.addEventListener('mousedown', (e) => {
+      if (e.button === 0) {
+        isPanning = true;
+        startX = e.clientX - this.transform.x;
+        startY = e.clientY - this.transform.y;
+      }
+    });
+  
+    document.addEventListener('mousemove', (e) => {
+      if (isPanning) {
+        this.transform.x = e.clientX - startX;
+        this.transform.y = e.clientY - startY;
+        this.applyTransform();
+      }
+    });
+  
+    document.addEventListener('mouseup', () => {
+      isPanning = false;
+    });
+  }
 
   CurvedParticle(
     start,
@@ -958,14 +994,17 @@ class SkillTreeComponent {
     relType,
     getTransform
   ) {
+    // Fix the particle size to be constant based on initial values only
+    const initialSize = this.particleBaseSize + Math.min(score, 6) * 0.1;
+    
     return {
       progress: progress,
-      fadeRate: 0.97,
+      fadeRate: 0.97, // Not used anymore
       thickness: thickness * 0.001,
       speed: speed * 0.05,
-      alpha: 0.75,
+      alpha: 0.75, // Constant alpha - no fading
       curve: { start, end, control },
-      size: this.particleBaseSize + Math.min(score, 6) * 0.1,
+      size: initialSize,
       relType: relType,
       score: score,
       getTransform: getTransform,
@@ -976,9 +1015,7 @@ class SkillTreeComponent {
       },
       update(dt, isDragging) {
         this.progress = (this.progress + this.speed * dt) % 1;
-        this.alpha *= this.fadeRate;
-        if (isDragging) this.alpha *= 0.85;
-        this.size = 1 + Math.min(score, 6) * 0.15;
+        // No fade effects - alpha stays constant
       },
       getPosition() {
         const t = this.progress;
@@ -1099,10 +1136,14 @@ class SkillTreeComponent {
         ? colorMatch.slice(1, 4).map(Number)
         : [100, 149, 237];
 
-      this.particleCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${p.alpha})`;
-      this.particleCtx.beginPath();
-      this.particleCtx.arc(pos.x, pos.y, p.size, 0, Math.PI * 2);
-      this.particleCtx.fill();
+        this.particleCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${Math.min(p.alpha, 0.7)})`;
+        this.particleCtx.beginPath();
+        this.particleCtx.arc(pos.x, pos.y, p.size * 0.8, 0, Math.PI * 2);
+        this.particleCtx.fill();
+        
+        // Add subtle glow effect
+        this.particleCtx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.3)`;
+        this.particleCtx.shadowBlur = 4;
       if (window.detailedView) {
         this.particleCtx.save();
         this.particleCtx.fillStyle = "white";
@@ -1177,9 +1218,10 @@ class SkillTreeComponent {
           score: clickedParticle.score,
           relationDetails: clickedParticle.relationData,
         });
-
-        clickedParticle.size *= 2;
-        clickedParticle.alpha = 1.0;
+        
+        // Removed these lines to prevent the flash effect:
+        // clickedParticle.size *= 2;
+        // clickedParticle.alpha = 1.0;
       } else {
         console.log("No particle detected at this position");
       }

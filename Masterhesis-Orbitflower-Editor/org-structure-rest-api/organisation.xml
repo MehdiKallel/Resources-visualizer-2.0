@@ -62,6 +62,27 @@
       <parent>Dekanat Informatik</parent>
       <permissions/>
     </unit>
+    <unit id="fewfewf">
+      <permissions/>
+    </unit>
+    <unit id="weffewf">
+      <permissions/>
+    </unit>
+    <unit id="fewffew">
+      <permissions/>
+    </unit>
+    <unit id="wfefwefe">
+      <permissions/>
+    </unit>
+    <unit id="fewfewfw">
+      <permissions/>
+    </unit>
+    <unit id="wefwfwfw">
+      <permissions/>
+    </unit>
+    <unit id="fefwefewf">
+      <permissions/>
+    </unit>
   </units>
   <roles>
     <role id="Regular">
@@ -109,37 +130,41 @@
       <relation unit="Knowledge Engineering" role="Project"/>
       <relation unit="Knowledge Engineering" role="Assistant"/>
       <subjectSkills>
-        <skillRef id="Supervised Learning"/>
+        <ref id="Supervised Learning"/>
       </subjectSkills>
     </subject>
     <subject id="Ada Lovelace" uid="lovela4">
+
       <relation unit="Software Architectures" role="Univ.Prof."/>
       <subjectSkills>
-        <skillRef id="Infrastructure Security"/>
-        <skillRef id="Network Security"/>
+        <ref id="Infrastructure Security"/>
+        <ref id="Network Security"/>
+        <ref id="Infrastructure Security"/>
+        <ref id="Network Security"/>
+        <ref id="Azure"/>
       </subjectSkills>
     </subject>
     <subject id="Grace Hopper" uid="hopperg3">
       <relation unit="Scientific Computing" role="Senior Lecturer"/>
       <relation unit="Data Analytics and Computing" role="Teaching"/>
       <subjectSkills>
-        <skillRef id="Cloud Security"/>
-        <skillRef id="DevOps"/>
+        <ref id="Cloud Security"/>
+        <ref id="DevOps"/>
       </subjectSkills>
     </subject>
     <subject id="Alan Turing" uid="turina1">
       <relation unit="Theory and Applications of Algorithms" role="Univ.Prof."/>
       <relation unit="Theory and Applications of Algorithms" role="Teaching"/>
       <subjectSkills>
-        <skillRef id="Machine Learning"/>
-        <skillRef id="Deep Learning"/>
+        <ref id="Machine Learning"/>
+        <ref id="Deep Learning"/>
       </subjectSkills>
     </subject>
     <subject id="Margaret Hamilton" uid="hamiltonm7">
       <relation unit="Workflow Systems and Technology" role="Ass.Prof."/>
       <relation unit="Workflow Systems and Technology" role="Project"/>
       <subjectSkills>
-        <skillRef id="Automation"/>
+        <ref id="Automation"/>
       </subjectSkills>
     </subject>
     <subject id="Simone Kriglstein" uid="kriglss9">
@@ -148,7 +173,7 @@
       <relation unit="Educational Technologies" role="Regular"/>
       <relation unit="Educational Technologies" role="Assistant"/>
       <subjectSkills>
-        <skillRef id="Cloud"/>
+        <ref id="Cloud"/>
       </subjectSkills>
     </subject>
     <subject id="Juergen Manlger" uid="manglej6">
@@ -204,12 +229,9 @@
     </subject>
     <subject id="Andreas Harapat" uid="harapata97">
       <subjectSkills>
-        <skillRef id="Azure"/>
+        <ref id="Azure"/>
       </subjectSkills>
       <relation unit="Educational Technologies" role="Regular"/>
-      <subjectSkills>
-        <skillRef id="Azure"/>
-      </subjectSkills>
     </subject>
     <subject id="Ewald Hellerschmid" uid="hellere8">
       <relation unit="Educational Technologies" role="Regular"/>
@@ -332,7 +354,7 @@
     </subject>
     <subject id="Atakan Aral" uid="arala86">
       <subjectSkills>
-        <skillRef id="AWS"/>
+        <ref id="AWS"/>
       </subjectSkills>
       <relation unit="Scientific Computing" role="Teaching"/>
       <relation unit="Scientific Computing" role="Project"/>
@@ -554,7 +576,7 @@
       <relation unit="Knowledge Engineering" role="Regular"/>
       <relation unit="Knowledge Engineering" role="Assistant"/>
       <subjectSkills>
-        <skillRef id="Azure"/>
+        <ref id="Azure"/>
       </subjectSkills>
     </subject>
     <subject id="Karlheinz Wachauer" uid="wachauk2">
@@ -621,6 +643,9 @@
       <relation unit="Workflow Systems and Technology" role="Teaching"/>
       <relation unit="Workflow Systems and Technology" role="Regular"/>
       <relation unit="Workflow Systems and Technology" role="Assistant"/>
+      <subjectSkills>
+        <ref id="TypeScript"/>
+      </subjectSkills>
     </subject>
     <subject id="Tobias Pfaller" uid="pfallert96">
       <relation unit="Workflow Systems and Technology" role="Project"/>
@@ -703,19 +728,12 @@
     </subject>
     <subject id="Albert Rafetseder" uid="rafetsa2">
       <subjectSkills>
-        <skillRef id="AWS"/>
-      </subjectSkills>
-      <subjectSkills>
-        <skillRef id="AWS"/>
-        <skillRef id="Google Cloud"/>
+        <ref id="AWS"/>
+        <ref id="Google Cloud"/>
       </subjectSkills>
       <relation unit="Cooperative Systems" role="Teaching"/>
       <relation unit="Cooperative Systems" role="Regular"/>
       <relation unit="Cooperative Systems" role="Assistant"/>
-      <subjectSkills>
-        <skillRef id="AWS"/>
-        <skillRef id="Google Cloud"/>
-      </subjectSkills>
     </subject>
     <subject id="Peter Reichl" uid="reichlp6">
       <relation unit="Cooperative Systems" role="Univ.Prof."/>
@@ -829,17 +847,17 @@
       <relation unit="Data Mining" role="Regular"/>
       <relation unit="Data Mining" role="Staff"/>
       <subjectSkills>
-        <skillRef id="Python"/>
-        <skillRef id="Machine Learning"/>
+        <ref id="Python"/>
+        <ref id="Machine Learning"/>
       </subjectSkills>
     </subject>
     <subject id="Erion Çano" uid="erionc99">
       <relation unit="Data Mining" role="Regular"/>
       <relation unit="Data Mining" role="Assistant"/>
       <subjectSkills>
-        <skillRef id="NLP"/>
-        <skillRef id="Python"/>
-        <skillRef id="Deep Learning"/>
+        <ref id="NLP"/>
+        <ref id="Python"/>
+        <ref id="Deep Learning"/>
       </subjectSkills>
     </subject>
   </subjects>

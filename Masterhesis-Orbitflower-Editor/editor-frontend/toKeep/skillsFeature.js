@@ -764,7 +764,10 @@ function renderSkillSegments(group, skillsData, options = {}) {
     // Create skill segment
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     const pathData = describeArc(cx, cy, outerR, innerR, startA, endA);
-
+    path.addEventListener("click", function (e) {
+      e.stopPropagation();
+      console.error("Clicked skill: helllooo"); 
+    });
     // Only set path data if it's valid
     if (pathData) {
       path.setAttribute("d", pathData);
@@ -802,7 +805,6 @@ function renderSkillSegments(group, skillsData, options = {}) {
           tooltipPos.y
         );
 
-        // Reset auto-collapse timeout when hovering over parent of expanded children
         if (path.parentNode.hasAttribute("data-expanded")) {
           const childGroup = group.querySelector(
             `.skill-level[data-parent="${skill.skill}"]`
@@ -829,165 +831,6 @@ function renderSkillSegments(group, skillsData, options = {}) {
               config.autoCollapseDelay
             );
           }
-        }
-      });
-
-      path.addEventListener("click", function (e) {
-        if (!window.expressionBuilderPaused) {
-          return;
-        }
-        const svg = this.ownerSVGElement;
-        svg.setAttribute("height", "250");
-        svgStateHistory.push(svg.innerHTML);
-        const mainGroup = this.closest('g[id^="u"], g[id^="r"]');
-        const currentUserColumn = document.getElementById("users");
-        const clonedUserColumn = originalSubjectsHTML.cloneNode(true);
-        currentUserColumn.parentNode.replaceChild(
-          clonedUserColumn,
-          currentUserColumn
-        );
-
-        // In the click event handler for the skill segment
-        const skillId = this.getAttribute("data-skill-id");
-        window.skillId = skillId;
-
-        // Filter subjects after resetting
-        const matchingSubjects = getSubjectsBySkillId(skillId);
-        clonedUserColumn.querySelectorAll(".subject").forEach((subject) => {
-          const subjectUid = subject.getAttribute("data-uid");
-          if (!matchingSubjects.some((s) => s.uid === subjectUid)) {
-            subject.remove();
-          }
-        });
-
-        // Highlight remaining subjects
-        matchingSubjects.forEach((subject) => {
-          const subjectElement = clonedUserColumn.querySelector(
-            `.subject[id="${subject.id}"]`
-          );
-          if (subjectElement) {
-            subjectElement.classList.add("highlight");
-          }
-        });
-
-        // Highlight matching subjects
-        matchingSubjects.forEach((subject) => {
-          const subjectElement = document.querySelector(
-            `#usercolumn .subject[id="${subject.id}"]`
-          );
-          if (subjectElement) {
-            subjectElement.classList.add("highlight");
-          }
-        });
-
-        if (isZoomed == false) {
-          console.log("Deleting unecessary elements for the first time");
-
-          // uppdate .unit css to have a stroke width of 0.5
-          document.querySelectorAll(".unit").forEach((unit) => {
-            unit.style.strokeWidth = 0.5;
-          });
-          document.querySelectorAll(".role").forEach((role) => {
-            role.style.strokeWidth = 0.5;
-          });
-
-          const allNodes = svg.querySelectorAll('g[id^="u"], g[id^="r"]');
-          const nodeId = mainGroup.id;
-
-          const node = document.getElementById(nodeId);
-          node.removeAttribute("onmouseover");
-          node.removeAttribute("onmouseout");
-          node.removeAttribute("onclick");
-
-          const relatedText = svg.querySelector(`text[id="${nodeId}_text"]`);
-          window.currentEntityId = relatedText.textContent;
-          window.currentEntityType = mainGroup.getAttribute("class");
-
-          if (relatedText) {
-            textToKeep = relatedText.cloneNode(true);
-          }
-
-          allNodes.forEach((node) => {
-            if (node !== mainGroup && !node.closest("#usercolumn")) {
-              node.remove();
-            }
-          });
-
-          // change textTokeep position in html and place it under <td id="graphcolumn">
-          const graphColumn = document.getElementById("graph");
-          const existingTitles = graphColumn.querySelectorAll("h3.node-title");
-          existingTitles.forEach((title) => title.remove());
-
-          if (textToKeep && textToKeep.textContent) {
-            // get texttokeep text
-            const textToKeepText = textToKeep.textContent;
-            // create an h3 and append it to graphcolumn
-            const h3 = document.createElement("h3");
-            h3.textContent = textToKeepText;
-            h3.classList.add("node-title"); // Add a class for easier selection
-            graphColumn.insertBefore(h3, graphColumn.firstChild);
-          }
-
-          isZoomed = true;
-          window.isZoom = true;
-
-          // Immediately render the skill tree instead of waiting for another click
-          if (window.renderSkillTree) {
-            window.renderSkillTree();
-          }
-        }
-        document
-          .querySelectorAll(".skill-segment.active-skill-filter")
-          .forEach((el) => {
-            el.classList.remove("active-skill-filter");
-          });
-        this.classList.add("active-skill-filter");
-
-        // Filter skill levels
-        const clickedGroup = this.closest(".skill-level");
-        const hierarchyGroups = collectHierarchyGroups(clickedGroup);
-        mainGroup.querySelectorAll(".skill-level").forEach((g) => {
-          if (!hierarchyGroups.includes(g)) g.remove();
-        });
-
-        // Animate zoom
-        animateZoom(svg, mainGroup, this);
-        createBackButton(svg);
-        setTooltipZoomState(svg, true);
-
-        // Original subskill expansion behavior
-        // Proceed with sub-skill expansion if available
-        if (skill.subSkills && skill.subSkills.length > 0) {
-          const existingSubGroup = group.querySelector(
-            `.skill-level[data-level="${config.level + 1}"][data-parent="${
-              skill.skill
-            }"]`
-          );
-
-          if (existingSubGroup) {
-            existingSubGroup.remove();
-            path.parentNode.removeAttribute("data-expanded");
-            clearCollapseTimeout(group.id, skill.skill);
-          } else {
-            path.parentNode.setAttribute("data-expanded", "true");
-            const childGroup = renderSkillSegments(group, skill.subSkills, {
-              level: config.level + 1,
-              startAngle: startA,
-              endAngle: endA,
-              parent: skill.skill,
-              autoCollapseDelay: config.autoCollapseDelay,
-            });
-            setCollapseTimeout(
-              group,
-              skill.skill,
-              childGroup,
-              path.parentNode,
-              config.autoCollapseDelay
-            );
-          }
-        }
-        if (window.updateAfterClick) {
-          window.updateAfterClick();
         }
       });
 
@@ -1066,7 +909,7 @@ function aggregateSkills(subjects) {
   subjects.forEach((subject) => {
     // Use the subject's id as its unique identifier.
     const subjectId = subject.getAttribute("id");
-    const skillRefs = subject.querySelectorAll("subjectSkills skillRef");
+    const skillRefs = subject.querySelectorAll("subjectSkills ref");
     skillRefs.forEach((ref) => {
       const skillId = ref.getAttribute("id");
       if (!skillSubjects[skillId]) {
@@ -1191,7 +1034,7 @@ function getSubjectsBySkillId(skillId) {
   const matches = [];
 
   subjects.forEach((subject) => {
-    const skillRefs = subject.querySelectorAll("subjectSkills skillRef");
+    const skillRefs = subject.querySelectorAll("subjectSkills ref");
     let hasMatch = false;
     skillRefs.forEach((ref) => {
       if (descendantIds.includes(ref.getAttribute("id"))) {

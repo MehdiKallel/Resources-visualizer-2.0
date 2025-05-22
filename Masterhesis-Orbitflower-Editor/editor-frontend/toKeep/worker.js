@@ -382,7 +382,7 @@ class SkillTreeComponent {
         const subjectSkills = subj.getElementsByTagName("subjectSkills");
         for (let k = 0; k < subjectSkills.length; k++) {
           const ss = subjectSkills[k];
-          const skillRefs = ss.getElementsByTagName("skillRef");
+          const skillRefs = ss.getElementsByTagName("ref");
           for (let l = 0; l < skillRefs.length; l++) {
             const ref = skillRefs[l];
             const skillRefId = ref.getAttribute("id");

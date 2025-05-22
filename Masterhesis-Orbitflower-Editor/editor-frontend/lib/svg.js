@@ -57,7 +57,7 @@ class SVG {
   }
 
   add_circle(cx, cy, radius, cls = null) {
-    this._res += `  <circle class='${cls}' cx='${cx}' cy='${cy}' r='${radius}'/>\n`;
+    this._res += `  <circle class='${cls}' cx='${cx}' cy='${cy}' r='${radius}'/> \n`;
   }
 
   add_rectangle(lx, ly, opacity, lwidth, lheight, cls = null) {

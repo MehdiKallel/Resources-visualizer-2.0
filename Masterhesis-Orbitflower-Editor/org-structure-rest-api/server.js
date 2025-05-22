@@ -1308,7 +1308,7 @@ app.put("/subjects/:id", (req, res) => {
       // Create the node that the GET endpoint expects
       const skillsNode = doc.createElement("subjectSkills");
       skills.forEach((skill) => {
-        const skillRefNode = doc.createElement("skillRef");
+        const skillRefNode = doc.createElement("ref");
         skillRefNode.setAttribute("id", skill.getAttribute("id"));
         skillsNode.appendChild(skillRefNode);
       });
@@ -1408,7 +1408,7 @@ app.post("/subjects/:id/skills", (req, res) => {
       req.body,
       "application/xml"
     );
-    const skillId = select("//skillRef/id/text()", docBody)[0]?.nodeValue;
+    const skillId = select("//ref/id/text()", docBody)[0]?.nodeValue;
     if (!skillId) return res.status(400).send("skillId is required.");
 
     const doc = readXML();
@@ -1434,7 +1434,7 @@ app.post("/subjects/:id/skills", (req, res) => {
     }
 
     const existingRef = select(
-      `${NS_PREFIX}:skillRef[@id='${skillId}']`,
+      `${NS_PREFIX}:ref[@id='${skillId}']`,
       subjectSkillsNode
     )[0];
     if (existingRef)
@@ -1442,7 +1442,7 @@ app.post("/subjects/:id/skills", (req, res) => {
         .status(409)
         .send("Skill is already referenced by the subject.");
 
-    const skillRefNode = doc.createElement("skillRef");
+    const skillRefNode = doc.createElement("ref");
     skillRefNode.setAttribute("id", skillId);
     subjectSkillsNode.appendChild(skillRefNode);
 
@@ -1458,7 +1458,7 @@ app.delete("/subjects/:id/skills/:skillId", (req, res) => {
     const { id, skillId } = req.params;
     const doc = readXML();
     const skillRefNode = select(
-      `//${NS_PREFIX}:organisation/${NS_PREFIX}:subjects/${NS_PREFIX}:subject[@id='${id}']/${NS_PREFIX}:subjectSkills/${NS_PREFIX}:skillRef[@id='${skillId}']`,
+      `//${NS_PREFIX}:organisation/${NS_PREFIX}:subjects/${NS_PREFIX}:subject[@id='${id}']/${NS_PREFIX}:subjectSkills/${NS_PREFIX}:ref[@id='${skillId}']`,
       doc
     )[0];
     if (!skillRefNode)
@@ -1601,7 +1601,7 @@ app.get("/subjects/byuid/:uid", (req, res) => {
       role: r.getAttribute("role"),
     }));
     const skillRefs = select(
-      `${NS_PREFIX}:subjectSkills/${NS_PREFIX}:skillRef`,
+      `${NS_PREFIX}:subjectSkills/${NS_PREFIX}:ref`,
       subjectNode
     ).map((sr) => sr.getAttribute("id"));
 

@@ -869,12 +869,10 @@ const renderOrganisationGraph = (doc) => {
     graphDiv.innerHTML = s.dump(maxwidth, maxheight).trim();
   }
 
-  console.log("################### new graph is", graphDiv)
   const usersDiv = document.querySelector("#users");
   if (usersDiv) {
     usersDiv.innerHTML = subjects.join("\n");
   }
-  console.log("################### new users are", usersDiv)
 
 
   return { graphDiv, usersDiv, styles: h.css };

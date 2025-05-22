@@ -1,5 +1,5 @@
-const SHIFT_FACTOR = 10;
-const EXPANSION_FACTOR = 1.2;
+const SHIFT_FACTOR = 20;
+const EXPANSION_FACTOR = 1.5;
 const ANIMATION_DURATION = 200;
 let isExpanded = false;
 let originalPositions = {};
@@ -13,6 +13,8 @@ let skills = {};
 
 document.addEventListener("graphRendered", async function () {
   document.addEventListener("click", (e) => {
+    console.log(window.expressionBuilderPaused);
+    console.log("##############################click event", e.target);
     if (
       e.target.classList.contains("skill-segment") &&
       isExpanded === true &&
@@ -27,7 +29,6 @@ document.addEventListener("graphRendered", async function () {
   createToggleButton();
   storeOriginalPositions();
 
-  console.log("Detailed Skill View Loaded correctly");
 });
 
 function deleteUnecessaryElements() {
@@ -132,7 +133,6 @@ function estimateCenterOfCircles() {
     y: screenPoint.y + window.scrollY,
   };
 
-  console.log("Document center coordinates:", documentCenter);
 
   return center;
 }
@@ -267,7 +267,6 @@ function createToggleButton() {
 
   // two actions on click
   button.addEventListener("click", () => {
-    console.log("Current zoom is before ", isExpanded);
     if (window.isZoom == false) {
       toggleExpansion();
     }
@@ -277,7 +276,6 @@ function createToggleButton() {
     if (!isExpanded && window.isZoom == false) {
       console.log("window is zoom issss", window.isZoom);
       deleteUnecessaryElements();
-      createResizableSkillSvgParticles();
     } else {
       restoreDeletedElements();
       // Remove the SVG with particles when collapsing
