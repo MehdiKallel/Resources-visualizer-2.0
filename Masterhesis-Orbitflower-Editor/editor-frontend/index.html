@@ -146,11 +146,11 @@
 
         skillsContainer.append(allSkillsBtn);
 
-        allSkillsBtn.on('click', function() {
+        allSkillsBtn.on("click", function () {
           // Reset any active filters
-          $('.skill-segment').css('fill', '');
-          $('#users table').removeClass('hidden highlight-skill');
-          $('#details-skills .skill-item').removeClass('active');
+          $(".skill-segment").css("fill", "");
+          $("#users table").removeClass("hidden highlight-skill");
+          $("#details-skills .skill-item").removeClass("active");
           viz.show(currentorgmodel);
           if (skillsFeature) {
             skillsFeature = new SkillsFeature($("svg"), currentorgmodel);
@@ -263,9 +263,6 @@
             renderSkill(id);
           }
         });
-
-       
-
       }
       // Add near the top of your script
       let isSplitView = false;
@@ -289,36 +286,7 @@
         }
       }
 
-      function toggleViewMode() {
-        if (isSplitView) {
-          splitGraphContainer(false);
-          $("#detailed-graph-skills").empty();
-          isSplitView = false;
-          viz.resetGraph();
-          viz.show(currentorgmodel);
-          skillsFeature = new SkillsFeature($("svg"), currentorgmodel);
-          skillsFeature.initialize();
-        } else {
-          const options = {
-            container: "detailed-graph-skills",
-            layoutType: "force",
-            nodeSize: 120,
-            chargeStrength: -3000,
-          };
-
-          splitGraphContainer(true);
-          workerGraphInstance = new SkillTreeComponent(options);
-          workerGraphInstance.renderFullGraph = true; // Indicate full graph rendering
-          workerGraphInstance.show(currentorgmodel);
-
-          setTimeout(() => {
-            workerGraphInstance.computeLayout();
-            workerGraphInstance.render();
-            workerGraphInstance.centerSVG(); // This will now zoom on the root
-          }, 50);
-        }
-        isSplitView = !isSplitView;
-      }
+      
       // Add to your $(document).ready() function:
       function setupSSEEventListeners() {
         const eventSource = new EventSource(
@@ -476,10 +444,6 @@
             $(state.element).toggleClass("hidden", state.hidden);
           });
         }
-
-        // append another svg to id svg and make it central (filled with black)
-        $("#viewToggle").on("click", toggleViewMode);
-
         $("svg").on("click", ".skill-segment", function (e) {
           const skillSegment = $(this);
           const parentNode = skillSegment.closest("g").parent();
@@ -572,7 +536,6 @@
               }
             });
 
-            // Find skills that have Child relations pointing to the current skill (current skill is their parent)
             $(
               `skill relation[type="Child"][id="${currentSkillId}"]`,
               currentorgmodel
@@ -586,21 +549,39 @@
 
           traverse(skillId);
 
-          console.error("all related skills", skills);
           return Array.from(skills);
         }
         var control = true;
         var currentActiveSkill = null; // Track currently active skill
 
+        $("#details-skills").on("mouseover", ".skill-item", function () {
+          var targetSkillId = $(this).attr("data-skill-id");
+          if (!targetSkillId) return;
+          $("#svg")
+            .find(".skill-segment")
+            .each(function () {
+              var skillSegment = $(this);
+              var segmentSkillId = skillSegment.attr("data-skill-id");
+              var relatedSkills = getAllRelatedSkills(targetSkillId);
+
+              if (relatedSkills.includes(segmentSkillId)) {
+                $(this).addClass("hover-highlight");
+              } else {
+                $(this).removeClass("hover-highlight");
+              }
+            });
+        });
+
+        $("#details-skills").on("mouseout", ".skill-item", function() {
+          $("#svg").find(".skill-segment").removeClass("hover-highlight");
+        });
+        
         $("#details-skills").on("click", function (e) {
-          // removing all active classes
           $("#details-skills .skill-item").removeClass("active");
-          // removing all selected classes
           $("#details-skills .skill-item").removeClass("selected");
           var targetSkillId = e.target.getAttribute("data-skill-id");
           if (!targetSkillId || targetSkillId === currentActiveSkill) return;
           if (isSplitView) {
-           
             $("#detailed-graph-skills").empty();
             currentActiveSkill = targetSkillId;
             options = {
@@ -622,98 +603,96 @@
               targetSkillId
             );
           }
-          
-            var clonedModel = currentorgmodel.cloneNode(true);
-            var allRelatedSkills = getAllRelatedSkills(targetSkillId);
-            // adding selected class to the selected skill
+          var clonedModel = currentorgmodel.cloneNode(true);
+          var allRelatedSkills = getAllRelatedSkills(targetSkillId);
+
+          $(
+            `#details-skills .skill-item[data-skill-id="${targetSkillId}"]`
+          ).addClass("selected");
+          // adding active class to related skills
+          allRelatedSkills.forEach((skillId) => {
             $(
-              `#details-skills .skill-item[data-skill-id="${targetSkillId}"]`
-            ).addClass("selected");
-            // adding active class to related skills
-            allRelatedSkills.forEach((skillId) => {
-              $(
-                `#details-skills .skill-item[data-skill-id="${skillId}"]`
-              ).addClass("active");});
+              `#details-skills .skill-item[data-skill-id="${skillId}"]`
+            ).addClass("active");
+          });
 
-            // Remove subjects that don't have any of the related skills
-            $(clonedModel)
-              .find("subject")
-              .each(function () {
-                const subject = $(this);
-                let hasSkill = false;
-                for (const skillId of allRelatedSkills) {
-                  if (
-                    subject.find(`subjectSkills ref[id="${skillId}"]`).length >
-                    0
-                  ) {
-                    hasSkill = true;
-                    break;
-                  }
+          // Remove subjects that don't have any of the related skills
+          $(clonedModel)
+            .find("subject")
+            .each(function () {
+              const subject = $(this);
+              let hasSkill = false;
+              for (const skillId of allRelatedSkills) {
+                if (
+                  subject.find(`subjectSkills ref[id="${skillId}"]`).length > 0
+                ) {
+                  hasSkill = true;
+                  break;
                 }
-                if (!hasSkill) {
-                  subject.remove();
-                }
-              });
+              }
+              if (!hasSkill) {
+                subject.remove();
+              }
+            });
 
-            // Remove unreferenced units and roles
-            $(clonedModel)
-              .find("unit")
-              .each(function () {
-                const $unit = $(this);
-                const unitId = $unit.attr("id");
-                const used =
-                  $(clonedModel).find(`subject relation[unit="${unitId}"]`)
-                    .length > 0;
-                if (!used) $unit.remove();
-              });
+          // Remove unreferenced units and roles
+          $(clonedModel)
+            .find("unit")
+            .each(function () {
+              const $unit = $(this);
+              const unitId = $unit.attr("id");
+              const used =
+                $(clonedModel).find(`subject relation[unit="${unitId}"]`)
+                  .length > 0;
+              if (!used) $unit.remove();
+            });
 
-            $(clonedModel)
-              .find("role")
-              .each(function () {
-                const $role = $(this);
-                const roleId = $role.attr("id");
-                const used =
-                  $(clonedModel).find(`subject relation[role="${roleId}"]`)
-                    .length > 0;
-                if (!used) $role.remove();
-              });
+          $(clonedModel)
+            .find("role")
+            .each(function () {
+              const $role = $(this);
+              const roleId = $role.attr("id");
+              const used =
+                $(clonedModel).find(`subject relation[role="${roleId}"]`)
+                  .length > 0;
+              if (!used) $role.remove();
+            });
 
-            // Update the visualization
-            $("#users").empty();
-            viz.show(clonedModel);
-            // render skill segments
-            skillsFeature = new SkillsFeature($("svg"), clonedModel);
-            skillsFeature.initialize();
-          
+          // Update the visualization
+          $("#users").empty();
+          viz.show(clonedModel);
+          // render skill segments
+          skillsFeature = new SkillsFeature($("svg"), clonedModel);
+          skillsFeature.initialize();
         });
 
         $("svg").on("click", function (e) {
           var clickedElement = e.target;
           console.error("clicked element", clickedElement);
-            if (clickedElement.tagName === "circle") {
+          if (clickedElement.tagName === "circle") {
             if (!clickedElement.hasAttribute("data-is-active")) {
               // First click: hide elements
               $("#users")
-              .find("table")
-              .each(function () {
-                if (!$(this).hasClass("highlightrole")  ) {
-                $(this).addClass("hidden");
-                }
-                if ($(this).hasClass("highlightunit")) {
-                  $(this).removeClass("hidden");
-                }
-              });
+                .find("table")
+                .each(function () {
+                  if (!$(this).hasClass("highlightrole")) {
+                    $(this).addClass("hidden");
+                  }
+                  if ($(this).hasClass("highlightunit")) {
+                    $(this).removeClass("hidden");
+                  }
+                });
               clickedElement.setAttribute("data-is-active", "true");
             } else {
               // Second click: show all elements
               $("#users")
-              .find("table")
-              .each(function () {
-                $(this).removeClass("hidden");
-              });
+                .find("table")
+                .each(function () {
+                  $(this).removeClass("hidden");
+                });
               clickedElement.removeAttribute("data-is-active");
             }
-            }
+          }
           if (
             clickedElement.classList.contains("skill-segment") &&
             expressionBuilder.isPaused() &&
@@ -757,9 +736,7 @@
   </head>
   <body is="x-ui-">
     <ui-rest id="main">
-      <button id="viewToggle" class="view-toggle" title="Toggle view mode">
-        ⇄ Split View
-      </button>
+      
 
       <ui-tabbar>
         <ui-before></ui-before>

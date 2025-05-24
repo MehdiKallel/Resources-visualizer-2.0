@@ -29,13 +29,41 @@
 
 .skill-item {
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   padding: 3px;
   border-radius: 3px;
+  position: relative;
+  overflow: hidden;
 }
 
 .skill-item:hover {
-  background-color: #f0f0f0;
+  background-color: #e0f7fa;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(0, 188, 212, 0.3);
+}
+
+.skill-item:hover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, 
+    rgba(0, 188, 212, 0.1),
+    rgba(0, 188, 212, 0.2),
+    rgba(0, 188, 212, 0.1)
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .skill-item.active {
@@ -317,4 +345,32 @@ circle:active {
       rgba(255, 240, 180, 0.1) 0%,
       rgba(255, 228, 120, 0.15) 100%);
   }
+}
+
+.skill-segment.hover-highlight {
+  /* solid base fill + stroke */
+  fill: #e74c3c !important;
+  stroke: #e74c3c;
+  stroke-width: 2px;
+
+  /* glow */
+  filter: drop-shadow(0 0 6px rgba(231, 76, 60, 0.6));
+  
+  /* start semi-transparent */
+  fill-opacity: 0.2;
+
+  /* animate the opacity “pulse” */
+  animation: pulse-fill 2s ease-in-out infinite;
+  transition: filter 0.2s ease-out, stroke-width 0.2s ease-out;
+}
+
+.skill-segment.hover-highlight:hover {
+  /* pop the outline on direct hover */
+  stroke-width: 4px;
+  filter: drop-shadow(0 0 12px rgba(231, 76, 60, 0.8));
+}
+
+@keyframes pulse-fill {
+  0%, 100% { fill-opacity: 0.2; }
+  50%      { fill-opacity: 0.6; }
 }
