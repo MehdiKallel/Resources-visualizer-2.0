@@ -1,4 +1,5 @@
 window.detailedView = false;
+var isSplitting = false;
 
 function getSkillIdColor(skillId) {
   const colorPalette = [
@@ -33,73 +34,68 @@ class SkillTreeComponent {
     this.nodeSize = 80; // Reduced node spacing
     this.chargeStrength = -120; // Increased repulsion
     this.linkDistance = 60; // Shorter links
-
     if (!document.getElementById("skill-tree-component-styles")) {
       const style = document.createElement("style");
       style.id = "skill-tree-component-styles";
       style.innerHTML = `
-        .skill-tree-component {
-          width: 100%;
-          height: 100% !important; /* Changed from 50% to 100% */
-          overflow: hidden;
-          position: relative;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-        
-        .particle-canvas {
-        }
+          .skill-tree-component {
+            width: 100%;
+            height: 100% !important; /* Changed from 50% to 100% */
+            overflow: hidden;
+            position: relative;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+          }
+          
+          .particle-canvas {
+          }
 
-        .node circle {
-  stroke: #ffffff;
-  stroke-width: 2;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
-}
+    
 
-        .particle-canvas {
-          pointer-events: none;
-        }
+          .particle-canvas {
+            pointer-events: none;
+          }
 
-        .node text {
-          font: 13px 'Segoe UI', sans-serif;
-          fill: #64748b;
-          transition: fill 0.2s ease;
-        }
+          .node text {
+            font: 13px 'Segoe UI', sans-serif;
+            fill: #64748b;
+            transition: fill 0.2s ease;
+          }
 
-        .node:hover circle {
-          stroke: #1e293b;
-        }
+          .node:hover circle {
+            stroke: #1e293b;
+          }
 
-        .node:hover text {
-          fill: #1e293b;
-          font-weight: 500;
-        }
+          .node:hover text {
+            fill: #1e293b;
+            font-weight: 500;
+          }
 
-        .relationship-line {
-          stroke: rgba(100, 100, 100, 0.1);
-          stroke-width: 1;
-        }
+          .relationship-line {
+            stroke: rgba(100, 100, 100, 0.1);
+            stroke-width: 1;
+          }
 
-        #tooltip {
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(4px);
-          border: 1px solid #e0e0e0;
-          border-radius: 6px;
-          padding: 12px;
-          font-size: 13px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
+          #tooltip {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(4px);
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 13px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+          }
 
-        .tooltip-title {
-          font-weight: 600;
-          margin-bottom: 8px;
-          color: #1e293b;
-        }
+          .tooltip-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1e293b;
+          }
 
-        .tooltip-content {
-          line-height: 1.5;
-        }
-      `;
+          .tooltip-content {
+            line-height: 1.5;
+          }
+        `;
       document.head.appendChild(style);
     }
     console.log("receiving the following options", options);
@@ -119,7 +115,7 @@ class SkillTreeComponent {
     this.filterId = options.filterId;
     this.skillId = options.skillId;
     this.xmlData = options.xmlData;
-    this.layoutType =  "hierarchical";
+    this.layoutType = "hierarchical";
 
     this.skillTree = null;
     this.relationships = [];
@@ -163,10 +159,10 @@ class SkillTreeComponent {
     this.svg.style.height = "100%";
     this.svg.setAttribute("id", "testing-svg");
     this.el.appendChild(this.svg);
-     // Add these properties
-     this.nodeSize = 80; // Reduced node spacing
-     this.chargeStrength = -120; // Increased repulsion
-     this.linkDistance = 60; // Shorter links
+    // Add these properties
+    this.nodeSize = 80; // Reduced node spacing
+    this.chargeStrength = -120; // Increased repulsion
+    this.linkDistance = 60; // Shorter links
     this.setupZoomPan();
   }
 
@@ -189,22 +185,23 @@ class SkillTreeComponent {
     }
   }
 
+  getBackgroundColor(value) {
+    return this.getSkillColor(value);
+  }
+
   show(currentorgmodel, parentNodeType, relatedText, skillId) {
+    isSplitting = true;
+    console.error("show called with the following parameters:", {
+      currentorgmodel,
+      parentNodeType,
+      relatedText,
+      skillId,
+    });
     this.xmlData = currentorgmodel;
     this.filterType = parentNodeType;
     this.filterId = relatedText;
     this.skillId = skillId;
-
-    // Determine if we should render the full graph
     this.renderFullGraph = Boolean(this.xmlData) && !this.skillId;
-
-    console.log(
-      "working showing with the following params",
-      this.xmlData,
-      this.filterType,
-      this.filterId,
-      this.skillId
-    );
     this.svgContent = document.createElementNS(
       "http://www.w3.org/2000/svg",
       "g"
@@ -218,10 +215,30 @@ class SkillTreeComponent {
     this.tooltip.style.pointerEvents = "none";
 
     this.setupNavigation();
-    this.parseXML();
+    // 1) figure out whether we're filtering or not
+    if (
+      (parentNodeType === "unit" || parentNodeType === "role") &&
+      relatedText &&
+      !skillId
+    ) {
+      this.filterType = parentNodeType;
+      this.filterId = relatedText;
+      this.renderFullGraph = false;
+    } else {
+      this.filterType = null;
+      this.filterId = null;
+      this.renderFullGraph = true;
+    }
 
-    // Only filter the tree by skill if we're not rendering the full graph
-    if (!this.renderFullGraph && this.skillId) {
+    this.parseXML();
+    if (this.filterType && this.filterId && !this.skillId) {
+      this.parseXML();
+      this.pruneSkillsByFilter();
+      this.renderFullGraph = false;
+    } else {
+      this.renderFullGraph = true;
+    }
+    if (this.skillId) {
       this.filterTreeBySkill();
     }
 
@@ -300,6 +317,7 @@ class SkillTreeComponent {
 
   getRelationshipColor(type) {
     const colors = {
+      has: "rgba(0, 0, 0, 0.8)", // Bright Blue
       isRelatedTo: "rgba(123, 58, 223, 0.8)", // Brighter Purple
       dependOn: "rgba(255, 30, 99, 0.8)", // Brighter Pink
       RelatedTo: "rgba(255, 152, 0, 0.8)", // Bright Orange
@@ -312,50 +330,58 @@ class SkillTreeComponent {
 
   parseXML() {
     const skills = {};
-    const skillElements = this.xmlData.getElementsByTagName("skill");
-    for (let i = 0; i < skillElements.length; i++) {
-      const elem = skillElements[i];
-      const id = elem.getAttribute("id");
-      if (!id) continue;
-      skills[id] = { id: id, name: id, children: [] };
-    }
+    $(this.xmlData)
+      .find("skill")
+      .each((_, elem) => {
+        const id = $(elem).attr("id");
+        if (!id) return;
+
+        // Only include skills that are in the relevantSkills array (if provided)
+        if (this.skillId && this.skillId.length > 0) {
+          if (!this.skillId.includes(id)) return;
+        }
+
+        skills[id] = { id: id, name: id, children: [] };
+      });
 
     this.relationships = [];
     const childSet = new Set();
-    for (let i = 0; i < skillElements.length; i++) {
-      const elem = skillElements[i];
-      const id = elem.getAttribute("id");
-      const relElements = elem.getElementsByTagName("relation");
-      for (let j = 0; j < relElements.length; j++) {
-        const relElem = relElements[j];
-        const targetId = relElem.getAttribute("id");
-        const type = relElem.getAttribute("type");
-        if (type === "Child") {
-          if (skills[targetId]) {
-            skills[targetId].children.push(skills[id]);
-          } else {
-            skills[targetId] = {
-              id: targetId,
-              name: targetId,
-              children: [skills[id]],
-            };
-          }
-          childSet.add(id);
-        } else {
-          let score = parseFloat(relElem.getAttribute("score"));
 
-          if (isNaN(score)) score = Math.floor(Math.random() * 10) + 1;
-          const speed = 0.0004 * score;
-          this.relationships.push({
-            from: id,
-            to: targetId,
-            score: score,
-            speed: speed,
-            type: type,
+    $(this.xmlData)
+      .find("skill")
+      .each((_, elem) => {
+        const id = $(elem).attr("id");
+        $(elem)
+          .find("relation")
+          .each((_, relElem) => {
+            const targetId = $(relElem).attr("id");
+            const type = $(relElem).attr("type");
+
+            if (type === "Child") {
+              if (skills[targetId]) {
+                skills[targetId].children.push(skills[id]);
+              } else {
+                skills[targetId] = {
+                  id: targetId,
+                  name: targetId,
+                  children: [skills[id]],
+                };
+              }
+              childSet.add(id);
+            } else {
+              let score = parseFloat($(relElem).attr("score"));
+              if (isNaN(score)) score = Math.floor(Math.random() * 10) + 1;
+              const speed = 0.0004 * score;
+              this.relationships.push({
+                from: id,
+                to: targetId,
+                score: score,
+                speed: speed,
+                type: type,
+              });
+            }
           });
-        }
-      }
-    }
+      });
 
     const roots = [];
     for (let id in skills) {
@@ -365,95 +391,182 @@ class SkillTreeComponent {
     if (roots.length === 1) {
       this.skillTree = roots[0];
     } else {
-      // Create synthetic root and connect it to children via relationships
       this.skillTree = {
         id: "root",
-        name: "Skills",
+        name: this.filterType ? ` ${this.filterId}` : "Root",
         children: roots,
         isSynthetic: true,
       };
 
-      // Add relationships between root and all its children
-      roots.forEach(root => {
+      roots.forEach((root) => {
         this.relationships.push({
           from: "root",
           to: root.id,
           score: 5,
           speed: 0.002,
-          type: "isA"
+          type: "has",
         });
       });
     }
 
     this.skillEmployeeMap.clear();
-    const subjectElements = this.xmlData.getElementsByTagName("subject");
-    for (let i = 0; i < subjectElements.length; i++) {
-      const subj = subjectElements[i];
-      let match = false;
+    $(this.xmlData)
+      .find("subject")
+      .each((_, subj) => {
+        let match = false;
 
-      // If we're rendering the full graph, include all subjects
-      if (this.renderFullGraph) {
-        match = true;
-      } else {
-        const relationElements = subj.getElementsByTagName("relation");
-        for (let j = 0; j < relationElements.length; j++) {
-          const rel = relationElements[j];
-          if (
-            (this.filterType === "unit" &&
-              rel.getAttribute("unit") === this.filterId) ||
-            (this.filterType === "role" &&
-              rel.getAttribute("role") === this.filterId)
-          ) {
-            match = true;
-            break;
-          }
+        if (this.renderFullGraph) {
+          match = true;
+        } else {
+          $(subj)
+            .find("relation")
+            .each((_, rel) => {
+              if (
+                (this.filterType === "unit" &&
+                  $(rel).attr("unit") === this.filterId) ||
+                (this.filterType === "role" &&
+                  $(rel).attr("role") === this.filterId)
+              ) {
+                match = true;
+                return false; 
+              }
+            });
         }
-      }
 
-      if (match) {
-        const subjectSkills = subj.getElementsByTagName("subjectSkills");
-        for (let k = 0; k < subjectSkills.length; k++) {
-          const ss = subjectSkills[k];
-          const skillRefs = ss.getElementsByTagName("skillRef");
-          for (let l = 0; l < skillRefs.length; l++) {
-            const ref = skillRefs[l];
-            const skillRefId = ref.getAttribute("id");
-            const count = this.skillEmployeeMap.get(skillRefId) || 0;
-            this.skillEmployeeMap.set(skillRefId, count + 1);
-            if (count + 1 > this.maxEmployeeCount) {
-              this.maxEmployeeCount = count + 1;
+        if (match) {
+          $(subj)
+            .find("subjectSkills ref")
+            .each((_, ref) => {
+              const skillRefId = $(ref).attr("id");
+              const count = this.skillEmployeeMap.get(skillRefId) || 0;
+              this.skillEmployeeMap.set(skillRefId, count + 1);
+              if (count + 1 > this.maxEmployeeCount) {
+                this.maxEmployeeCount = count + 1;
+              }
+            });
+        }
+      });
+  }
+  pruneSkillsByFilter() {
+    const relevantSubjects = new Set();
+
+    $(this.xmlData)
+      .find("subject")
+      .each((_, subject) => {
+        $(subject)
+          .find("relation")
+          .each((_, relation) => {
+            if (
+              (this.filterType === "unit" &&
+                $(relation).attr("unit") === this.filterId) ||
+              (this.filterType === "role" &&
+                $(relation).attr("role") === this.filterId)
+            ) {
+              $(subject)
+                .find("subjectSkills ref")
+                .each((_, skillRef) => {
+                  relevantSubjects.add($(skillRef).attr("id"));
+                });
             }
-          }
-        }
+          });
+      });
+
+    console.error(
+      "Relevant subjects after filtering:",
+      Array.from(relevantSubjects)
+    );
+
+    // Prune function remains the same
+    function prune(node) {
+      if (!node.children) {
+        return relevantSubjects.has(node.id);
+      }
+      node.children = node.children.filter((child) => prune(child));
+      return relevantSubjects.has(node.id) || node.children.length > 0;
+    }
+
+    if (this.skillTree.isSynthetic) {
+      this.skillTree.children = this.skillTree.children.filter((child) =>
+        prune(child)
+      );
+    } else {
+      if (!prune(this.skillTree)) {
+        this.skillTree.children = [];
       }
     }
   }
 
   filterTreeBySkill() {
-    const skillElements = this.xmlData.getElementsByTagName("skill");
     const graph = {};
-    for (let i = 0; i < skillElements.length; i++) {
-      const elem = skillElements[i];
-      const id = elem.getAttribute("id");
-      if (!id) continue;
-      if (!graph[id] && id == this.skillId) {
-        graph[id] = new Set();
-      }
+    let relevantSkills = new Set();
 
-      if (id != this.skillId) continue;
-      const relElements = elem.getElementsByTagName("relation");
-      for (let j = 0; j < relElements.length; j++) {
-        const relElem = relElements[j];
-        const targetId = relElem.getAttribute("id");
-        if (targetId) {
-          if (!graph[id]) graph[id] = new Set();
-          if (!graph[targetId]) graph[targetId] = new Set();
-          graph[id].add(targetId);
-          graph[targetId].add(id);
-        }
-      }
+    if (this.filterType && this.filterId) {
+      $(this.xmlData)
+        .find("subject")
+        .each((_, subject) => {
+          let isRelevant = false;
+          $(subject)
+            .find("relation")
+            .each((_, relation) => {
+              if (
+                (this.filterType === "unit" &&
+                  $(relation).attr("unit") === this.filterId) ||
+                (this.filterType === "role" &&
+                  $(relation).attr("role") === this.filterId)
+              ) {
+                isRelevant = true;
+                return false; // break the loop
+              }
+            });
+
+          if (isRelevant) {
+            $(subject)
+              .find("subjectSkills ref")
+              .each((_, ref) => {
+                relevantSkills.add($(ref).attr("id"));
+              });
+          }
+        });
     }
 
+    // Build the graph with skill relationships
+    $(this.xmlData)
+      .find("skill")
+      .each((_, elem) => {
+        const id = $(elem).attr("id");
+        if (!id) return;
+
+        // Skip if not the target skill or not relevant
+        if (
+          id !== this.skillId &&
+          relevantSkills.size > 0 &&
+          !relevantSkills.has(id)
+        ) {
+          return;
+        }
+
+        if (!graph[id]) {
+          graph[id] = new Set();
+        }
+
+        $(elem)
+          .find("relation")
+          .each((_, rel) => {
+            const targetId = $(rel).attr("id");
+            if (
+              targetId &&
+              (!relevantSkills.size || relevantSkills.has(targetId))
+            ) {
+              if (!graph[targetId]) graph[targetId] = new Set();
+              graph[id].add(targetId);
+              graph[targetId].add(id);
+            }
+          });
+      });
+    console.error(
+      "Relevant skills after filtering:",
+      Array.from(relevantSkills)
+    );
     const visited = new Set();
     const queue = [];
     const spanningTree = { id: this.skillId, name: this.skillId, children: [] };
@@ -475,8 +588,12 @@ class SkillTreeComponent {
         }
       });
     }
-
+    console.error(
+      "Spanning tree constructed with nodes:",
+      Object.keys(treeNodes)
+    );
     this.skillTree = spanningTree;
+    console.error("Spanning tree has the following nodes:", this.skillTree);
     setTimeout(() => this.centerSVG(), 50);
   }
 
@@ -489,36 +606,63 @@ class SkillTreeComponent {
   }
 
   computeHierarchicalLayout() {
+    if (!this.skillTree) {
+      console.warn("No skill tree data available for layout");
+      return;
+    }
+
     let nextX = 50;
     const horizontalSpacing = 160;
     const verticalSpacing = 160;
-    function layout(node, depth) {
+
+    const layout = (node, depth) => {
+      if (!node) return;
+
       node.y = depth * verticalSpacing;
+
       if (node.children && node.children.length > 0) {
+        // Filter out any null or undefined children
+        node.children = node.children.filter((child) => child != null);
+
+        // Process all valid children
         node.children.forEach((child) => layout(child, depth + 1));
-        let first = node.children[0].x;
-        let last = node.children[node.children.length - 1].x;
-        node.x = (first + last) / 2;
+
+        if (node.children.length > 0) {
+          // Only calculate position if there are valid children
+          const first = node.children[0].x;
+          const last = node.children[node.children.length - 1].x;
+          node.x = (first + last) / 2;
+        } else {
+          // If no valid children after filtering, treat as leaf node
+          node.x = nextX;
+          nextX += horizontalSpacing;
+        }
       } else {
         node.x = nextX;
         nextX += horizontalSpacing;
       }
-    }
+    };
+
+    // Start the layout from the root
     layout(this.skillTree, 0);
   }
 
   computeRadialLayout() {
     const root = d3.hierarchy(this.skillTree);
-    const treeLayout = d3.tree()
-      .size([2 * Math.PI, Math.min(this.container.clientWidth, this.container.clientHeight) * 0.4])
-      .separation((a, b) => (a.parent === root || b.parent === root) ? 2 : 1);
+    const treeLayout = d3
+      .tree()
+      .size([
+        2 * Math.PI,
+        Math.min(this.container.clientWidth, this.container.clientHeight) * 0.4,
+      ])
+      .separation((a, b) => (a.parent === root || b.parent === root ? 2 : 1));
 
     treeLayout(root);
 
-    root.each(node => {
+    root.each((node) => {
       const [theta, radius] = [node.x, node.y];
-      node.x = Math.cos(theta) * radius + this.container.clientWidth/2;
-      node.y = Math.sin(theta) * radius + this.container.clientHeight/2;
+      node.x = Math.cos(theta) * radius + this.container.clientWidth / 2;
+      node.y = Math.sin(theta) * radius + this.container.clientHeight / 2;
     });
   }
   renderTree() {
@@ -552,27 +696,15 @@ class SkillTreeComponent {
       group.setAttribute("transform", `translate(${node.x}, ${node.y})`);
 
       group.setAttribute("data-skill-id", node.id || "");
-      group.setAttribute("data-entity-type", this.filterType || "");
-
-      group.addEventListener("click", (event) => {
-        console.log("Node clicked:", {
-          id: node.id,
-          name: node.name,
-          entityType: this.filterType,
-          employeeCount: this.skillEmployeeMap.get(node.id) || 0,
-          hasChildren: node.children && node.children.length > 0,
-          childrenCount: node.children ? node.children.length : 0,
-        });
+      group.setAttribute("data-node-type", "skill");
+      group.setAttribute("draggable", "true");
+      group.addEventListener("dragstart", (e) => {
+        e.preventDefault();
       });
-
-      const circle = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "circle"
-      );
       const baseRadius = 15;
-      const count = this.skillEmployeeMap.get(node.id) || 0;
+      const count = node.id ? this.skillEmployeeMap.get(node.id) || 0 : 0;
       const maxRadius = 45;
-      const radius =
+      var radius =
         count === 0
           ? baseRadius
           : baseRadius +
@@ -583,10 +715,95 @@ class SkillTreeComponent {
         ? getSkillIdColor(node.id)
         : this.getSkillColor(count);
 
+      const circle = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "circle"
+      );
+      if (node.id === "root") {
+        radius = radius * 4; // Increase root node size
+      }
       circle.setAttribute("r", radius);
+      if (node.id === "root") {
+        circle.setAttribute("stroke-width", "1.5"); 
+        if (this.filterType === "unit") {
+          circle.setAttribute("fill", "#729fcf");
+          circle.setAttribute("stroke", "#204a87");
+      
+        } else if (this.filterType === "role") {
+          circle.setAttribute("fill", "#ad7fa8");
+          circle.setAttribute("stroke", "#5c3566");
+        }
+        circle.setAttribute("data-skill-id", node.id);
+      }
+      if ( node.id && node.id !== "root") {
       circle.setAttribute("fill", color);
-      circle.setAttribute("stroke", "#ffffff");
-      circle.setAttribute("stroke-width", "1.5");
+      }
+
+      // make r
+      // Add drag event handlers
+      group.addEventListener("mousedown", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (e.button !== 0) return; // Only handle left clicks
+
+        const nodeId = node.id;
+        const nodeType = "skill";
+        const nodeText = node.name;
+
+        // Create ghost element
+        const ghost = document.createElement("div");
+        ghost.id = "node-drag-ghost";
+        ghost.textContent = `${nodeType}: ${nodeText}`;
+        Object.assign(ghost.style, {
+          position: "fixed",
+          backgroundColor: color,
+          color: "#fff",
+          padding: "8px 12px",
+          borderRadius: "4px",
+          pointerEvents: "none",
+          zIndex: 9999,
+          fontSize: "14px",
+          boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+          transform: "translate(-50%, -50%)",
+          left: `${e.clientX}px`,
+          top: `${e.clientY}px`,
+          animation: "dropPulse 1s infinite",
+          opacity: "0.9",
+          transition: "opacity 0.2s",
+          whiteSpace: "nowrap",
+        });
+        document.body.appendChild(ghost);
+
+        const moveHandler = (moveEvent) => {
+          ghost.style.left = `${moveEvent.clientX}px`;
+          ghost.style.top = `${moveEvent.clientY}px`;
+        };
+
+        const upHandler = (upEvent) => {
+          document.removeEventListener("mousemove", moveHandler);
+          document.removeEventListener("mouseup", upHandler);
+
+          // Add drop animation before removing
+          ghost.style.opacity = "0";
+          setTimeout(() => ghost.remove(), 200);
+
+          // Dispatch custom event for the expression builder
+          const nodeDropEvent = new CustomEvent("nodedragend", {
+            detail: {
+              nodeId,
+              nodeType,
+              nodeText,
+              x: upEvent.clientX,
+              y: upEvent.clientY,
+            },
+          });
+          window.dispatchEvent(nodeDropEvent);
+        };
+
+        document.addEventListener("mousemove", moveHandler);
+        document.addEventListener("mouseup", upHandler);
+      });
+
       group.appendChild(circle);
 
       if (count > 0) {
@@ -594,12 +811,16 @@ class SkillTreeComponent {
           "http://www.w3.org/2000/svg",
           "text"
         );
-        countText.setAttribute("x", 0);
-        countText.setAttribute("y", 5);
-        countText.setAttribute("text-anchor", "middle");
-        countText.setAttribute("font-size", Math.min(radius * 0.8, 16));
-        countText.setAttribute("fill", "#ffffff");
+        countText.setAttribute("x", "0");
+        countText.setAttribute("y", "0"); // Center vertically
+        countText.setAttribute("dominant-baseline", "middle"); // Vertical centering
+        countText.setAttribute("text-anchor", "middle"); // Horizontal centering
+        countText.setAttribute("font-size", Math.min(radius * 0.8, 16)); // Dynamic font size
         countText.setAttribute("font-weight", "bold");
+        countText.setAttribute(
+          "filter",
+          "drop-shadow(0 1px 1px rgba(0,0,0,0.3))"
+        ); // Add subtle shadow
         countText.textContent = count;
         group.appendChild(countText);
       }
@@ -621,16 +842,16 @@ class SkillTreeComponent {
         );
 
         this.tooltip.innerHTML = `
-          <div class="tooltip-title">${node.name}</div>
-          <div class="tooltip-content">
-            <div>Employees: ${count}</div>
-            ${
-              relationships.length
-                ? `<div>Connections: ${relationships.length}</div>`
-                : ""
-            }
-          </div>
-        `;
+            <div class="tooltip-title">${node.name}</div>
+            <div class="tooltip-content">
+              <div>Employees: ${count}</div>
+              ${
+                relationships.length
+                  ? `<div>Connections: ${relationships.length}</div>`
+                  : ""
+              }
+            </div>
+          `;
 
         this.tooltip.style.display = "block";
         const rect = group.getBoundingClientRect();
@@ -694,14 +915,14 @@ class SkillTreeComponent {
         clickablePath.setAttribute("stroke-opacity", "0.4");
 
         this.tooltip.innerHTML = `
-          <div class="tooltip-title">Relationship</div>
-          <div class="tooltip-content">
-            <div>From: ${rel.from}</div>
-            <div>To: ${rel.to}</div>
-            <div>Type: ${rel.type}</div>
-            <div>Strength: ${rel.score}</div>
-          </div>
-        `;
+            <div class="tooltip-title">Relationship</div>
+            <div class="tooltip-content">
+              <div>From: ${rel.from}</div>
+              <div>To: ${rel.to}</div>
+              <div>Type: ${rel.type}</div>
+              <div>Strength: ${rel.score}</div>
+            </div>
+          `;
 
         this.tooltip.style.display = "block";
 
@@ -763,60 +984,62 @@ class SkillTreeComponent {
   }
 
   centerSVG() {
-  const svgRect = this.svg.getBoundingClientRect();
-  const svgWidth = svgRect.width;
-  const svgHeight = svgRect.height;
+    const svgRect = this.svg.getBoundingClientRect();
+    const svgWidth = svgRect.width;
+    const svgHeight = svgRect.height;
 
-  if (!this.skillTree || !this.svgContent) return;
+    if (!this.skillTree || !this.svgContent) return;
 
-  if (this.renderFullGraph) {
-    // Center on the root node with a higher zoom level
-    const root = this.skillTree;
-    const rootX = root.x;
-    const rootY = root.y;
+    if (this.renderFullGraph) {
+      // Center on the root node with a higher zoom level
+      const root = this.skillTree;
+      const rootX = root.x;
+      const rootY = root.y;
 
-    // Set a higher scale for zoom
-    this.transform.scale = 1.5; // Adjust this value as needed for zoom level
-    this.transform.x = svgWidth / 2 - rootX * this.transform.scale;
-    this.transform.y = svgHeight / 2 - rootY * this.transform.scale;
-  } else {
-    // Existing code to fit all nodes
-    let minX = Infinity, maxX = -Infinity;
-    let minY = Infinity, maxY = -Infinity;
+      // Set a higher scale for zoom
+      this.transform.scale = 1.5; // Adjust this value as needed for zoom level
+      this.transform.x = svgWidth / 2 - rootX * this.transform.scale;
+      this.transform.y = svgHeight / 2 - rootY * this.transform.scale;
+    } else {
+      // Existing code to fit all nodes
+      let minX = Infinity,
+        maxX = -Infinity;
+      let minY = Infinity,
+        maxY = -Infinity;
 
-    const traverseForBounds = (node) => {
-      if (node) {
-        minX = Math.min(minX, node.x);
-        maxX = Math.max(maxX, node.x);
-        minY = Math.min(minY, node.y);
-        maxY = Math.max(maxY, node.y);
-        if (node.children) node.children.forEach(traverseForBounds);
-      }
-    };
-    traverseForBounds(this.skillTree);
+      const traverseForBounds = (node) => {
+        if (node) {
+          minX = Math.min(minX, node.x);
+          maxX = Math.max(maxX, node.x);
+          minY = Math.min(minY, node.y);
+          maxY = Math.max(maxY, node.y);
+          if (node.children) node.children.forEach(traverseForBounds);
+        }
+      };
+      traverseForBounds(this.skillTree);
 
-    const padding = 100;
-    minX -= padding;
-    maxX += padding;
-    minY -= padding;
-    maxY += padding;
+      const padding = 100;
+      minX -= padding;
+      maxX += padding;
+      minY -= padding;
+      maxY += padding;
 
-    const graphWidth = maxX - minX;
-    const graphHeight = maxY - minY;
-    const scaleX = svgWidth / graphWidth;
-    const scaleY = svgHeight / graphHeight;
-    const fitScale = Math.min(scaleX, scaleY, 1);
+      const graphWidth = maxX - minX;
+      const graphHeight = maxY - minY;
+      const scaleX = svgWidth / graphWidth;
+      const scaleY = svgHeight / graphHeight;
+      const fitScale = Math.min(scaleX, scaleY, 1);
 
-    const centerX = (minX + maxX) / 2;
-    const centerY = (minY + maxY) / 2;
+      const centerX = (minX + maxX) / 2;
+      const centerY = (minY + maxY) / 2;
 
-    this.transform.scale = fitScale;
-    this.transform.x = svgWidth / 2 - centerX * fitScale;
-    this.transform.y = svgHeight / 2 - centerY * fitScale;
+      this.transform.scale = fitScale;
+      this.transform.x = svgWidth / 2 - centerX * fitScale;
+      this.transform.y = svgHeight / 2 - centerY * fitScale;
+    }
+
+    this.applyTransform();
   }
-
-  this.applyTransform();
-}
   render() {
     if (!this.container) {
       console.error("Container is undefined");
@@ -943,42 +1166,42 @@ class SkillTreeComponent {
     let isPanning = false;
     let startX, startY;
     const zoomIntensity = 0.1;
-  
+
     // Mouse wheel zoom
-    this.svg.addEventListener('wheel', (e) => {
+    this.svg.addEventListener("wheel", (e) => {
       e.preventDefault();
       const rect = this.svg.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
-      
+
       const zoomFactor = 1 + (e.deltaY < 0 ? zoomIntensity : -zoomIntensity);
       this.transform.scale *= zoomFactor;
-      
+
       // Adjust transform based on mouse position
       this.transform.x = mouseX - (mouseX - this.transform.x) * zoomFactor;
       this.transform.y = mouseY - (mouseY - this.transform.y) * zoomFactor;
-      
+
       this.applyTransform();
     });
-  
+
     // Panning handlers
-    this.svg.addEventListener('mousedown', (e) => {
+    this.svg.addEventListener("mousedown", (e) => {
       if (e.button === 0) {
         isPanning = true;
         startX = e.clientX - this.transform.x;
         startY = e.clientY - this.transform.y;
       }
     });
-  
-    document.addEventListener('mousemove', (e) => {
+
+    document.addEventListener("mousemove", (e) => {
       if (isPanning) {
         this.transform.x = e.clientX - startX;
         this.transform.y = e.clientY - startY;
         this.applyTransform();
       }
     });
-  
-    document.addEventListener('mouseup', () => {
+
+    document.addEventListener("mouseup", () => {
       isPanning = false;
     });
   }
@@ -996,7 +1219,7 @@ class SkillTreeComponent {
   ) {
     // Fix the particle size to be constant based on initial values only
     const initialSize = this.particleBaseSize + Math.min(score, 6) * 0.1;
-    
+
     return {
       progress: progress,
       fadeRate: 0.97, // Not used anymore
@@ -1136,14 +1359,17 @@ class SkillTreeComponent {
         ? colorMatch.slice(1, 4).map(Number)
         : [100, 149, 237];
 
-        this.particleCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${Math.min(p.alpha, 0.7)})`;
-        this.particleCtx.beginPath();
-        this.particleCtx.arc(pos.x, pos.y, p.size * 0.8, 0, Math.PI * 2);
-        this.particleCtx.fill();
-        
-        // Add subtle glow effect
-        this.particleCtx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.3)`;
-        this.particleCtx.shadowBlur = 4;
+      this.particleCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${Math.min(
+        p.alpha,
+        0.7
+      )})`;
+      this.particleCtx.beginPath();
+      this.particleCtx.arc(pos.x, pos.y, p.size * 0.8, 0, Math.PI * 2);
+      this.particleCtx.fill();
+
+      // Add subtle glow effect
+      this.particleCtx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.3)`;
+      this.particleCtx.shadowBlur = 4;
       if (window.detailedView) {
         this.particleCtx.save();
         this.particleCtx.fillStyle = "white";
@@ -1218,7 +1444,7 @@ class SkillTreeComponent {
           score: clickedParticle.score,
           relationDetails: clickedParticle.relationData,
         });
-        
+
         // Removed these lines to prevent the flash effect:
         // clickedParticle.size *= 2;
         // clickedParticle.alpha = 1.0;

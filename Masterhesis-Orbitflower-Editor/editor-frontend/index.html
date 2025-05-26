@@ -448,18 +448,12 @@
           const skillSegment = $(this);
           const parentNode = skillSegment.closest("g").parent();
           const parentId = parentNode.attr("id");
-          console.error("this is the parent node", parentId);
           const unitId = document.querySelector(
             `text[id="${parentId}_text"]`
           )?.textContent;
 
           const skillId = skillSegment.attr("data-skill-id");
           const key = `${unitId}_${skillId}`;
-          console.error(
-            "this what we are getting from the skill segment",
-            key,
-            skillId
-          );
           if (activeSkillSegments[key]) {
             delete activeSkillSegments[key];
             skillSegment.css("fill", "");
@@ -477,8 +471,9 @@
 
             activeSkillSegments[key] = true;
             relatedSkills = getAllRelatedSkills(skillId);
-            console.error("related skills", relatedSkills);
+            console.error("filtering by unitId", unitId);
             filterUsersByUnitAndSkill(unitId, relatedSkills);
+            console.error("current selected users")
             skillSegment.css("fill", "#4CAF50");
           }
 
@@ -570,10 +565,26 @@
                 $(this).removeClass("hover-highlight");
               }
             });
+
+            // find g with class node and which has child text with content equal to targetSkillId
+            $("#testing-svg")
+              .find("g.node")
+              .each(function () {
+                var node = $(this);
+                var nodeId = node.attr("data-skill-id");
+                console.error("comparing nodeId", nodeId, "with targetSkillId", targetSkillId);
+                  if (nodeId === targetSkillId) {
+                    node.addClass("hover-highlight");
+                  } else {
+                    node.removeClass("hover-highlight");
+                  }
+                
+              });
         });
 
         $("#details-skills").on("mouseout", ".skill-item", function() {
           $("#svg").find(".skill-segment").removeClass("hover-highlight");
+          $("#testing-svg").find("g.node").removeClass("hover-highlight");
         });
         
         $("#details-skills").on("click", function (e) {
@@ -581,28 +592,23 @@
           $("#details-skills .skill-item").removeClass("selected");
           var targetSkillId = e.target.getAttribute("data-skill-id");
           if (!targetSkillId || targetSkillId === currentActiveSkill) return;
-          if (isSplitView) {
-            $("#detailed-graph-skills").empty();
-            currentActiveSkill = targetSkillId;
-            options = {
-              container: "detailed-graph-skills",
-            };
-            const workerGraph = new SkillTreeComponent(options);
-            workerGraph.reset("#detailed-graph-skills");
-            console.log(
-              "showing graph worker with the following parameters",
-              currentorgmodel,
-              parentNodeType,
-              relatedText,
-              targetSkillId
-            );
-            workerGraph.show(
-              currentorgmodel,
-              parentNodeType,
-              relatedText,
-              targetSkillId
-            );
-          }
+      
+  if (isSplitView) {
+    $("#detailed-graph-skills").empty();
+    currentActiveSkill = targetSkillId;
+
+    // Reuse existing instance or create new
+    if (!window.workerGraphInstance) {
+      window.workerGraphInstance = new SkillTreeComponent({ container: "detailed-graph-skills" });
+    }
+    window.workerGraphInstance.reset("#detailed-graph-skills");
+    window.workerGraphInstance.show(
+      currentorgmodel,
+      parentNodeType,
+      relatedText,
+      targetSkillId
+    );
+  }
           var clonedModel = currentorgmodel.cloneNode(true);
           var allRelatedSkills = getAllRelatedSkills(targetSkillId);
 
@@ -668,7 +674,6 @@
 
         $("svg").on("click", function (e) {
           var clickedElement = e.target;
-          console.error("clicked element", clickedElement);
           if (clickedElement.tagName === "circle") {
             if (!clickedElement.hasAttribute("data-is-active")) {
               // First click: hide elements
@@ -684,7 +689,6 @@
                 });
               clickedElement.setAttribute("data-is-active", "true");
             } else {
-              // Second click: show all elements
               $("#users")
                 .find("table")
                 .each(function () {
@@ -694,11 +698,9 @@
             }
           }
           if (
-            clickedElement.classList.contains("skill-segment") &&
-            expressionBuilder.isPaused() &&
+            clickedElement.classList.contains("skill-segment") && !isSplitting &&
             clickedElement.tagName === "path"
-          ) {
-            splitGraphContainer(true);
+          ) {          
             var parentNodeId =
               clickedElement.parentNode.parentNode.getAttribute("id");
             parentNodeType =
@@ -720,14 +722,6 @@
               relatedText,
               skillId
             );
-            isolateTargetGraphNode(parentNodeId, "svg", "main-svg");
-            $("#users")
-              .find("table")
-              .each(function () {
-                if (!$(this).hasClass("highlightrole")) {
-                  $(this).addClass("hidden");
-                }
-              });
             isZoomed = true;
           }
         });

@@ -9,6 +9,7 @@ class ExpressionBuilder {
     this.apiBaseUrl = "";
     window.addEventListener("skilldragend", this.handleSkillDrop.bind(this));
     window.addEventListener("circledragend", this.handleCircleDrop.bind(this));
+    window.addEventListener("nodedragend", this.handleNodeDrop.bind(this));
 
     this.onGraphRendered = this.onGraphRendered.bind(this);
 
@@ -177,6 +178,42 @@ class ExpressionBuilder {
         type: "andBlock",
         items: [newItem],
         operators: [], // still empty
+      });
+    }
+
+    this.updateExpressionDisplay();
+  }
+
+  handleNodeDrop({ detail }) {
+    const { nodeId, nodeType, nodeText, x, y } = detail;
+    const display = document.getElementById("currentExpression");
+    const rect = display.getBoundingClientRect();
+
+
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      return;
+    }
+
+    this.saveExpressionState();
+
+    // Build a node token
+    const newItem = {
+      type: nodeType,
+      value: nodeId,
+      element: null,
+      displayValue: `${nodeType.toUpperCase()}:${nodeText}`,
+    };
+
+    // If last thing is an AND-block, append; otherwise start a new one
+    const last = this.currentExpression.slice(-1)[0];
+    if (last && last.type === "andBlock") {
+      last.items.push(newItem);
+      last.operators.push("AND");
+    } else {
+      this.currentExpression.push({
+        type: "andBlock",
+        items: [newItem],
+        operators: [],
       });
     }
 

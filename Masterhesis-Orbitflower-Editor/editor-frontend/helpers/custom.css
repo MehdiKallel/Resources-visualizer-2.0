@@ -347,30 +347,112 @@ circle:active {
   }
 }
 
-.skill-segment.hover-highlight {
-  /* solid base fill + stroke */
+.hover-highlight {
+  /* keep your fill-pulse if you like */
   fill: #e74c3c !important;
-  stroke: #e74c3c;
-  stroke-width: 2px;
-
-  /* glow */
-  filter: drop-shadow(0 0 6px rgba(231, 76, 60, 0.6));
-  
-  /* start semi-transparent */
   fill-opacity: 0.2;
+  animation:
+    pulse-fill 2s ease-in-out infinite,
+    dash-march 1s linear infinite,
+    glow-pulse 1.5s ease-in-out infinite;
+  
+  /* THICK, BRIGHT, DASHED STROKE */
+  stroke: #ff1744 !important;
+  stroke-width: 3px;
+  stroke-linecap: round;
+  stroke-dasharray: 10 5;
+  stroke-dashoffset: 0;
 
-  /* animate the opacity “pulse” */
-  animation: pulse-fill 2s ease-in-out infinite;
+  /* DUAL DROP-SHADOW FOR A STRONGER GLOW */
+  filter:
+    drop-shadow(0 0 8px rgba(231, 76, 60, 0.7))
+    drop-shadow(0 0 16px rgba(231, 76, 60, 0.5));
+  
   transition: filter 0.2s ease-out, stroke-width 0.2s ease-out;
 }
 
-.skill-segment.hover-highlight:hover {
-  /* pop the outline on direct hover */
-  stroke-width: 4px;
-  filter: drop-shadow(0 0 12px rgba(231, 76, 60, 0.8));
+@keyframes dash-march {
+  to { stroke-dashoffset: -15; } /* sum(dash+gap) = 15 */
 }
 
+@keyframes glow-pulse {
+  0%, 100% {
+    filter:
+      drop-shadow(0 0 6px rgba(231, 76, 60, 0.5))
+      drop-shadow(0 0 12px rgba(231, 76, 60, 0.3));
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 12px rgba(231, 76, 60, 0.8))
+      drop-shadow(0 0 24px rgba(231, 76, 60, 0.6));
+  }
+}
+
+/* your existing fill-pulse */
 @keyframes pulse-fill {
   0%, 100% { fill-opacity: 0.2; }
   50%      { fill-opacity: 0.6; }
 }
+/* Add these to custom.css */
+@keyframes nodeShake {
+  0%, 100% { 
+    transform: scale(1.1) rotate(0deg);
+    filter: brightness(1);
+  }
+  25% { 
+    transform: scale(1.15) rotate(-3deg);
+    filter: brightness(1.2);
+  }
+  75% { 
+    transform: scale(1.15) rotate(3deg);
+    filter: brightness(1.2);
+  }
+}
+
+@keyframes nodeEnlarge {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.2); }
+}
+
+
+
+/* 1) New keyframes: subtle back-and-forth + glow pulse */
+/* 1) Pure horizontal shake */
+@keyframes holdShake {
+  0%, 100%   { transform: translateX(-1px); }
+  50%        { transform: translateX(1px); }
+}
+
+/* 2) Slow glow pulse */
+@keyframes holdGlow {
+  0%   { filter: drop-shadow(0 0 4px rgba(0,180,255,0.4)); }
+  50%  { filter: drop-shadow(0 0 16px rgba(0,220,255,0.8)); }
+  100% { filter: drop-shadow(0 0 4px rgba(0,180,255,0.4)); }
+}
+
+/* 3) Combined on hold—with subtle ease and alternation */
+.hold-active:not([class*="relation"]) {
+  animation:
+    holdShake 0.25s ease-in-out infinite alternate,
+    holdGlowIntensify 1s ease-out forwards;
+  transform-origin: center;
+  cursor: grabbing;
+}
+
+@keyframes holdGlowIntensify {
+  0%   { filter: drop-shadow(0 0 4px rgba(0,180,255,0.4)); }
+  20%  { filter: drop-shadow(0 0 8px rgba(0,200,255,0.5)); }
+  40%  { filter: drop-shadow(0 0 12px rgba(0,210,255,0.6)); }
+  60%  { filter: drop-shadow(0 0 16px rgba(0,220,255,0.7)); }
+  80%  { filter: drop-shadow(0 0 20px rgba(0,230,255,0.8)); }
+  100% { filter: drop-shadow(0 0 24px rgba(0,240,255,0.9)); }
+}
+
+
+/* 3) When you remove .hold-active, it'll snap right back to normal */
+
+
+
+
+
+
