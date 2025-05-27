@@ -488,45 +488,7 @@ class SkillsFeature {
     }
   }
 
-  // Create a back button as HTML element outside the SVG
-  createBackButton(svg) {
-    // Remove any existing back button
-    const existingButton = document.getElementById("skills-back-button");
-    if (existingButton) {
-      existingButton.remove();
-    }
-
-    // Get the graph column position for proper placement
-    const graphColumn = document.getElementById("graph");
-
-    // Create HTML button
-    const backButton = document.createElement("button");
-    backButton.id = "skills-back-button";
-    backButton.textContent = "Single View";
-    backButton.style.cssText = `
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      padding: 4px 8px;
-      background-color: #ffffff;
-      border: 1px solid #cccccc;
-      border-radius: 3px;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      font-size: 15px;
-      color: #333333;
-      cursor: pointer;
-      z-index: 100;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    `;
-
-    // Add click handler with proper binding
-    backButton.addEventListener("click", () => this.resetZoom());
-
-    // Append to graph column parent container for proper positioning
-    graphColumn.style.position = "relative"; // Ensure relative positioning for absolute child
-    graphColumn.appendChild(backButton);
-    return backButton;
-  }
+  
 
   // Create tooltip container with all necessary elements
   createTooltip(svg) {
@@ -944,7 +906,6 @@ class SkillsFeature {
             if (!hierarchyGroups.includes(g)) g.remove();
           });
 
-          self.createBackButton(svg);
           self.setTooltipZoomState(svg, true);
 
           if (skill.subSkills && skill.subSkills.length > 0) {

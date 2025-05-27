@@ -86,6 +86,44 @@ class OrbitFlower {
     const mainSVG = this.svgElement[0];
     mainSVG.appendChild(container);
   }
+  createBackButton(svg) {
+    // Remove any existing back button
+    const existingButton = document.getElementById("skills-back-button");
+    if (existingButton) {
+      existingButton.remove();
+    }
+
+    // Get the graph column position for proper placement
+    const graphColumn = document.getElementById("graph");
+
+    // Create HTML button
+    const backButton = document.createElement("button");
+    backButton.id = "skills-back-button";
+    backButton.textContent = "Back";
+    backButton.style.cssText = `
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 4px 8px;
+      background-color: #ffffff;
+      border: 1px solid #cccccc;
+      border-radius: 3px;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 15px;
+      color: #333333;
+      cursor: pointer;
+      z-index: 100;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    `;
+
+    // Add click handler with proper binding
+    backButton.addEventListener("click", () => window.location.reload());
+
+    // Append to graph column parent container for proper positioning
+    graphColumn.style.position = "relative"; // Ensure relative positioning for absolute child
+    graphColumn.appendChild(backButton);
+    return backButton;
+  }
 
   showCenteredContainer() {
     const container = this.svgElement.find("#centered-container");
@@ -100,10 +138,6 @@ class OrbitFlower {
   }
 
   renderOrganisationGraph(doc) {
-    console.error(
-      "************************************************ rendering doc:",
-      doc
-    );
     const gw = new GraphWorker(
       doc,
       "/o:organisation/o:units/o:unit|/o:organisation/o:roles/o:role",
@@ -678,6 +712,7 @@ class OrbitFlower {
             }
 
             splitGraphContainer(true);
+            this.createBackButton(svgRoot);
             const container = document.getElementById('detailed-graph-skills');
             container.innerHTML = '';
             const workerGraph = new SkillTreeComponent({ container });
@@ -806,6 +841,7 @@ class OrbitFlower {
     return { graphSvg, usersSvg };
   }
 }
+
 
 const renderOrganisationGraph = (doc) => {
   const tempViz = new OrbitFlower($("svg"));
