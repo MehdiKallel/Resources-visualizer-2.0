@@ -4,7 +4,6 @@ class ExpressionBuilder {
     this.currentExpression = [];
     this.expressionHistory = [];
     this.draggedItem = null;
-    this.paused = false;
     this.savedExpressions = [];
     this.apiBaseUrl = "";
     window.addEventListener("skilldragend", this.handleSkillDrop.bind(this));
@@ -234,7 +233,7 @@ class ExpressionBuilder {
     container.style.zIndex = "1000";
     container.style.maxWidth = "100%"; // Maximum width constraint
 
-    // Create a header with the title, pause/resume and collapse/expand buttons
+    // Create a header with the title and collapse/expand buttons
     const headerContainer = document.createElement("div");
     headerContainer.style.display = "flex";
     headerContainer.style.justifyContent = "space-between";
@@ -247,19 +246,6 @@ class ExpressionBuilder {
     title.style.fontSize = "16px";
 
     const buttonContainer = document.createElement("div");
-
-    // Pause/Resume Button
-    const pauseResumeBtn = document.createElement("button");
-    this.updatePauseButtonState(pauseResumeBtn);
-    pauseResumeBtn.style.fontSize = "11px";
-    pauseResumeBtn.style.padding = "3px 5px";
-    pauseResumeBtn.onclick = () => {
-      this.toggleExpressionBuilderPause();
-      this.updatePauseButtonState(pauseResumeBtn);
-    };
-
-    buttonContainer.appendChild(pauseResumeBtn);
-
     headerContainer.appendChild(title);
     headerContainer.appendChild(buttonContainer);
 
@@ -756,22 +742,6 @@ class ExpressionBuilder {
       document.addEventListener("mouseup", mouseUpHandler);
       e.preventDefault();
     });
-  }
-
-  toggleExpressionBuilderPause() {
-    this.paused = !this.paused;
-  }
-
-  updatePauseButtonState(button) {
-    if (this.paused) {
-      button.textContent = "Single View";
-      button.title = "Resume expression builder";
-      button.style.background = "#ffe0e0";
-    } else {
-      button.textContent = "Explore Mode";
-      button.title = "Pause expression builder";
-      button.style.background = "#e0e0e0";
-    }
   }
 
   executeSearch() {
@@ -1718,7 +1688,6 @@ class ExpressionBuilder {
         return copy;
       }),
       expressionHistory: this.expressionHistory,
-      paused: this.paused,
       savedExpressions: this.savedExpressions,
     };
   }
@@ -1742,7 +1711,6 @@ class ExpressionBuilder {
       this.currentExpression = state.currentExpression;
       if (state.expressionHistory)
         this.expressionHistory = state.expressionHistory;
-      if (state.paused !== undefined) this.paused = state.paused;
       if (state.savedExpressions)
         this.savedExpressions = state.savedExpressions;
 
