@@ -327,9 +327,35 @@ class ExpressionBuilder {
 
     expressionDisplay.addEventListener("drop", (e) => {
       e.preventDefault();
-      console.log("Dropped item:", e.dataTransfer);
+      
+      // Remove all drag highlights first
+      Array.from(expressionDisplay.children).forEach((child) => {
+        child.classList.remove("drop-target");
+      });
 
-      // 1) handle new-subject drops
+      // Define elements array and find direct target that we'll use throughout the drop handler
+      const elements = Array.from(expressionDisplay.children).filter(
+        (el) => el.id !== "drop-indicator"
+      );
+      
+      let directTarget = null;
+      let directTargetIndex = -1;
+      
+      // Find the direct target element under cursor
+      for (let i = 0; i < elements.length; i++) {
+        const rect = elements[i].getBoundingClientRect();
+        if (
+          e.clientX >= rect.left &&
+          e.clientX <= rect.right &&
+          e.clientY >= rect.top &&
+          e.clientY <= rect.bottom
+        ) {
+          directTarget = elements[i];
+          directTargetIndex = i;
+          break;
+        }
+      }
+
       let payload = null;
       if (e.dataTransfer.types.includes("application/json")) {
         try {
@@ -338,9 +364,8 @@ class ExpressionBuilder {
           console.error("Error parsing drag payload:", err);
         }
       }
-      console.log("Payload:", payload);
 
-      // Handle skill items from the skills panel
+      // Handle skill drops
       if (payload && payload.type === "skill" && payload.id) {
         this.saveExpressionState();
 
@@ -375,12 +400,8 @@ class ExpressionBuilder {
         return;
       }
 
-      // Handle both external-entity and external-subject types
-      if (
-        payload &&
-        (payload.type === "external-entity" ||
-          payload.type === "external-subject")
-      ) {
+      // Handle external entity drops
+      if (payload && (payload.type === "external-entity" || payload.type === "external-subject")) {
         const nodeText = payload.nodeText || payload.entityId || "";
         const entityType = payload.entityType || "subject";
         this.addEntityToExpression(nodeText, entityType, null);
@@ -392,52 +413,77 @@ class ExpressionBuilder {
 
       // Parse the drag data
       try {
-        const parsedData = JSON.parse(data);
-        if (parsedData.type === "blockItem") {
-          sourceType = "blockItem";
-          sourceBlockIndex = parsedData.blockIndex;
-          sourceItemIndex = parsedData.itemIndex;
-        } else {
-          sourceType = "item";
-          sourceIndex = parseInt(data, 10);
-        }
-      } catch {
         if (data.startsWith("block:")) {
           sourceType = "block";
           sourceIndex = parseInt(data.split(":")[1], 10);
         } else {
-          sourceType = "item";
-          sourceIndex = parseInt(data, 10);
+          const parsedData = JSON.parse(data);
+          if (parsedData.type === "blockItem") {
+            sourceType = "blockItem";
+            sourceBlockIndex = parsedData.blockIndex;
+            sourceItemIndex = parsedData.itemIndex;
+          } else {
+            sourceType = "item";
+            sourceIndex = parseInt(data, 10);
+          }
         }
+      } catch {
+        sourceType = "item";
+        sourceIndex = parseInt(data, 10);
       }
 
-      // Find direct-target under cursor
-      let directTarget = null;
-      let directTargetIndex = -1;
-      const elements = Array.from(expressionDisplay.children).filter(
-        (el) => el.id !== "drop-indicator"
-      );
-      for (let i = 0; i < elements.length; i++) {
-        const rect = elements[i].getBoundingClientRect();
-        if (
-          e.clientX >= rect.left &&
-          e.clientX <= rect.right &&
-          e.clientY >= rect.top &&
-          e.clientY <= rect.bottom
-        ) {
-          directTarget = elements[i];
-          directTargetIndex = i;
-          break;
-        }
-      }
-
-      // Standard drop position calculation
+      // Get drop position
       const dropPosition = this.getDropPosition(
         expressionDisplay,
         e.clientX,
-        e.clientY
+        e.clientY,
+        directTarget
       );
 
+      // Handle block-to-block merging
+      if (sourceType === "block" && dropPosition.type === "block") {
+        // Prevent merging block with itself
+        if (sourceIndex === dropPosition.index) {
+          return;
+        }
+
+        this.saveExpressionState();
+        const sourceBlock = this.currentExpression[sourceIndex];
+        const targetBlock = this.currentExpression[dropPosition.index];
+        
+        // Add AND operator between the last item of target and first item of source
+        if (targetBlock.items.length > 0) {
+          if (!targetBlock.operators) {
+            targetBlock.operators = [];
+          }
+          targetBlock.operators.push("AND");
+        }
+        
+        // Merge items and operators
+        targetBlock.items = targetBlock.items.concat(sourceBlock.items);
+        if (sourceBlock.operators) {
+          targetBlock.operators = targetBlock.operators.concat(sourceBlock.operators);
+        }
+        
+        // Remove the source block
+        this.currentExpression.splice(sourceIndex, 1);
+        this.updateExpressionDisplay();
+        return;
+      }
+
+      // Prevent blocks from being merged into non-block elements
+      if (sourceType === "block" && dropPosition.type !== "block") {
+        this.saveExpressionState();
+        const block = this.currentExpression.splice(sourceIndex, 1)[0];
+        if (sourceIndex < dropPosition.index) {
+          dropPosition.index--;
+        }
+        this.currentExpression.splice(dropPosition.index, 0, block);
+        this.updateExpressionDisplay();
+        return;
+      }
+
+      // Standard drop position calculation
       // ── NEW: if dropping a blockItem back into its own andBlock, swap positions ──
       if (
         sourceType === "blockItem" &&
@@ -447,6 +493,10 @@ class ExpressionBuilder {
         this.saveExpressionState();
         const block = this.currentExpression[sourceBlockIndex];
         const blockEl = elements[sourceBlockIndex];
+        if (!blockEl) {
+          console.warn("Block element not found, aborting swap");
+          return;
+        }
         const rect = blockEl.getBoundingClientRect();
         const relativeX = e.clientX - rect.left;
         const itemCount = block.items.length;
@@ -457,10 +507,6 @@ class ExpressionBuilder {
           block.items[targetItemIndex],
           block.items[sourceItemIndex],
         ];
-        // clear highlights & re-render
-        Array.from(expressionDisplay.children).forEach((c) =>
-          c.classList.remove("drop-target")
-        );
         this.updateExpressionDisplay();
         return;
       }
@@ -469,12 +515,28 @@ class ExpressionBuilder {
       let draggedItem;
       if (sourceType === "blockItem") {
         const sourceBlock = this.currentExpression[sourceBlockIndex];
-        draggedItem = sourceBlock.items.splice(sourceItemIndex, 1)[0];
-        if (sourceBlock.items.length === 0) {
-          this.currentExpression.splice(sourceBlockIndex, 1);
-          if (sourceBlockIndex < dropPosition.index) {
-            dropPosition.index--;
+        if (!sourceBlock || !sourceBlock.items) {
+          console.warn("Invalid source block or missing items array");
+          return;
+        }
+        
+        try {
+          draggedItem = sourceBlock.items.splice(sourceItemIndex, 1)[0];
+          if (!draggedItem) {
+            console.warn("Failed to remove item from source block");
+            return;
           }
+          
+          // Remove empty blocks
+          if (sourceBlock.items.length === 0) {
+            this.currentExpression.splice(sourceBlockIndex, 1);
+            if (sourceBlockIndex < dropPosition.index) {
+              dropPosition.index--;
+            }
+          }
+        } catch (err) {
+          console.error("Error handling block item drag:", err);
+          return;
         }
       } else if (sourceType === "block") {
         draggedItem = this.currentExpression.splice(sourceIndex, 1)[0];
@@ -488,38 +550,27 @@ class ExpressionBuilder {
         }
       }
 
-      // ── existing: insert the dragged item at the drop location ──
-      if (
-        dropPosition.type === "block" &&
-        draggedItem.type !== "operator" &&
-        draggedItem.value !== "(" &&
-        draggedItem.value !== ")"
-      ) {
-        this.currentExpression[dropPosition.index].items.push(draggedItem);
-      } else if (
-        directTarget &&
-        directTarget.classList.contains("expr-item") &&
-        !directTarget.classList.contains("operator") &&
-        draggedItem.type !== "operator" &&
-        draggedItem.value !== "(" &&
-        draggedItem.value !== ")"
-      ) {
-        const targetItem = this.currentExpression[directTargetIndex];
-        if (
-          targetItem.type !== "operator" &&
-          targetItem.value !== "(" &&
-          targetItem.value !== ")"
-        ) {
-          const newBlock = {
-            type: "andBlock",
-            items: [targetItem, draggedItem],
-            operators: ["AND"],
-          };
-          this.currentExpression.splice(directTargetIndex, 1, newBlock);
-        } else {
-          this.currentExpression.splice(dropPosition.index, 0, draggedItem);
+      if (!draggedItem) {
+        console.warn("No valid item to drag");
+        return;
+      }
+
+      // ── Handle dropping item at the new location ──
+      if (dropPosition.type === "block" && draggedItem.type !== "operator") {
+        // Add to existing block
+        if (this.currentExpression[dropPosition.index] && 
+            this.currentExpression[dropPosition.index].items) {
+          this.currentExpression[dropPosition.index].items.push(draggedItem);
         }
       } else {
+        // Create new block for single items
+        if (draggedItem.type !== "operator" && draggedItem.type !== "andBlock") {
+          draggedItem = {
+            type: "andBlock",
+            items: [draggedItem],
+            operators: []
+          };
+        }
         this.currentExpression.splice(dropPosition.index, 0, draggedItem);
       }
 
@@ -1290,6 +1341,15 @@ class ExpressionBuilder {
 
     const closeParen = document.createElement("span");
     closeParen.textContent = ")";
+
+    // Add event listener to close parenthesis for removing block
+    closeParen.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.saveExpressionState();
+      this.currentExpression.splice(index, 1);
+      this.updateExpressionDisplay();
+    });
+
     closeParen.style.marginLeft = "2px";
     wrapper.appendChild(closeParen);
 
@@ -1312,7 +1372,7 @@ class ExpressionBuilder {
     };
 
     wrapper.addEventListener("dragstart", (e) => {
-      e.dataTransfer.setData("text/plain", index.toString());
+      e.dataTransfer.setData("text/plain", `block:${index}`);
       wrapper.classList.add("dragging");
       e.dataTransfer.effectAllowed = "move";
     });
@@ -1427,9 +1487,64 @@ class ExpressionBuilder {
     return wrapper;
   }
 
+  normalizeBlockOperators() {
+    // Remove ANDs from start and end
+    while (
+      this.currentExpression.length > 0 && 
+      this.currentExpression[0].type === "operator" && 
+      this.currentExpression[0].value === "AND"
+    ) {
+      this.currentExpression.shift();
+    }
+    while (
+      this.currentExpression.length > 0 && 
+      this.currentExpression[this.currentExpression.length - 1].type === "operator" && 
+      this.currentExpression[this.currentExpression.length - 1].value === "AND"
+    ) {
+      this.currentExpression.pop();
+    }
+
+    // Remove consecutive ANDs
+    for (let i = this.currentExpression.length - 1; i > 0; i--) {
+      const current = this.currentExpression[i];
+      const prev = this.currentExpression[i - 1];
+
+      if (
+        current?.type === "operator" && current.value === "AND" &&
+        prev?.type === "operator" && prev.value === "AND"
+      ) {
+        // Remove one of the consecutive ANDs
+        this.currentExpression.splice(i, 1);
+      }
+    }
+    // Scan for missing ANDs between blocks
+    for (let i = 0; i < this.currentExpression.length - 1; i++) {
+      const current = this.currentExpression[i];
+      const next = this.currentExpression[i + 1];
+
+      // If we have two consecutive blocks or items without an operator between them
+      if (
+        (!this.isOperator(current) && !this.isOperator(next)) ||
+        (current.type === "andBlock" && next.type === "andBlock")
+      ) {
+        // Insert a flippable AND operator
+        this.currentExpression.splice(i + 1, 0, {
+          type: "operator",
+          value: "AND",
+          displayValue: "AND",
+          flippable: true
+        });
+        i++; // Skip the newly inserted operator
+      }
+    }
+  }
+
   updateExpressionDisplay() {
     const display = document.getElementById("currentExpression");
     if (!display) return;
+
+    // Normalize block operators before displaying
+    this.normalizeBlockOperators();
 
     display.innerHTML = "";
 
@@ -1563,7 +1678,7 @@ class ExpressionBuilder {
     });
   }
 
-  getDropPosition(container, clientX, clientY) {
+  getDropPosition(container, clientX, clientY, directTarget) {
     const elements = Array.from(container.children);
     for (let i = 0; i < elements.length; i++) {
       const element = elements[i];
@@ -1574,16 +1689,17 @@ class ExpressionBuilder {
         clientY >= rect.top &&
         clientY <= rect.bottom
       ) {
+        // If dropping on a block
         if (element.classList.contains("expr-block")) {
           return { type: "block", index: i };
-        } else {
-          const halfWidth = rect.width / 2;
-          return {
-            type: "element",
-            index: clientX < rect.left + halfWidth ? i : i + 1,
-            before: clientX < rect.left + halfWidth,
-          };
         }
+        // For non-block elements, allow item drops
+        const halfWidth = rect.width / 2;
+        return {
+          type: "element",
+          index: clientX < rect.left + halfWidth ? i : i + 1,
+          before: clientX < rect.left + halfWidth,
+        };
       }
     }
     return { type: "element", index: elements.length, before: false };
@@ -1667,10 +1783,6 @@ class ExpressionBuilder {
     return true;
   }
 
-  isPaused() {
-    return this.paused;
-  }
-
   // State management methods
   getState() {
     return {
@@ -1752,7 +1864,6 @@ class ExpressionBuilder {
             })
           : []
       ),
-      paused: this.paused,
       savedExpressions: this.savedExpressions,
     };
   }
@@ -1808,11 +1919,6 @@ class ExpressionBuilder {
       this.expressionHistory = state.expressionHistory;
     }
 
-    if (state.paused !== undefined) {
-      this.paused = state.paused;
-      window.expressionBuilderPaused = this.paused;
-    }
-
     if (state.savedExpressions) {
       this.savedExpressions = state.savedExpressions;
       this.updateSavedExpressionsList();
@@ -1820,13 +1926,5 @@ class ExpressionBuilder {
 
     // Update the UI to reflect the loaded state
     this.updateExpressionDisplay();
-
-    // Update pause button if it exists
-    const pauseResumeBtn = document.querySelector(
-      `#${this.containerId} button`
-    );
-    if (pauseResumeBtn) {
-      this.updatePauseButtonState(pauseResumeBtn);
-    }
   }
 }

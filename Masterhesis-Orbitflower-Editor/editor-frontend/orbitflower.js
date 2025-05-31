@@ -633,177 +633,65 @@ class OrbitFlower {
       });
 
       svgRoot.querySelectorAll("circle").forEach((circle) => {
-        circle.style.cursor = "grab";
-        let holdTimeout;
-        let isHolding = false;
+        circle.style.cursor = "pointer";
         const group = circle.parentNode;
 
-        circle.addEventListener("mousedown", (e) => {
-          e.preventDefault();
-
-          if (group) {
-            group.classList.add("hold-active");
+        // Add tooltip on hover
+        circle.addEventListener("mouseenter", (e) => {
+          // Remove any existing tooltips first
+          const existingTooltip = document.getElementById("circle-tooltip");
+          if (existingTooltip) {
+            existingTooltip.remove();
           }
 
-          // Create a tooltip-style hold hint
-          const holdHint = document.createElement("div");
-          holdHint.id = "hold-hint";
-          holdHint.textContent = "Hold to view skills graph...";
-          Object.assign(holdHint.style, {
-            position: "fixed",
-            left: `${e.clientX + 20}px`,
-            top: `${e.clientY - 25}px`,
-            background: "rgba(0, 0, 0, 0.8)",
-            color: "#fff",
-            padding: "6px 12px",
-            borderRadius: "20px",
-            fontSize: "13px",
-            pointerEvents: "none",
-            opacity: "0",
-            transform: "translateY(10px)",
-            transition: "all 0.2s ease-out",
-            zIndex: "10000",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-            fontFamily: "Arial, sans-serif",
-          });
-          document.body.appendChild(holdHint);
+          const tooltip = document.createElement("div");
+          tooltip.id = "circle-tooltip";
+          tooltip.textContent = "Double-click to explore skills";
+          tooltip.style.left = `${e.clientX + 15}px`;
+          tooltip.style.top = `${e.clientY - 25}px`;
+          document.body.appendChild(tooltip);
 
-          // Fade in the hint after a small delay
-          requestAnimationFrame(() => {
-            holdHint.style.opacity = "1";
-            holdHint.style.transform = "translateY(0)";
-          });
-
-          holdTimeout = setTimeout(() => {
-            // Fade out and remove the hint
-            const existingHint = document.getElementById("hold-hint");
-            if (existingHint) {
-              existingHint.style.opacity = "0";
-              existingHint.addEventListener("transitionend", () => existingHint.remove());
-            }
-            isHolding = true;
-            const nodeId = group.id;
-            const nodeType = group.classList.contains("unit") ? "unit" : "role";
-            const nodeText = document.querySelector(
-              `#${nodeId}_text`
-            ).textContent;
-
-            // Get all skills associated with this unit/role
-            const relevantSkills = new Set();
-            const subjects = this.doc.getElementsByTagName("subject");
-            for (let i = 0; i < subjects.length; i++) {
-              const subject = subjects[i];
-              const relations = subject.getElementsByTagName("relation");
-              for (let j = 0; j < relations.length; j++) {
-                const rel = relations[j];
-                if (
-                  (nodeType === "unit" && rel.getAttribute("unit") === nodeText) ||
-                  (nodeType === "role" && rel.getAttribute("role") === nodeText)
-                ) {
-                  const subjectSkills = subject.getElementsByTagName('subjectSkills')[0];
-                  if (subjectSkills) {
-                    const skillRefs = subjectSkills.getElementsByTagName('skillRef');
-                    for (let l = 0; l < skillRefs.length; l++) {
-                      relevantSkills.add(skillRefs[l].getAttribute('id'));
-                    }
-                  }
-                }
-              }
-            }
-
-            splitGraphContainer(true);
-            this.createBackButton(svgRoot);
-            const container = document.getElementById('detailed-graph-skills');
-            container.innerHTML = '';
-            const workerGraph = new SkillTreeComponent({ container });
-            workerGraph.reset("#detailed-graph-skills");
-            workerGraph.show(currentorgmodel, nodeType, nodeText, null);
-            isolateTargetGraphNode(nodeId, "svg", "main-svg");
-            group.classList.remove("hold-active");
-          }, 2000); // 500ms hold duration
-
-          // Remove hold-active when mouse is released
-          const clearHoldState = () => {
-            clearTimeout(holdTimeout);
-            isHolding = false;
-            group.classList.remove("hold-active");
-             // remove hint if they let go early
-    const existingHint = document.getElementById("hold-hint");
-    if (existingHint) existingHint.remove();
-            document.removeEventListener("mouseup", clearHoldState);
-          };
-          document.addEventListener("mouseup", clearHoldState);
-
-          // Original drag handling code continues...
-          // 5. Store where the pointer was
-          startPoint.x = e.clientX;
-          startPoint.y = e.clientY;
-
-          // Create a drag ghost box similar to skills feature
-          const ghostBox = document.createElement("div");
-          const circleType = group.classList.contains("unit") ? "Unit" : "Role";
-          const nodeText = svg.querySelector(`#${group.id}_text`).textContent;
-
-          // Apply styling to make it a visible box
-          Object.assign(ghostBox.style, {
-            position: "absolute",
-            padding: "8px 12px",
-            backgroundColor: window.getComputedStyle(circle).fill || "#60A5FA",
-            color: "#fff",
-            borderRadius: "4px",
-            fontFamily: "Arial, sans-serif",
-            fontSize: "14px",
-            fontWeight: "normal",
-            pointerEvents: "none",
-            zIndex: "9999",
-            transform: "translate(-50%, -50%)",
-            boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
-            animation: "dropPulse 1s infinite", // Using the same animation name
-            whiteSpace: "nowrap",
-            transition: "opacity 0.3s, transform 0.3s",
-            left: `${e.clientX}px`,
-            top: `${e.clientY}px`,
-          });
-          ghostBox.textContent = `${circleType}: ${nodeText}`;
-          ghostBox.id = "circle-drag-ghost";
-          document.body.appendChild(ghostBox);
-
-          // Update the mouse move handler to also move the ghost box
-          const existingMouseMove = document.onmousemove;
-          document.onmousemove = function (e) {
-            if (existingMouseMove) existingMouseMove(e);
-            if (ghostBox) {
-              ghostBox.style.left = `${e.clientX}px`;
-              ghostBox.style.top = `${e.clientY}px`;
-            }
-          };
-
-          // Update the mouse up handler to clean up the ghost box
-          const existingMouseUp = document.onmouseup;
-          document.onmouseup = function (e) {
-            if (existingMouseUp) existingMouseUp(e);
-            if (ghostBox && ghostBox.parentNode) {
-              // Optional: Add drop animation before removing
-              ghostBox.classList.add("drop-effect");
-              ghostBox.parentNode.removeChild(ghostBox);
-            }
-            // Dispatch a custom event for drag end similar to skills
-            const dropEvent = new CustomEvent("circledragend", {
-              detail: {
-                nodeId: group.id,
-                nodeType: circleType.toLowerCase(),
-                nodeName: nodeText,
-                x: e.clientX,
-                y: e.clientY,
-              },
-            });
-            window.dispatchEvent(dropEvent);
-
-            // Restore original handlers
-            document.onmousemove = existingMouseMove;
-            document.onmouseup = existingMouseUp;
-          };
+          // Force reflow and add visible class
+          tooltip.offsetHeight;
+          tooltip.classList.add("visible");
         });
+
+        circle.addEventListener("mouseleave", () => {
+          const tooltip = document.getElementById("circle-tooltip");
+          if (tooltip) {
+            tooltip.classList.add("hiding");
+            tooltip.addEventListener(
+              "transitionend",
+              () => {
+                if (tooltip && tooltip.parentNode) {
+                  tooltip.remove();
+                }
+              },
+              { once: true }
+            );
+          }
+        });
+
+        // Replace hold with double-click
+        circle.addEventListener("dblclick", (e) => {
+          e.preventDefault();
+
+          // Only keep the essential functionality
+          const nodeId = group.id;
+          const nodeType = group.classList.contains("unit") ? "unit" : "role";
+          const nodeText = document.querySelector(`#${nodeId}_text`).textContent;
+
+          splitGraphContainer(true);
+          this.createBackButton(svgRoot);
+          const container = document.getElementById("detailed-graph-skills");
+          container.innerHTML = "";
+          const workerGraph = new SkillTreeComponent({ container });
+          workerGraph.reset("#detailed-graph-skills");
+          workerGraph.show(currentorgmodel, nodeType, nodeText, null);
+          isolateTargetGraphNode(nodeId, "svg", "main-svg");
+        });
+
+        // ... rest of the drag handling code ...
       });
 
       console.log("Added centered container at", maxwidth / 2, maxheight / 2);
@@ -841,7 +729,6 @@ class OrbitFlower {
     return { graphSvg, usersSvg };
   }
 }
-
 
 const renderOrganisationGraph = (doc) => {
   const tempViz = new OrbitFlower($("svg"));

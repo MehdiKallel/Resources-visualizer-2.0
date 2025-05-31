@@ -451,8 +451,80 @@ circle:active {
 
 /* 3) When you remove .hold-active, it'll snap right back to normal */
 
+/* Circle hover effect */
+circle:hover {
+  filter: brightness(1.2) drop-shadow(0 0 4px rgba(0,180,255,0.4));
+  transition: all 0.2s ease-out;
+}
+
+/* Ripple animation for double-click feedback */
+@keyframes rippleEffect {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(20);
+    opacity: 0;
+  }
+}
+
+/* Updated tooltip styles */
+#circle-tooltip {
+  position: fixed;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+  z-index: 10000;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  font-family: Arial, sans-serif;
+}
+
+#circle-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#circle-tooltip.hiding {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+}
+
+/* Remove these transition-related classes and keyframes */
+.orbit-transition-out,
+.skills-transition-in,
+.vertical-fade-out,
+.skills-slide-up {
+  animation: none;
+}
+
+/* Keep other existing styles */
 
 
 
 
 
+
+/* custom.css - Add these styles */
+.block-creation-indicator {
+  animation: pulse 1s infinite;
+  box-shadow: 0 0 10px rgba(74, 144, 226, 0.5);
+}
+
+@keyframes pulse {
+  0% { opacity: 0.7; transform: scale(0.95); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 0.7; transform: scale(0.95); }
+}
+
+.external-item {
+  border-left: 3px solid #4a90e2;
+  padding-left: 5px;
+}
