@@ -191,68 +191,111 @@
                      border-left: 3px solid ${color};
                      padding: 5px;"
                      draggable="true">
-                     
            ${skillId}
          </div>
          `);
 
           skillsContainer.append(skillElem);
+          
+          // Simplified drag handling
           skillElem.on("dragstart", function (e) {
             const dt = e.originalEvent.dataTransfer;
-            dt.setData(
-              "application/json",
-              JSON.stringify({
-                type: "skill",
-                pathId: skillId,
-                id: skillId,
-                entityId: "", // Empty as this is a standalone skill without entity context
-                entityType: "skill",
-                displayValue: `Skill:${skillId}`,
-              })
-            );
-
-            const dragIcon = document.createElement("div");
-            dragIcon.textContent = skillId;
-            dragIcon.style.backgroundColor = color;
-            dragIcon.style.padding = "5px";
-            dragIcon.style.borderRadius = "3px";
-            dragIcon.style.color = "white";
-            dragIcon.style.width = "fit-content";
-            document.body.appendChild(dragIcon);
-            dt.setDragImage(dragIcon, 10, 10);
-
-            setTimeout(() => {
-              document.body.removeChild(dragIcon);
-            }, 0);
-
-            const event = new CustomEvent("skilldragend", {
-              detail: {
-                skillId: skillId,
-                entityName: "",
-                entityType: "skill",
-                x: e.clientX,
-                y: e.clientY,
-              },
-              bubbles: true,
+            
+            // Create a custom drag image
+            const dragImage = document.createElement("div");
+            dragImage.textContent = `Skill:${skillId}`;
+            Object.assign(dragImage.style, {
+              position: "fixed",
+              top: "-1000px", // Move off screen
+              padding: "8px 12px",
+              backgroundColor: color,
+              color: "#fff",
+              borderRadius: "4px",
+              fontFamily: "Arial, sans-serif",
+              fontSize: "14px",
+              fontWeight: "normal",
+              whiteSpace: "nowrap",
+              opacity: "0.9"
             });
-
-            window.currentDraggedSkillElement = this;
-          });
-
-          skillElem.on("dragend", function (e) {
-            const detail = {
-              skillId: skillId,
-              entityName: "",
+            
+            document.body.appendChild(dragImage);
+            dt.setDragImage(dragImage, 0, 0);
+            
+            // Set drag data
+            dt.setData("application/json", JSON.stringify({
+              type: "skill",
+              pathId: skillId,
+              id: skillId,
+              entityId: "",
               entityType: "skill",
-              x: e.clientX,
-              y: e.clientY,
-              pathId: null,
+              displayValue: `Skill:${skillId}`,
+            }));
+
+            // Check expression blocks during drag
+            const checkDropTargets = (e) => {
+              const expressionBlocks = document.querySelectorAll('.expr-block');
+              let isOverExprBlock = false;
+              let isOverCurrentExpr = false;
+              
+              // Check if over currentExpression first
+              const currentExpr = document.getElementById("currentExpression");
+              if (currentExpr) {
+                const rect = currentExpr.getBoundingClientRect();
+                if (e.clientX >= rect.left && 
+                    e.clientX <= rect.right && 
+                    e.clientY >= rect.top && 
+                    e.clientY <= rect.bottom) {
+                  currentExpr.classList.add('drop-target');
+                  isOverCurrentExpr = true;
+                } else {
+                  currentExpr.classList.remove('drop-target');
+                }
+              }
+              
+              expressionBlocks.forEach(block => {
+                const rect = block.getBoundingClientRect();
+                if (e.clientX >= rect.left && 
+                    e.clientX <= rect.right && 
+                    e.clientY >= rect.top && 
+                    e.clientY <= rect.bottom) {
+                  block.classList.add('block-drop-target');
+                  isOverExprBlock = true;
+                } else {
+                  block.classList.remove('block-drop-target');
+                }
+              });
+
+              // If not over any valid target, remove all highlighting
+              if (!isOverExprBlock && !isOverCurrentExpr) {
+                document.querySelectorAll('.block-drop-target').forEach(block => {
+                  block.classList.remove('block-drop-target');
+                });
+                if (currentExpr) {
+                  currentExpr.classList.remove('drop-target');
+                }
+              }
             };
 
-            document.dispatchEvent(new CustomEvent("skilldragend", { detail }));
-            window.currentDraggedSkillElement = null;
+            document.addEventListener('dragover', checkDropTargets);
+
+            // Cleanup
+            const cleanup = () => {
+              dragImage.remove();
+              document.removeEventListener('dragover', checkDropTargets);
+              document.querySelectorAll('.block-drop-target').forEach(block => {
+                block.classList.remove('block-drop-target');
+              });
+              const container = document.getElementById("currentExpression");
+              if (container) {
+                container.classList.remove('drop-target');
+              }
+            };
+
+            document.addEventListener('dragend', cleanup, { once: true });
+            document.addEventListener('drop', cleanup, { once: true });
           });
 
+          // Render children recursively
           skillData.children.forEach((childId) => {
             renderSkill(childId, level + 1);
           });

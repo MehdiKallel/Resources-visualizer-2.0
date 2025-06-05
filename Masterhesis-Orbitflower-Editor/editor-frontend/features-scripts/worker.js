@@ -697,8 +697,12 @@ class SkillTreeComponent {
 
       group.setAttribute("data-skill-id", node.id || "");
       group.setAttribute("data-node-type", "skill");
-      group.setAttribute("draggable", "true");
+      group.setAttribute("draggable", node.id !== "root"); // Root not draggable
       group.addEventListener("dragstart", (e) => {
+        if (node.id === "root") {
+          e.preventDefault();
+          return;
+        }
         e.preventDefault();
       });
       const baseRadius = 15;
@@ -742,18 +746,23 @@ class SkillTreeComponent {
       // make r
       // Add drag event handlers
       group.addEventListener("mousedown", (e) => {
+        if (node.id === "root") return;
+        
         e.stopPropagation();
         e.preventDefault();
-        if (e.button !== 0) return; // Only handle left clicks
+        if (e.button !== 0) return;
 
         const nodeId = node.id;
         const nodeType = "skill";
-        const nodeText = node.name;
+        let nodeText = node.name;
+        let displayText = this.filterType && this.filterId 
+          ? `Skill: ${nodeText} (${this.filterType} ${this.filterId})`
+          : `Skill: ${nodeText}`;
 
-        // Create ghost element
+        // Create ghost element with instant positioning
         const ghost = document.createElement("div");
         ghost.id = "node-drag-ghost";
-        ghost.textContent = `${nodeType}: ${nodeText}`;
+        ghost.textContent = displayText;
         Object.assign(ghost.style, {
           position: "fixed",
           backgroundColor: color,
@@ -767,35 +776,63 @@ class SkillTreeComponent {
           transform: "translate(-50%, -50%)",
           left: `${e.clientX}px`,
           top: `${e.clientY}px`,
-          animation: "dropPulse 1s infinite",
           opacity: "0.9",
-          transition: "opacity 0.2s",
           whiteSpace: "nowrap",
+          transition: 'none' // Remove transition for instant updates
         });
         document.body.appendChild(ghost);
 
         const moveHandler = (moveEvent) => {
+          // Direct positioning without transitions
           ghost.style.left = `${moveEvent.clientX}px`;
           ghost.style.top = `${moveEvent.clientY}px`;
+
+          // Check for expression blocks
+          const expressionBlocks = document.querySelectorAll('.expr-block');
+          let isOverBlock = false;
+          
+          expressionBlocks.forEach(block => {
+            const rect = block.getBoundingClientRect();
+            const isOver = moveEvent.clientX >= rect.left && 
+                          moveEvent.clientX <= rect.right && 
+                          moveEvent.clientY >= rect.top && 
+                          moveEvent.clientY <= rect.bottom;
+
+            if (isOver) {
+              isOverBlock = true;
+              block.classList.add('block-drop-target');
+              ghost.style.boxShadow = '0 0 15px #4a90e2';
+            } else {
+              block.classList.remove('block-drop-target');
+            }
+          });
+
+          if (!isOverBlock) {
+            ghost.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
+          }
         };
 
         const upHandler = (upEvent) => {
           document.removeEventListener("mousemove", moveHandler);
           document.removeEventListener("mouseup", upHandler);
 
-          // Add drop animation before removing
+          // Quick fade out and remove
           ghost.style.opacity = "0";
-          setTimeout(() => ghost.remove(), 200);
+          setTimeout(() => ghost.remove(), 50);
 
-          // Dispatch custom event for the expression builder
+          // Clean up any remaining drop targets
+          document.querySelectorAll('.block-drop-target').forEach(el => {
+            el.classList.remove('block-drop-target');
+          });
+
           const nodeDropEvent = new CustomEvent("nodedragend", {
             detail: {
               nodeId,
               nodeType,
-              nodeText,
+              nodeText: displayText,
               x: upEvent.clientX,
-              y: upEvent.clientY,
-            },
+              y: upEvent.clientY
+            }
           });
           window.dispatchEvent(nodeDropEvent);
         };

@@ -471,7 +471,9 @@
 
             activeSkillSegments[key] = true;
             relatedSkills = getAllRelatedSkills(skillId);
+            console.error("filtering by unitId", unitId);
             filterUsersByUnitAndSkill(unitId, relatedSkills);
+            console.error("current selected users")
             skillSegment.css("fill", "#4CAF50");
           }
 
@@ -569,24 +571,20 @@
               .find("g.node")
               .each(function () {
                 var node = $(this);
-                var textElement = node.find("text");
-                if (textElement.length > 0) {
-                  var textContent = textElement.text();
-                  // remove first letter from textContent
-                  textContent = textContent.trim();
-                  textContent = textContent.substring(1).trim();
-
-                  if (textContent === targetSkillId) {
+                var nodeId = node.attr("data-skill-id");
+                console.error("comparing nodeId", nodeId, "with targetSkillId", targetSkillId);
+                  if (nodeId === targetSkillId) {
                     node.addClass("hover-highlight");
                   } else {
                     node.removeClass("hover-highlight");
                   }
-                }
+                
               });
         });
 
         $("#details-skills").on("mouseout", ".skill-item", function() {
           $("#svg").find(".skill-segment").removeClass("hover-highlight");
+          $("#testing-svg").find("g.node").removeClass("hover-highlight");
         });
         
         $("#details-skills").on("click", function (e) {
@@ -691,7 +689,6 @@
                 });
               clickedElement.setAttribute("data-is-active", "true");
             } else {
-              // Second click: show all elements
               $("#users")
                 .find("table")
                 .each(function () {
@@ -701,10 +698,9 @@
             }
           }
           if (
-            clickedElement.classList.contains("skill-segment") && !!isSplitting &&
+            clickedElement.classList.contains("skill-segment") && !isSplitting &&
             clickedElement.tagName === "path"
-          ) {
-            
+          ) {          
             var parentNodeId =
               clickedElement.parentNode.parentNode.getAttribute("id");
             parentNodeType =
@@ -726,14 +722,6 @@
               relatedText,
               skillId
             );
-            isolateTargetGraphNode(parentNodeId, "svg", "main-svg");
-            $("#users")
-              .find("table")
-              .each(function () {
-                if (!$(this).hasClass("highlightrole")) {
-                  $(this).addClass("hidden");
-                }
-              });
             isZoomed = true;
           }
         });

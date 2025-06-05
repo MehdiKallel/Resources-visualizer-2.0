@@ -419,6 +419,29 @@ ui-area[data-belongs-to-tab="graph"] {
   overflow: hidden !important;
 }
 
+#skill-drag-ghost {
+  background-color: #4a90e2;
+  transition: transform 0.2s ease;
+}
+
+#subject-drag-ghost {
+  pointer-events: none;
+  user-select: none;
+}
+
+.block-drop-target {
+  outline: 2px dashed #4CAF50;
+  background-color: rgba(76, 175, 80, 0.1);
+  transform: scale(1.02);
+  transition: transform 0.2s ease;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
 
 
 

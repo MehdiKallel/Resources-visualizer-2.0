@@ -761,12 +761,11 @@ class SkillsFeature {
           if (!isDragging && distance > DRAG_THRESH) {
             isDragging = true;
 
-            // Create an SVG tooltip container for dragging
             dragTooltip = document.createElement("div");
             Object.assign(dragTooltip.style, {
-              position: "absolute",
+              position: "fixed",
               padding: "8px 12px",
-              backgroundColor: skill.color, // Use the skill segment's color
+              backgroundColor: skill.color,
               color: "#fff",
               borderRadius: "4px",
               fontFamily: "Arial, sans-serif",
@@ -776,18 +775,43 @@ class SkillsFeature {
               zIndex: "9999",
               transform: "translate(-50%, -50%)",
               whiteSpace: "nowrap",
-              boxShadow: `0 4px 8px ${self.shadeColor(skill.color, -20)}`, // Add a shadow with a darker shade of the color
-              animation: "pulse 1s infinite", // Add a pulsing animation
+              boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+              transition: "none" // Remove transitions for instant updates
             });
             dragTooltip.textContent = `Skill:${skill.skill} (of ${entityType} ${entityName})`;
             document.body.appendChild(dragTooltip);
 
-            // Add a cool touch: scale up the skill segment slightly
             path.classList.add("dragging");
           }
 
           if (isDragging) {
-            updateDragPosition(e);
+            // Direct positioning without transitions
+            dragTooltip.style.left = `${e.clientX}px`;
+            dragTooltip.style.top = `${e.clientY}px`;
+
+            // Check if we're over expression blocks
+            const expressionBlocks = document.querySelectorAll('.expr-block');
+            let isOverBlock = false;
+            
+            expressionBlocks.forEach(block => {
+              const rect = block.getBoundingClientRect();
+              const isOver = e.clientX >= rect.left && 
+                            e.clientX <= rect.right && 
+                            e.clientY >= rect.top && 
+                            e.clientY <= rect.bottom;
+
+              if (isOver) {
+                isOverBlock = true;
+                block.classList.add('block-drop-target');
+                dragTooltip.style.boxShadow = '0 0 15px #4a90e2';
+              } else {
+                block.classList.remove('block-drop-target');
+              }
+            });
+
+            if (!isOverBlock) {
+              dragTooltip.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
+            }
           }
         }
 
@@ -798,44 +822,37 @@ class SkillsFeature {
           svg.removeEventListener("pointerup", stopDrag);
           svg.removeEventListener("pointercancel", stopDrag);
 
-          const dx = e.clientX - startX;
-          const dy = e.clientY - startY;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-
           if (isDragging) {
             isDragging = false;
 
-            // Dispatch drop event
+            // Quick cleanup
             if (dragTooltip) {
-              const dropEvent = new CustomEvent("skilldragend", {
-                detail: {
-                  skillId: skill.skill,
-                  entityName: entityName,
-                  entityType: entityType,
-                  pathId: pathId,
-                  x: e.clientX,
-                  y: e.clientY,
-                },
-              });
-              window.dispatchEvent(dropEvent);
               document.body.removeChild(dragTooltip);
               dragTooltip = null;
             }
 
-            // Remove the scaling effect
+            // Clean up any remaining drop targets
+            document.querySelectorAll('.block-drop-target').forEach(el => {
+              el.classList.remove('block-drop-target');
+            });
+
             path.classList.remove("dragging");
-          } else if (distance <= DRAG_THRESH) {
-            path.dispatchEvent(new Event("click"));
+
+            // Dispatch drop event
+            const dropEvent = new CustomEvent("skilldragend", {
+              detail: {
+                skillId: skill.skill,
+                entityName: entityName,
+                entityType: entityType,
+                pathId: pathId,
+                x: e.clientX,
+                y: e.clientY
+              }
+            });
+            window.dispatchEvent(dropEvent);
           }
         }
 
-        function updateDragPosition(e) {
-          // Position the tooltip under the cursor
-          if (dragTooltip) {
-            dragTooltip.style.left = `${e.clientX}px`;
-            dragTooltip.style.top = `${e.clientY}px`;
-          }
-        }
         path.addEventListener("mouseenter", function (e) {
           const midAngle = (startA + endA) / 2;
           const tooltipPos = self.polarToCartesian(
@@ -853,15 +870,8 @@ class SkillsFeature {
             tooltipPos.y
           );
 
-          // Reset auto-collapse timeout when hovering over parent of expanded children
-          if (path.parentNode.hasAttribute("data-expanded")) {
-            const childGroup = group.querySelector(
-              `.skill-level[data-parent="${skill.skill}"]`
-            );
-            if (childGroup) {
-              self.clearCollapseTimeout(group.id, skill.skill);
-            }
-          }
+          // Reset auto-collapse timeout when hovering over path
+          self.clearCollapseTimeout(group.id, skill.skill);
         });
 
         path.addEventListener("mouseleave", function (e) {

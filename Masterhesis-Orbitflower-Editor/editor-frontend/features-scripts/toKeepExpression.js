@@ -1,4 +1,4 @@
-class ExpressionBuilder {
+ class ExpressionBuilder {
   constructor(containerId) {
     this.containerId = containerId;
     this.currentExpression = [];
@@ -7,11 +7,9 @@ class ExpressionBuilder {
     this.savedExpressions = [];
     this.apiBaseUrl = "";
     this.expressionDisplay = null; // Add this line
-    this.dropTargetActive = false;
     window.addEventListener("skilldragend", this.handleSkillDrop.bind(this));
     window.addEventListener("circledragend", this.handleCircleDrop.bind(this));
     window.addEventListener("nodedragend", this.handleNodeDrop.bind(this));
-    window.addEventListener("subjectdragend", this.handleSubjectDrop.bind(this));
 
     this.onGraphRendered = this.onGraphRendered.bind(this);
 
@@ -39,25 +37,6 @@ class ExpressionBuilder {
           err
         );
       },
-    });
-
-    document.addEventListener('dragging-over-expression', (e) => {
-      const display = document.getElementById("currentExpression");
-      if (!this.dropTargetActive) {
-        this.dropTargetActive = true;
-        display.classList.add('drop-target-active');
-        // Pulse animation on the box
-        display.style.animation = 'dropPulse 1s ease-in-out infinite';
-      }
-    });
-
-    document.addEventListener('dragging-exit-expression', () => {
-      const display = document.getElementById("currentExpression");
-      if (this.dropTargetActive) {
-        this.dropTargetActive = false;
-        display.classList.remove('drop-target-active');
-        display.style.animation = '';
-      }
     });
   }
 
@@ -254,47 +233,6 @@ class ExpressionBuilder {
       value: nodeId,
       element: null,
       displayValue: displayValue,
-    };
-
-    // Find target block based on drop position
-    const targetBlock = this.findTargetBlock(x, y);
-
-    if (targetBlock) {
-      // Add to existing block
-      if (targetBlock.items.length > 0) {
-        if (!targetBlock.operators) targetBlock.operators = [];
-        targetBlock.operators.push("AND");
-      }
-      targetBlock.items.push(newItem);
-    } else {
-      // Create new block
-      this.currentExpression.push({
-        type: "andBlock",
-        items: [newItem],
-        operators: [],
-      });
-    }
-
-    this.updateExpressionDisplay();
-  }
-
-  handleSubjectDrop({ detail }) {
-    const { subjectId, uid, nodeText, x, y } = detail;
-    const display = document.getElementById("currentExpression");
-    const rect = display.getBoundingClientRect();
-
-    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
-      return;
-    }
-
-    this.saveExpressionState();
-
-    const newItem = {
-      type: "subject",
-      value: subjectId,
-      uid: uid,
-      element: null,
-      displayValue: `Subject:${nodeText}`,
     };
 
     // Find target block based on drop position
@@ -871,14 +809,6 @@ class ExpressionBuilder {
           }
           .insertion-marker {
             animation: pulse 1s infinite;
-          }
-          @keyframes dropPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); }
-          }
-          .block-drop-target {
-            outline: 2px dashed #4a90e2;
           }
         `;
 

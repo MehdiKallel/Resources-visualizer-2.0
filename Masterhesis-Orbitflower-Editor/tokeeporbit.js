@@ -450,7 +450,7 @@ class OrbitFlower {
         const svgMarkup = si.dump(12, 12);
 
         subjects.push(`
-          <table class="subject" id="${u.id}" data-uid="${u.uid}" data-subject-id="${u.shortid}" onmouseover="s_relationstoggle(this)" onmouseout="s_relationstoggle(this)" onclick="openSubjectEditor('${u.uid}')" style="margin-bottom: 5px;">
+          <table class="subject" id="${u.id}" data-uid="${u.uid}" onmouseover="s_relationstoggle(this)" onmouseout="s_relationstoggle(this)" onclick="openSubjectEditor('${u.uid}')" style="margin-bottom: 5px;">
               <tbody>
               <tr>
                   <td>${svgMarkup}</td>
@@ -740,34 +740,8 @@ class OrbitFlower {
           }
 
           if (isDragging && ghostBox) {
-            // Remove animation, make positioning instant
-            ghostBox.style.transition = 'none';
             ghostBox.style.left = `${e.clientX}px`;
             ghostBox.style.top = `${e.clientY}px`;
-
-            // Check if we're over any expression block
-            const expressionBlocks = document.querySelectorAll('.expr-block');
-            let isOverBlock = false;
-            
-            expressionBlocks.forEach(block => {
-              const rect = block.getBoundingClientRect();
-              const isOver = e.clientX >= rect.left && 
-                            e.clientX <= rect.right && 
-                            e.clientY >= rect.top && 
-                            e.clientY <= rect.bottom;
-
-              if (isOver) {
-                isOverBlock = true;
-                block.classList.add('block-drop-target');
-                ghostBox.classList.add('over-expression');
-              } else {
-                block.classList.remove('block-drop-target');
-              }
-            });
-
-            if (!isOverBlock) {
-              ghostBox.classList.remove('over-expression');
-            }
           }
         }
 
@@ -839,92 +813,23 @@ class OrbitFlower {
       usersSvg.innerHTML = subjects.join("\n");
       console.log("Users updated");
 
-      // Enhanced drag handlers for subjects
-      usersSvg.querySelectorAll("table.subject").forEach((subject) => {
-        subject.style.cursor = "grab";
-        let currentGhostBox = null;
-        
-        subject.addEventListener("pointerdown", startDrag);
-
-        function startDrag(e) {
-          // Ensure any existing ghost boxes are removed
-          document.querySelectorAll("#subject-drag-ghost").forEach(ghost => ghost.remove());
-          
-          const svg = document.querySelector("#graph svg");
-          svg.setPointerCapture(e.pointerId);
-          
-          currentGhostBox = document.createElement("div");
-          currentGhostBox.id = "subject-drag-ghost";
-          const labelText = subject.querySelector(".labeltext").textContent;
-          const subjectId = subject.getAttribute("data-subject-id");
-          const uid = subject.getAttribute("data-uid");
-          
-          Object.assign(currentGhostBox.style, {
-            position: "fixed",
-            padding: "8px 12px",
-            backgroundColor: "#e66465",
-            color: "#fff",
-            borderRadius: "4px",
-            fontFamily: "Arial, sans-serif",
-            fontSize: "14px",
-            fontWeight: "normal",
-            pointerEvents: "none",
-            zIndex: "9999",
-            whiteSpace: "nowrap",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-            animation: "pulse 1s infinite",
-            transform: "translate(-50%, -50%)", // Add transform like circle ghost
-            left: `${e.clientX}px`,  // Remove offset
-            top: `${e.clientY}px`    // Remove offset
+      // === Make each labeltext draggable ===
+      usersSvg
+        .querySelectorAll("table.subject .labeltext")
+        .forEach((labelTd) => {
+          labelTd.setAttribute("draggable", "true");
+          labelTd.addEventListener("dragstart", (e) => {
+            const subjectUid = labelTd.closest("table.subject").dataset.uid;
+            const subjectText = labelTd.textContent;
+            const payload = JSON.stringify({
+              type: "external-entity", // Changed from external-subject to external-entity
+              entityType: "subject",
+              nodeText: subjectText,
+              entityId: subjectUid,
+            });
+            e.dataTransfer.setData("application/json", payload);
           });
-          
-          currentGhostBox.textContent = `Subject: ${labelText}`;
-          document.body.appendChild(currentGhostBox);
-
-          const moveGhost = (e) => {
-            if (!currentGhostBox || !currentGhostBox.parentNode) return;
-            currentGhostBox.style.left = `${e.clientX}px`;  
-            currentGhostBox.style.top = `${e.clientY}px`   
-
-            // Dispatch event when dragging over expression container 
-            const expressionContainer = document.getElementById("currentExpression");
-            if (expressionContainer) {
-              const rect = expressionContainer.getBoundingClientRect();
-              if (e.clientX >= rect.left && e.clientX <= rect.right && 
-                  e.clientY >= rect.top && e.clientY <= rect.bottom) {
-                document.dispatchEvent(new CustomEvent('dragging-over-expression'));
-              } else {
-                document.dispatchEvent(new CustomEvent('dragging-exit-expression')); 
-              }
-            }
-          };
-          
-          const cleanupDrag = () => {
-            svg.releasePointerCapture(e.pointerId);
-            if (currentGhostBox) {
-              currentGhostBox.remove();
-              currentGhostBox = null;
-            }
-            document.removeEventListener("pointermove", moveGhost);
-            document.removeEventListener("pointerup", stopDrag);
-            document.removeEventListener("pointercancel", stopDrag);
-          };
-          
-          const stopDrag = (e) => {
-            cleanupDrag();
-            // Dispatch drop event only if we had started dragging
-            if (currentGhostBox) {
-              window.dispatchEvent(new CustomEvent("subjectdragend", {
-                detail: { subjectId, uid, nodeText: labelText, x: e.clientX, y: e.clientY }
-              }));
-            }
-          };
-
-          document.addEventListener("pointermove", moveGhost);
-          document.addEventListener("pointerup", stopDrag);
-          document.addEventListener("pointercancel", stopDrag);
-        }
-      });
+        });
     }
 
     const renderedEvent = new Event("graphRendered");
