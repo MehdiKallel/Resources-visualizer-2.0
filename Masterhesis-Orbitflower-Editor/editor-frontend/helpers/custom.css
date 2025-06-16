@@ -575,3 +575,19 @@ circle:hover {
   transform: scale(1.05);
   background-color: #357abd;
 }
+
+#subject-drag-ghost {
+  transition: transform 0.1s ease, background-color 0.1s ease;
+}
+
+#subject-drag-ghost.over-expression {
+  transform: scale(1.05);
+  background-color: #d64545;
+  box-shadow: 0 4px 12px rgba(214, 69, 69, 0.4);
+}
+
+ #currentExpression.drop-target {
+    background-color: rgba(74, 144, 226, 0.1);
+    border: 2px dashed #4a90e2;
+    transition: all 0.3s ease;
+  }
