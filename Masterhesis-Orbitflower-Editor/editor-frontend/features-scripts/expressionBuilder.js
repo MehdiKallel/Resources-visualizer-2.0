@@ -278,46 +278,41 @@ class ExpressionBuilder {
     this.updateExpressionDisplay();
   }
 
-  handleSubjectDrop({ detail }) {
-    const { subjectId, uid, nodeText, x, y } = detail;
-    const display = document.getElementById("currentExpression");
-    const rect = display.getBoundingClientRect();
+ handleSubjectDrop({ detail }) {
+  const { subjectId, uid, nodeText, x, y } = detail;
+  const display = document.getElementById("currentExpression");
+  
+  // Ensure we have valid coordinates
+  if (!x || !y) return;
+  
+  // Create the subject item
+  const newItem = {
+    type: "subject",
+    value: subjectId,
+    uid: uid,
+    element: null,
+    displayValue: `Subject:${nodeText}`,
+  };
 
-    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
-      return;
+  // Find target block based on drop position
+  const targetBlock = this.findTargetBlock(x, y);
+
+  if (targetBlock) {
+    if (targetBlock.items.length > 0) {
+      if (!targetBlock.operators) targetBlock.operators = [];
+      targetBlock.operators.push("AND");
     }
-
-    this.saveExpressionState();
-
-    const newItem = {
-      type: "subject",
-      value: subjectId,
-      uid: uid,
-      element: null,
-      displayValue: `Subject:${nodeText}`,
-    };
-
-    // Find target block based on drop position
-    const targetBlock = this.findTargetBlock(x, y);
-
-    if (targetBlock) {
-      // Add to existing block
-      if (targetBlock.items.length > 0) {
-        if (!targetBlock.operators) targetBlock.operators = [];
-        targetBlock.operators.push("AND");
-      }
-      targetBlock.items.push(newItem);
-    } else {
-      // Create new block
-      this.currentExpression.push({
-        type: "andBlock",
-        items: [newItem],
-        operators: [],
-      });
-    }
-
-    this.updateExpressionDisplay();
+    targetBlock.items.push(newItem);
+  } else {
+    this.currentExpression.push({
+      type: "andBlock",
+      items: [newItem],
+      operators: [],
+    });
   }
+
+  this.updateExpressionDisplay();
+}
 
   createExpressionBuilderUI() {
     const container = document.querySelector(`#${this.containerId}`);
@@ -367,6 +362,7 @@ class ExpressionBuilder {
 
     this.expressionDisplay = expressionDisplay; // Store reference
 
+    
     expressionDisplay.addEventListener("dragover", (e) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
@@ -375,11 +371,7 @@ class ExpressionBuilder {
       const hasJsonData = e.dataTransfer.types.includes('application/json');
       
       // If it's a dragged circle or other element with JSON data
-      if (hasJsonData) {
-        // Add visual feedback for the drop target
-        expressionDisplay.classList.add('drop-target');
-        return;
-      }
+      
 
       // Existing handling for expression elements
       Array.from(expressionDisplay.children).forEach((child) => {
