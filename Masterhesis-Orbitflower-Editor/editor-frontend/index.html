@@ -276,20 +276,15 @@
               }
             };
 
-            document.addEventListener('dragover', checkDropTargets);
 
             // Cleanup
             const cleanup = () => {
-              dragImage.remove();
-              document.removeEventListener('dragover', checkDropTargets);
-              document.querySelectorAll('.block-drop-target').forEach(block => {
-                block.classList.remove('block-drop-target');
-              });
-              const container = document.getElementById("currentExpression");
-              if (container) {
-                container.classList.remove('drop-target');
-              }
-            };
+  dragImage.remove();
+  // Remove any leftover drop target classes
+  document.querySelectorAll('.drop-target, .block-drop-target').forEach(el => {
+    el.classList.remove('drop-target', 'block-drop-target');
+  });
+};
 
             document.addEventListener('dragend', cleanup, { once: true });
             document.addEventListener('drop', cleanup, { once: true });
@@ -615,7 +610,6 @@
               .each(function () {
                 var node = $(this);
                 var nodeId = node.attr("data-skill-id");
-                console.error("comparing nodeId", nodeId, "with targetSkillId", targetSkillId);
                   if (nodeId === targetSkillId) {
                     node.addClass("hover-highlight");
                   } else {
