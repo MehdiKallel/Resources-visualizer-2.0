@@ -842,22 +842,20 @@ class OrbitFlower {
       // Enhanced drag handlers for subjects
       usersSvg.querySelectorAll("table.subject").forEach((subject) => {
         subject.style.cursor = "grab";
-        let currentGhostBox = null;
+        
+        // Add data attributes for identification
+        const subjectId = subject.getAttribute("data-subject-id");
+        const uid = subject.getAttribute("data-uid");
         
         subject.addEventListener("pointerdown", startDrag);
 
         function startDrag(e) {
-          // Ensure any existing ghost boxes are removed
+          // Remove any existing ghost boxes
           document.querySelectorAll("#subject-drag-ghost").forEach(ghost => ghost.remove());
           
-          const svg = document.querySelector("#graph svg");
-          svg.setPointerCapture(e.pointerId);
-          
-          currentGhostBox = document.createElement("div");
+          const currentGhostBox = document.createElement("div");
           currentGhostBox.id = "subject-drag-ghost";
           const labelText = subject.querySelector(".labeltext").textContent;
-          const subjectId = subject.getAttribute("data-subject-id");
-          const uid = subject.getAttribute("data-uid");
           
           Object.assign(currentGhostBox.style, {
             position: "fixed",
@@ -873,9 +871,9 @@ class OrbitFlower {
             whiteSpace: "nowrap",
             boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
             animation: "pulse 1s infinite",
-            transform: "translate(-50%, -50%)", // Add transform like circle ghost
-            left: `${e.clientX}px`,  // Remove offset
-            top: `${e.clientY}px`    // Remove offset
+            transform: "translate(-50%, -50%)",
+            left: `${e.clientX}px`,
+            top: `${e.clientY}px`
           });
           
           currentGhostBox.textContent = `Subject: ${labelText}`;
@@ -884,27 +882,43 @@ class OrbitFlower {
           const moveGhost = (e) => {
             if (!currentGhostBox || !currentGhostBox.parentNode) return;
             currentGhostBox.style.left = `${e.clientX}px`;  
-            currentGhostBox.style.top = `${e.clientY}px`   
+            currentGhostBox.style.top = `${e.clientY}px`;
 
-            // Dispatch event when dragging over expression container 
-            const expressionContainer = document.getElementById("currentExpression");
-            if (expressionContainer) {
-              const rect = expressionContainer.getBoundingClientRect();
-              if (e.clientX >= rect.left && e.clientX <= rect.right && 
-                  e.clientY >= rect.top && e.clientY <= rect.bottom) {
-                document.dispatchEvent(new CustomEvent('dragging-over-expression'));
+            // Check if over expression blocks
+            const expressionBlocks = document.querySelectorAll('.expr-block');
+            let isOverBlock = false;
+            
+            expressionBlocks.forEach(block => {
+              const rect = block.getBoundingClientRect();
+              const isOver = e.clientX >= rect.left && 
+                            e.clientX <= rect.right && 
+                            e.clientY >= rect.top && 
+                            e.clientY <= rect.bottom;
+
+              if (isOver) {
+                isOverBlock = true;
+                block.classList.add('block-drop-target');
+                currentGhostBox.classList.add('over-expression');
               } else {
-                document.dispatchEvent(new CustomEvent('dragging-exit-expression')); 
+                block.classList.remove('block-drop-target');
               }
+            });
+
+            if (!isOverBlock) {
+              currentGhostBox.classList.remove('over-expression');
+              document.querySelectorAll('.block-drop-target').forEach(el => 
+                el.classList.remove('block-drop-target')
+              );
             }
           };
           
           const cleanupDrag = () => {
-            svg.releasePointerCapture(e.pointerId);
             if (currentGhostBox) {
               currentGhostBox.remove();
-              currentGhostBox = null;
             }
+            document.querySelectorAll('.block-drop-target').forEach(el => 
+              el.classList.remove('block-drop-target')
+            );
             document.removeEventListener("pointermove", moveGhost);
             document.removeEventListener("pointerup", stopDrag);
             document.removeEventListener("pointercancel", stopDrag);
@@ -912,12 +926,16 @@ class OrbitFlower {
           
           const stopDrag = (e) => {
             cleanupDrag();
-            // Dispatch drop event only if we had started dragging
-            if (currentGhostBox) {
-              window.dispatchEvent(new CustomEvent("subjectdragend", {
-                detail: { subjectId, uid, nodeText: labelText, x: e.clientX, y: e.clientY }
-              }));
-            }
+            // Dispatch drop event
+            window.dispatchEvent(new CustomEvent("subjectdragend", {
+              detail: { 
+                subjectId, 
+                uid, 
+                nodeText: labelText, 
+                x: e.clientX, 
+                y: e.clientY 
+              }
+            }));
           };
 
           document.addEventListener("pointermove", moveGhost);
