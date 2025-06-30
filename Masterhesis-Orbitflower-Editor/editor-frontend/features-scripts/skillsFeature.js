@@ -776,6 +776,8 @@ class SkillsFeature {
         let startY = 0;
         const DRAG_THRESH = 8; // px
         let moved = false;
+        let pointerMoveHandler = null;
+        let pointerUpHandler = null;
 
         path.addEventListener("pointerdown", startPointer);
         path.addEventListener("dblclick", onDoubleClick);
@@ -787,9 +789,11 @@ class SkillsFeature {
           startY = e.clientY;
           const svg = path.ownerSVGElement;
           svg.setPointerCapture(e.pointerId);
-          svg.addEventListener("pointermove", onPointerMove);
-          svg.addEventListener("pointerup", onPointerUp);
-          svg.addEventListener("pointercancel", onPointerUp);
+          pointerMoveHandler = onPointerMove;
+          pointerUpHandler = onPointerUp;
+          svg.addEventListener("pointermove", pointerMoveHandler);
+          svg.addEventListener("pointerup", pointerUpHandler);
+          svg.addEventListener("pointercancel", pointerUpHandler);
         }
 
         function onPointerMove(e) {
@@ -826,18 +830,40 @@ class SkillsFeature {
               dragTooltip.style.left = `${e.clientX}px`;
               dragTooltip.style.top = `${e.clientY}px`;
             }
+            // --- Add block-drop-target effect on expr-blocks ---
+            const expressionBlocks = document.querySelectorAll('.expr-block');
+            let isOverBlock = false;
+            expressionBlocks.forEach(block => {
+              const rect = block.getBoundingClientRect();
+              const isOver = e.clientX >= rect.left &&
+                            e.clientX <= rect.right &&
+                            e.clientY >= rect.top &&
+                            e.clientY <= rect.bottom;
+              if (isOver) {
+                isOverBlock = true;
+                block.classList.add('block-drop-target');
+                if (dragTooltip) dragTooltip.classList.add('over-expression');
+              } else {
+                block.classList.remove('block-drop-target');
+              }
+            });
+            if (!isOverBlock && dragTooltip) {
+              dragTooltip.classList.remove('over-expression');
+            }
           }
         }
 
         function onPointerUp(e) {
           const svg = path.ownerSVGElement;
           svg.releasePointerCapture(e.pointerId);
-          svg.removeEventListener("pointermove", onPointerMove);
-          svg.removeEventListener("pointerup", onPointerUp);
-          svg.removeEventListener("pointercancel", onPointerUp);
+          svg.removeEventListener("pointermove", pointerMoveHandler);
+          svg.removeEventListener("pointerup", pointerUpHandler);
+          svg.removeEventListener("pointercancel", pointerUpHandler);
           const dx = e.clientX - startX;
           const dy = e.clientY - startY;
           const distance = Math.sqrt(dx * dx + dy * dy);
+          // --- Remove all block-drop-target classes on drag end ---
+          document.querySelectorAll('.block-drop-target').forEach(el => el.classList.remove('block-drop-target'));
           if (isDragging) {
             isDragging = false;
             // Dispatch drop event
