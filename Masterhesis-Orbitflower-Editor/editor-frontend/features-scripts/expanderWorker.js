@@ -13,8 +13,6 @@ let skills = {};
 
 document.addEventListener("graphRendered", async function () {
   document.addEventListener("click", (e) => {
-    console.log(window.expressionBuilderPaused);
-    console.log("##############################click event", e.target);
     if (
       e.target.classList.contains("skill-segment") &&
       isExpanded === true &&
@@ -326,7 +324,6 @@ function animateTransformation(startScale, endScale, button) {
     } else {
       // Animation complete
       animationFrameId = null;
-      console.log("changing from", isExpanded, "to", !isExpanded);
       isExpanded = !isExpanded;
       button.textContent = isExpanded ? "Restore" : "Expand";
     }
