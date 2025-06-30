@@ -488,7 +488,45 @@ class SkillsFeature {
     }
   }
 
-  
+  // Create a back button as HTML element outside the SVG
+  createBackButton(svg) {
+    // Remove any existing back button
+    const existingButton = document.getElementById("skills-back-button");
+    if (existingButton) {
+      existingButton.remove();
+    }
+
+    // Get the graph column position for proper placement
+    const graphColumn = document.getElementById("graph");
+
+    // Create HTML button
+    const backButton = document.createElement("button");
+    backButton.id = "skills-back-button";
+    backButton.textContent = "Single View";
+    backButton.style.cssText = `
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 4px 8px;
+      background-color: #ffffff;
+      border: 1px solid #cccccc;
+      border-radius: 3px;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 15px;
+      color: #333333;
+      cursor: pointer;
+      z-index: 100;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    `;
+
+    // Add click handler with proper binding
+    backButton.addEventListener("click", () => this.resetZoom());
+
+    // Append to graph column parent container for proper positioning
+    graphColumn.style.position = "relative"; // Ensure relative positioning for absolute child
+    graphColumn.appendChild(backButton);
+    return backButton;
+  }
 
   // Create tooltip container with all necessary elements
   createTooltip(svg) {
@@ -731,39 +769,40 @@ class SkillsFeature {
           `text#${group.id}_text`
         ).textContent;
         const pathId = `${group.id}-${skill.skill.replace(/\s+/g, "")}`;
-
-        // Add drag functionality
+        // Add drag/click/double-click functionality (no delays)
         let isDragging = false;
         let dragTooltip = null;
         let startX = 0;
         let startY = 0;
-        const DRAG_THRESH = 10; // px
+        const DRAG_THRESH = 8; // px
+        let moved = false;
 
-        path.addEventListener("pointerdown", startDrag);
+        path.addEventListener("pointerdown", startPointer);
+        path.addEventListener("dblclick", onDoubleClick);
 
-        function startDrag(e) {
+        function startPointer(e) {
+          isDragging = false;
+          moved = false;
           startX = e.clientX;
           startY = e.clientY;
-
           const svg = path.ownerSVGElement;
           svg.setPointerCapture(e.pointerId);
-
-          svg.addEventListener("pointermove", drag);
-          svg.addEventListener("pointerup", stopDrag);
-          svg.addEventListener("pointercancel", stopDrag);
+          svg.addEventListener("pointermove", onPointerMove);
+          svg.addEventListener("pointerup", onPointerUp);
+          svg.addEventListener("pointercancel", onPointerUp);
         }
 
-        function drag(e) {
+        function onPointerMove(e) {
           const dx = e.clientX - startX;
           const dy = e.clientY - startY;
           const distance = Math.sqrt(dx * dx + dy * dy);
-
           if (!isDragging && distance > DRAG_THRESH) {
             isDragging = true;
-
+            moved = true;
+            // Create drag tooltip
             dragTooltip = document.createElement("div");
             Object.assign(dragTooltip.style, {
-              position: "fixed",
+              position: "absolute",
               padding: "8px 12px",
               backgroundColor: skill.color,
               color: "#fff",
@@ -775,82 +814,58 @@ class SkillsFeature {
               zIndex: "9999",
               transform: "translate(-50%, -50%)",
               whiteSpace: "nowrap",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-              transition: "none" // Remove transitions for instant updates
+              boxShadow: `0 4px 8px ${self.shadeColor(skill.color, -20)}`,
+              animation: "pulse 1s infinite",
             });
             dragTooltip.textContent = `Skill:${skill.skill} (of ${entityType} ${entityName})`;
             document.body.appendChild(dragTooltip);
-
             path.classList.add("dragging");
           }
-
           if (isDragging) {
-            // Direct positioning without transitions
-            dragTooltip.style.left = `${e.clientX}px`;
-            dragTooltip.style.top = `${e.clientY}px`;
-
-            // Check if we're over expression blocks
-            const expressionBlocks = document.querySelectorAll('.expr-block');
-            let isOverBlock = false;
-            
-            expressionBlocks.forEach(block => {
-              const rect = block.getBoundingClientRect();
-              const isOver = e.clientX >= rect.left && 
-                            e.clientX <= rect.right && 
-                            e.clientY >= rect.top && 
-                            e.clientY <= rect.bottom;
-
-              if (isOver) {
-                isOverBlock = true;
-                block.classList.add('block-drop-target');
-                dragTooltip.style.boxShadow = '0 0 15px #4a90e2';
-              } else {
-                block.classList.remove('block-drop-target');
-              }
-            });
-
-            if (!isOverBlock) {
-              dragTooltip.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
+            if (dragTooltip) {
+              dragTooltip.style.left = `${e.clientX}px`;
+              dragTooltip.style.top = `${e.clientY}px`;
             }
           }
         }
 
-        function stopDrag(e) {
+        function onPointerUp(e) {
           const svg = path.ownerSVGElement;
           svg.releasePointerCapture(e.pointerId);
-          svg.removeEventListener("pointermove", drag);
-          svg.removeEventListener("pointerup", stopDrag);
-          svg.removeEventListener("pointercancel", stopDrag);
-
+          svg.removeEventListener("pointermove", onPointerMove);
+          svg.removeEventListener("pointerup", onPointerUp);
+          svg.removeEventListener("pointercancel", onPointerUp);
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
           if (isDragging) {
             isDragging = false;
-
-            // Quick cleanup
+            // Dispatch drop event
             if (dragTooltip) {
+              const dropEvent = new CustomEvent("skilldragend", {
+                detail: {
+                  skillId: skill.skill,
+                  entityName: entityName,
+                  entityType: entityType,
+                  pathId: pathId,
+                  x: e.clientX,
+                  y: e.clientY,
+                },
+              });
+              window.dispatchEvent(dropEvent);
               document.body.removeChild(dragTooltip);
               dragTooltip = null;
             }
-
-            // Clean up any remaining drop targets
-            document.querySelectorAll('.block-drop-target').forEach(el => {
-              el.classList.remove('block-drop-target');
-            });
-
             path.classList.remove("dragging");
-
-            // Dispatch drop event
-            const dropEvent = new CustomEvent("skilldragend", {
-              detail: {
-                skillId: skill.skill,
-                entityName: entityName,
-                entityType: entityType,
-                pathId: pathId,
-                x: e.clientX,
-                y: e.clientY
-              }
-            });
-            window.dispatchEvent(dropEvent);
+          } else if (!moved && distance <= DRAG_THRESH) {
+            // Treat as click
+            path.dispatchEvent(new Event("click", { bubbles: true }));
           }
+        }
+
+        function onDoubleClick(e) {
+          // You can add double-click logic here if needed
+          // e.g., open details, zoom, etc.
         }
 
         path.addEventListener("mouseenter", function (e) {
@@ -870,8 +885,15 @@ class SkillsFeature {
             tooltipPos.y
           );
 
-          // Reset auto-collapse timeout when hovering over path
-          self.clearCollapseTimeout(group.id, skill.skill);
+          // Reset auto-collapse timeout when hovering over parent of expanded children
+          if (path.parentNode.hasAttribute("data-expanded")) {
+            const childGroup = group.querySelector(
+              `.skill-level[data-parent="${skill.skill}"]`
+            );
+            if (childGroup) {
+              self.clearCollapseTimeout(group.id, skill.skill);
+            }
+          }
         });
 
         path.addEventListener("mouseleave", function (e) {
@@ -895,7 +917,6 @@ class SkillsFeature {
 
         path.addEventListener("click", function (e) {
           const svg = this.ownerSVGElement;
-          console.error("helllooooo");
           if (!svg) {
             console.error("SVG element not found.");
             return;
@@ -916,6 +937,7 @@ class SkillsFeature {
             if (!hierarchyGroups.includes(g)) g.remove();
           });
 
+          self.createBackButton(svg);
           self.setTooltipZoomState(svg, true);
 
           if (skill.subSkills && skill.subSkills.length > 0) {
