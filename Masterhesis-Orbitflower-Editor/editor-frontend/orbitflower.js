@@ -681,20 +681,36 @@ class OrbitFlower {
         let isDragging = false;
         let ghostBox = null;
         let startPoint = { x: 0, y: 0 };
-        const DRAG_THRESH = 10;
-
+        const DRAG_THRESH = 10;        let clickTimeout;
+        let lastClickTime = 0;
+        const doubleClickDelay = 300; // ms between clicks to count as double-click
+        
         circle.addEventListener("pointerdown", startDrag);
 
         function startDrag(e) {
+          const currentTime = new Date().getTime();
+          const timeDiff = currentTime - lastClickTime;
+          
+          if (timeDiff < doubleClickDelay) {
+            // This is a double-click, don't start drag
+            clearTimeout(clickTimeout);
+            lastClickTime = 0;
+            return;
+          }
+          
+          lastClickTime = currentTime;
           startPoint.x = e.clientX;
           startPoint.y = e.clientY;
           
           const svg = circle.ownerSVGElement;
           svg.setPointerCapture(e.pointerId);
           
-          svg.addEventListener("pointermove", drag);
-          svg.addEventListener("pointerup", stopDrag);
-          svg.addEventListener("pointercancel", stopDrag);
+          // Delay drag start to not interfere with double-click
+          clickTimeout = setTimeout(() => {
+            svg.addEventListener("pointermove", drag);
+            svg.addEventListener("pointerup", stopDrag);
+            svg.addEventListener("pointercancel", stopDrag);
+          }, 200); // Short delay to check for double-click
         }
 
         function drag(e) {
@@ -776,8 +792,7 @@ class OrbitFlower {
           svg.releasePointerCapture(e.pointerId);
           svg.removeEventListener("pointermove", drag);
           svg.removeEventListener("pointerup", stopDrag);
-          svg.removeEventListener("pointercancel", stopDrag); 
-
+          svg.removeEventListener("pointercancel", stopDrag);          clearTimeout(clickTimeout);
           if (isDragging) {
             isDragging = false;
             
@@ -808,6 +823,9 @@ class OrbitFlower {
           }
         }
 
+        circle.addEventListener("click", (e) => {
+          console.error("Circle clicked, but no action defined.");
+        });
         // Double-click handler for exploring skills
         circle.addEventListener("dblclick", (e) => {
           e.preventDefault();
