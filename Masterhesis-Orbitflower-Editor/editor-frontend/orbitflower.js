@@ -685,9 +685,7 @@ class OrbitFlower {
         let lastClickTime = 0;
         const doubleClickDelay = 300; // ms between clicks to count as double-click
         
-        circle.addEventListener("pointerdown", startDrag);
-
-        function startDrag(e) {
+        circle.addEventListener("pointerdown", startDrag);        function startDrag(e) {
           const currentTime = new Date().getTime();
           const timeDiff = currentTime - lastClickTime;
           
@@ -705,21 +703,23 @@ class OrbitFlower {
           const svg = circle.ownerSVGElement;
           svg.setPointerCapture(e.pointerId);
           
-          // Delay drag start to not interfere with double-click
-          clickTimeout = setTimeout(() => {
-            svg.addEventListener("pointermove", drag);
-            svg.addEventListener("pointerup", stopDrag);
-            svg.addEventListener("pointercancel", stopDrag);
-          }, 200); // Short delay to check for double-click
+          // Add listeners immediately but don't create ghost box until actual drag occurs
+          svg.addEventListener("pointermove", drag);
+          svg.addEventListener("pointerup", stopDrag);
+          svg.addEventListener("pointercancel", stopDrag);
         }
 
         function drag(e) {
           const dx = e.clientX - startPoint.x;
           const dy = e.clientY - startPoint.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-
-          if (!isDragging && distance > DRAG_THRESH) {
+          const distance = Math.sqrt(dx * dx + dy * dy);          if (!isDragging && distance > DRAG_THRESH) {
             isDragging = true;
+
+            // Remove any existing ghost boxes first
+            const existingGhost = document.getElementById("circle-drag-ghost");
+            if (existingGhost) {
+              existingGhost.remove();
+            }
             
             // Create ghost box
             ghostBox = document.createElement("div");
