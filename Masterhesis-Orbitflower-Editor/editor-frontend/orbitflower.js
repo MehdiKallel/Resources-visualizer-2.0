@@ -408,8 +408,7 @@ class OrbitFlower {
           },
           () => {
             s.add_path(
-              `M ${sx - 5} ${sy} L ${sx} ${sy - 5} L ${sx + 5} ${sy} L ${sx} ${
-                sy + 5
+              `M ${sx - 5} ${sy} L ${sx} ${sy - 5} L ${sx + 5} ${sy} L ${sx} ${sy + 5
               } Z`,
               {
                 class: "skill-shape",
@@ -612,8 +611,8 @@ class OrbitFlower {
         console.log("Dragging circle:", dragging);
         const ghostBox = document.getElementById("circle-drag-ghost");
         if (ghostBox) {
-          const offsetX = 15; 
-          const offsetY = 15; 
+          const offsetX = 15;
+          const offsetY = 15;
           ghostBox.style.position = "fixed";
           ghostBox.style.left = `${e.clientX + offsetX}px`;
           ghostBox.style.top = `${e.clientY + offsetY}px`;
@@ -648,7 +647,7 @@ class OrbitFlower {
             existingTooltip.remove();
           }
 
-          
+
           const tooltip = document.createElement("div");
           tooltip.id = "circle-tooltip";
           tooltip.textContent = "Double-click to explore skills";
@@ -681,28 +680,28 @@ class OrbitFlower {
         let isDragging = false;
         let ghostBox = null;
         let startPoint = { x: 0, y: 0 };
-        const DRAG_THRESH = 10;        let clickTimeout;
+        const DRAG_THRESH = 10; let clickTimeout;
         let lastClickTime = 0;
         const doubleClickDelay = 300; // ms between clicks to count as double-click
-        
-        circle.addEventListener("pointerdown", startDrag);        function startDrag(e) {
+
+        circle.addEventListener("pointerdown", startDrag); function startDrag(e) {
           const currentTime = new Date().getTime();
           const timeDiff = currentTime - lastClickTime;
-          
+
           if (timeDiff < doubleClickDelay) {
             // This is a double-click, don't start drag
             clearTimeout(clickTimeout);
             lastClickTime = 0;
             return;
           }
-          
+
           lastClickTime = currentTime;
           startPoint.x = e.clientX;
           startPoint.y = e.clientY;
-          
+
           const svg = circle.ownerSVGElement;
           svg.setPointerCapture(e.pointerId);
-          
+
           // Add listeners immediately but don't create ghost box until actual drag occurs
           svg.addEventListener("pointermove", drag);
           svg.addEventListener("pointerup", stopDrag);
@@ -712,7 +711,7 @@ class OrbitFlower {
         function drag(e) {
           const dx = e.clientX - startPoint.x;
           const dy = e.clientY - startPoint.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);          if (!isDragging && distance > DRAG_THRESH) {
+          const distance = Math.sqrt(dx * dx + dy * dy); if (!isDragging && distance > DRAG_THRESH) {
             isDragging = true;
 
             // Remove any existing ghost boxes first
@@ -720,17 +719,17 @@ class OrbitFlower {
             if (existingGhost) {
               existingGhost.remove();
             }
-            
+
             // Create ghost box
             ghostBox = document.createElement("div");
             ghostBox.id = "circle-drag-ghost";
             const nodeType = group.classList.contains("unit") ? "Unit" : "Role";
-            
+
             // Fix text extraction by looking for text in the correct place
-            const labelText = group.querySelector(".labeltext")?.textContent || 
-                            document.querySelector(`#${group.id}_text`)?.textContent || 
-                            "Unknown";
-            
+            const labelText = group.querySelector(".labeltext")?.textContent ||
+              document.querySelector(`#${group.id}_text`)?.textContent ||
+              "Unknown";
+
             Object.assign(ghostBox.style, {
               position: "fixed",
               padding: "8px 12px",
@@ -747,10 +746,10 @@ class OrbitFlower {
               boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
               animation: "pulse 1s infinite"
             });
-            
+
             ghostBox.textContent = `${nodeType}: ${labelText}`;
             document.body.appendChild(ghostBox);
-            
+
             // Add dragging class to circle
             circle.classList.add("dragging");
           }
@@ -764,13 +763,13 @@ class OrbitFlower {
             // Check if we're over any expression block
             const expressionBlocks = document.querySelectorAll('.expr-block');
             let isOverBlock = false;
-            
+
             expressionBlocks.forEach(block => {
               const rect = block.getBoundingClientRect();
-              const isOver = e.clientX >= rect.left && 
-                            e.clientX <= rect.right && 
-                            e.clientY >= rect.top && 
-                            e.clientY <= rect.bottom;
+              const isOver = e.clientX >= rect.left &&
+                e.clientX <= rect.right &&
+                e.clientY >= rect.top &&
+                e.clientY <= rect.bottom;
 
               if (isOver) {
                 isOverBlock = true;
@@ -792,24 +791,24 @@ class OrbitFlower {
           svg.releasePointerCapture(e.pointerId);
           svg.removeEventListener("pointermove", drag);
           svg.removeEventListener("pointerup", stopDrag);
-          svg.removeEventListener("pointercancel", stopDrag);          clearTimeout(clickTimeout);
+          svg.removeEventListener("pointercancel", stopDrag); clearTimeout(clickTimeout);
           if (isDragging) {
             isDragging = false;
-            
+
             if (ghostBox) {
               document.body.removeChild(ghostBox);
               ghostBox = null;
             }
-            
+
             // Remove dragging class
             circle.classList.remove("dragging");
 
             // Fix text extraction for the drag end event
             const nodeType = group.classList.contains("unit") ? "unit" : "role";
-            const nodeText = group.querySelector(".labeltext")?.textContent || 
-                           document.querySelector(`#${group.id}_text`)?.textContent || 
-                           "Unknown";
-            
+            const nodeText = group.querySelector(".labeltext")?.textContent ||
+              document.querySelector(`#${group.id}_text`)?.textContent ||
+              "Unknown";
+
             const dragEndEvent = new CustomEvent("nodedragend", {
               detail: {
                 nodeId: group.id,
@@ -826,11 +825,9 @@ class OrbitFlower {
         circle.addEventListener("click", (e) => {
           console.error("Circle clicked, but no action defined.");
         });
-        // Double-click handler for exploring skills
         circle.addEventListener("dblclick", (e) => {
           e.preventDefault();
 
-          // Only keep the essential functionality
           const nodeId = group.id;
           const nodeType = group.classList.contains("unit") ? "unit" : "role";
           const nodeText = document.querySelector(`#${nodeId}_text`).textContent;
@@ -852,108 +849,119 @@ class OrbitFlower {
       console.warn("Graph SVG element not found");
     }
 
-    // … inside renderOrganisationGraph, after usersSvg.innerHTML = subjects.join("\n");
     if (usersSvg) {
       usersSvg.innerHTML = subjects.join("\n");
       console.log("Users updated");
 
-      // Enhanced drag handlers for subjects
       usersSvg.querySelectorAll("table.subject").forEach((subject) => {
         subject.style.cursor = "grab";
-        
-        // Add data attributes for identification
+
         const subjectId = subject.getAttribute("data-subject-id");
         const uid = subject.getAttribute("data-uid");
-        
+
         subject.addEventListener("pointerdown", startDrag);
 
         function startDrag(e) {
-          // Remove any existing ghost boxes
-          document.querySelectorAll("#subject-drag-ghost").forEach(ghost => ghost.remove());
-          
-          const currentGhostBox = document.createElement("div");
-          currentGhostBox.id = "subject-drag-ghost";
-          const labelText = subject.querySelector(".labeltext").textContent;
-          
-          Object.assign(currentGhostBox.style, {
-            position: "fixed",
-            padding: "8px 12px",
-            backgroundColor: "#e66465",
-            color: "#fff",
-            borderRadius: "4px",
-            fontFamily: "Arial, sans-serif",
-            fontSize: "14px",
-            fontWeight: "normal",
-            pointerEvents: "none",
-            zIndex: "9999",
-            whiteSpace: "nowrap",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-            animation: "pulse 1s infinite",
-            transform: "translate(-50%, -50%)",
-            left: `${e.clientX}px`,
-            top: `${e.clientY}px`
-          });
-          
-          currentGhostBox.textContent = `Subject: ${labelText}`;
-          document.body.appendChild(currentGhostBox);
+          const startPoint = { x: e.clientX, y: e.clientY };
+          let isDragging = false;
+          let currentGhostBox = null;
+          const DRAG_THRESH = 10;
 
           const moveGhost = (e) => {
-            if (!currentGhostBox || !currentGhostBox.parentNode) return;
-            currentGhostBox.style.left = `${e.clientX}px`;  
-            currentGhostBox.style.top = `${e.clientY}px`;
+            const dx = e.clientX - startPoint.x;
+            const dy = e.clientY - startPoint.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
 
-            // Check if over expression blocks
-            const expressionBlocks = document.querySelectorAll('.expr-block');
-            let isOverBlock = false;
-            
-            expressionBlocks.forEach(block => {
-              const rect = block.getBoundingClientRect();
-              const isOver = e.clientX >= rect.left && 
-                            e.clientX <= rect.right && 
-                            e.clientY >= rect.top && 
-                            e.clientY <= rect.bottom;
+            if (!isDragging && distance > DRAG_THRESH) {
+              isDragging = true;
+              document.querySelectorAll("#subject-drag-ghost").forEach(ghost => ghost.remove());
 
-              if (isOver) {
-                isOverBlock = true;
-                block.classList.add('block-drop-target');
-                currentGhostBox.classList.add('over-expression');
-              } else {
-                block.classList.remove('block-drop-target');
+              currentGhostBox = document.createElement("div");
+              currentGhostBox.id = "subject-drag-ghost";
+              const labelText = subject.querySelector(".labeltext").textContent;
+
+              Object.assign(currentGhostBox.style, {
+                position: "fixed",
+                padding: "8px 12px",
+                backgroundColor: "#e66465",
+                color: "#fff",
+                borderRadius: "4px",
+                fontFamily: "Arial, sans-serif",
+                fontSize: "14px",
+                fontWeight: "normal",
+                pointerEvents: "none",
+                zIndex: "9999",
+                whiteSpace: "nowrap",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+                animation: "pulse 1s infinite",
+                transform: "translate(-50%, -50%)",
+                left: `${e.clientX}px`,
+                top: `${e.clientY}px`
+              });
+
+              currentGhostBox.textContent = `Subject: ${labelText}`;
+              document.body.appendChild(currentGhostBox);
+            }
+
+            if (isDragging && currentGhostBox) {
+              currentGhostBox.style.left = `${e.clientX}px`;
+              currentGhostBox.style.top = `${e.clientY}px`;
+
+              // Check if over expression blocks
+              const expressionBlocks = document.querySelectorAll('.expr-block');
+              let isOverBlock = false;
+
+              expressionBlocks.forEach(block => {
+                const rect = block.getBoundingClientRect();
+                const isOver = e.clientX >= rect.left &&
+                  e.clientX <= rect.right &&
+                  e.clientY >= rect.top &&
+                  e.clientY <= rect.bottom;
+
+                if (isOver) {
+                  isOverBlock = true;
+                  block.classList.add('block-drop-target');
+                  currentGhostBox.classList.add('over-expression');
+                } else {
+                  block.classList.remove('block-drop-target');
+                }
+              });
+
+              if (!isOverBlock) {
+                currentGhostBox.classList.remove('over-expression');
+                document.querySelectorAll('.block-drop-target').forEach(el =>
+                  el.classList.remove('block-drop-target')
+                );
               }
-            });
-
-            if (!isOverBlock) {
-              currentGhostBox.classList.remove('over-expression');
-              document.querySelectorAll('.block-drop-target').forEach(el => 
-                el.classList.remove('block-drop-target')
-              );
             }
           };
-          
+
           const cleanupDrag = () => {
-            if (currentGhostBox) {
+            if (currentGhostBox && isDragging) {
               currentGhostBox.remove();
             }
-            document.querySelectorAll('.block-drop-target').forEach(el => 
+            document.querySelectorAll('.block-drop-target').forEach(el =>
               el.classList.remove('block-drop-target')
             );
             document.removeEventListener("pointermove", moveGhost);
             document.removeEventListener("pointerup", stopDrag);
             document.removeEventListener("pointercancel", stopDrag);
           };
-          
+
           const stopDrag = (e) => {
+            if (isDragging) {
+              // Dispatch drop event only if we were actually dragging
+              window.dispatchEvent(new CustomEvent("subjectdragend", {
+                detail: {
+                  subjectId,
+                  uid,
+                  nodeText: subject.querySelector(".labeltext").textContent,
+                  x: e.clientX,
+                  y: e.clientY
+                }
+              }));
+            }
             cleanupDrag();
-            // Dispatch drop event
-            window.dispatchEvent(new CustomEvent("subjectdragend", {
-              detail: { 
-                subjectId, 
-                uid, 
-                nodeText: labelText, 
-                x: e.clientX, 
-                y: e.clientY 
-              }
-            }));
           };
 
           document.addEventListener("pointermove", moveGhost);
