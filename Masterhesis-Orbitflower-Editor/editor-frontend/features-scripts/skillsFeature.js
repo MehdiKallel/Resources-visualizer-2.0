@@ -398,94 +398,47 @@ class SkillsFeature {
     const percentWidth = percentText.getComputedTextLength();
     const maxTextWidth = Math.max(titleWidth, valueWidth, percentWidth);
 
-    const paddingX = isSplitView ? 8 : 16;
-    const paddingY = isSplitView ? 4 : 8;
-    const lineHeight = isSplitView ? 10 : 12;
+    // Fixed left padding for all text
+    const paddingX = isSplitView ? 10 : 14;
+    const paddingY = isSplitView ? 6 : 10;
+    const lineHeight = isSplitView ? 11 : 14;
 
-    const newWidth = Math.max(
-      maxTextWidth + paddingX * 2,
-      isSplitView ? 90 : 120
-    );
-    const newHeight = isSplitView ? 30 : 45;
+    // Tooltip width is just enough for the widest text plus padding
+    const newWidth = Math.max(maxTextWidth + paddingX * 2, isSplitView ? 90 : 120);
+    const newHeight = paddingY * 2 + baseFontSize + lineHeight * 2;
 
     const bg = tooltip.querySelector(".tooltip-bg");
     bg.setAttribute("width", newWidth);
     bg.setAttribute("height", newHeight);
-    bg.setAttribute("rx", isSplitView ? 2 : 4);
-    bg.setAttribute("ry", isSplitView ? 2 : 4);
+    bg.setAttribute("rx", isSplitView ? 4 : 6);
+    bg.setAttribute("ry", isSplitView ? 4 : 6);
 
-    // Position elements dynamically
-    title.setAttribute("x", paddingX);
+    // Always left-align text with fixed x
+    const textX = paddingX;
+    title.setAttribute("x", textX);
     title.setAttribute("y", paddingY + baseFontSize);
-    valueText.setAttribute("x", paddingX);
+    title.setAttribute("text-anchor", "start");
+    valueText.setAttribute("x", textX);
     valueText.setAttribute("y", paddingY + baseFontSize + lineHeight);
-    percentText.setAttribute("x", paddingX);
+    valueText.setAttribute("text-anchor", "start");
+    percentText.setAttribute("x", textX);
     percentText.setAttribute("y", paddingY + baseFontSize + lineHeight * 2);
-
-    // Adjust position for split view
-    const svg = tooltip.ownerSVGElement;
-    if (svg) {
-      const svgRect = svg.getBoundingClientRect();
-      if (isSplitView) {
-        const svgRect = svg.getBoundingClientRect();
-        const newX = svgRect.width * 0.1;
-        const newY = svgRect.height * 0.1;
-        tooltip.setAttribute("transform", `translate(${newX},${newY})`);
-      }
-    }
+    percentText.setAttribute("text-anchor", "start");
 
     tooltip.setAttribute("transform", `translate(${x},${y})`);
     tooltip.style.visibility = "visible";
   }
   // Add this function to toggle tooltip zoom state
   setTooltipZoomState(svg, isZoomed) {
+    // Only remove .tooltip-zoomed classes, do not touch x/y/text-anchor
     const tooltip = svg.querySelector(".skill-tooltip-container");
     if (!tooltip) return;
-
-    // Get tooltip elements
-    const bg = tooltip.querySelector(".tooltip-bg");
     const title = tooltip.querySelector(".tooltip-title");
     const valueTexts = tooltip.querySelectorAll(".tooltip-value");
-
-    if (isZoomed) {
-      // Apply much smaller dimensions for zoomed state
-      bg.setAttribute("width", 65); // Even smaller width
-      bg.setAttribute("height", 28); // Even smaller height
-      bg.setAttribute("rx", 2);
-      bg.setAttribute("ry", 2);
-
-      // Add zoomed class to text elements
-      title.classList.add("tooltip-zoomed");
-      title.setAttribute("x", 4); // Reduced padding
-      title.setAttribute("y", 9); // Adjusted position
-
-      valueTexts[0].classList.add("tooltip-zoomed");
-      valueTexts[0].setAttribute("x", 4);
-      valueTexts[0].setAttribute("y", 17); // Adjusted position
-
-      valueTexts[1].classList.add("tooltip-zoomed");
-      valueTexts[1].setAttribute("x", 4);
-      valueTexts[1].setAttribute("y", 24); // Adjusted position
-    } else {
-      // Reset to normal dimensions
-      bg.setAttribute("width", 120);
-      bg.setAttribute("height", 45);
-      bg.setAttribute("rx", 3);
-      bg.setAttribute("ry", 3);
-
-      // Remove zoomed class from text elements
-      title.classList.remove("tooltip-zoomed");
-      title.setAttribute("x", 8);
-      title.setAttribute("y", 15);
-
-      valueTexts[0].classList.remove("tooltip-zoomed");
-      valueTexts[0].setAttribute("x", 8);
-      valueTexts[0].setAttribute("y", 28);
-
-      valueTexts[1].classList.remove("tooltip-zoomed");
-      valueTexts[1].setAttribute("x", 10);
-      valueTexts[1].setAttribute("y", 39);
-    }
+    title.classList.remove("tooltip-zoomed");
+    valueTexts[0].classList.remove("tooltip-zoomed");
+    valueTexts[1].classList.remove("tooltip-zoomed");
+    // Do not set x/y/text-anchor here!
   }
 
   // Create a back button as HTML element outside the SVG
@@ -895,20 +848,20 @@ class SkillsFeature {
         }
 
         path.addEventListener("mouseenter", function (e) {
-          const midAngle = (startA + endA) / 2;
-          const tooltipPos = self.polarToCartesian(
-            cx,
-            cy,
-            outerR + 15,
-            midAngle
-          );
+          // Use cursor position for tooltip
+          const svg = path.ownerSVGElement;
+          const pt = svg.createSVGPoint();
+          pt.x = e.clientX;
+          pt.y = e.clientY;
+          // Convert screen coordinates to SVG coordinates
+          const cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
           self.updateTooltip(
             tooltip,
             skill.skill,
             skill.value,
             Math.round((skill.value / total) * 100),
-            tooltipPos.x,
-            tooltipPos.y
+            cursorpt.x + 10, // offset for better visibility
+            cursorpt.y + 10
           );
 
           // Reset auto-collapse timeout when hovering over parent of expanded children
@@ -920,6 +873,23 @@ class SkillsFeature {
               self.clearCollapseTimeout(group.id, skill.skill);
             }
           }
+        });
+
+        // Add mousemove to update tooltip position as cursor moves
+        path.addEventListener("mousemove", function (e) {
+          const svg = path.ownerSVGElement;
+          const pt = svg.createSVGPoint();
+          pt.x = e.clientX;
+          pt.y = e.clientY;
+          const cursorpt = pt.matrixTransform(svg.getScreenCTM().inverse());
+          self.updateTooltip(
+            tooltip,
+            skill.skill,
+            skill.value,
+            Math.round((skill.value / total) * 100),
+            cursorpt.x + 10,
+            cursorpt.y + 10
+          );
         });
 
         path.addEventListener("mouseleave", function (e) {
