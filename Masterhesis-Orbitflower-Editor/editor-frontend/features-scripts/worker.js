@@ -95,6 +95,16 @@ class SkillTreeComponent {
           .tooltip-content {
             line-height: 1.5;
           }
+
+          .node-count-text {
+            pointer-events: none;
+            font-weight: bold;
+            fill: #1e293b;
+            paint-order: stroke fill;
+            stroke: white;
+            stroke-width: 2px;
+            z-index: 9999;
+          }
         `;
       document.head.appendChild(style);
     }
@@ -694,7 +704,6 @@ class SkillTreeComponent {
       const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
       group.setAttribute("class", "node");
       group.setAttribute("transform", `translate(${node.x}, ${node.y})`);
-
       group.setAttribute("data-skill-id", node.id || "");
       group.setAttribute("data-node-type", "skill");
       group.setAttribute("draggable", node.id !== "root"); // Root not draggable
@@ -713,12 +722,10 @@ class SkillTreeComponent {
           ? baseRadius
           : baseRadius +
             (count / this.maxEmployeeCount) * (maxRadius - baseRadius);
-
       this.currentSkillId = node.id;
       const color = node.id
         ? getSkillIdColor(node.id)
         : this.getSkillColor(count);
-
       const circle = document.createElementNS(
         "http://www.w3.org/2000/svg",
         "circle"
@@ -728,11 +735,10 @@ class SkillTreeComponent {
       }
       circle.setAttribute("r", radius);
       if (node.id === "root") {
-        circle.setAttribute("stroke-width", "1.5"); 
+        circle.setAttribute("stroke-width", "1.5");
         if (this.filterType === "unit") {
           circle.setAttribute("fill", "#729fcf");
           circle.setAttribute("stroke", "#204a87");
-      
         } else if (this.filterType === "role") {
           circle.setAttribute("fill", "#ad7fa8");
           circle.setAttribute("stroke", "#5c3566");
@@ -740,134 +746,47 @@ class SkillTreeComponent {
         circle.setAttribute("data-skill-id", node.id);
       }
       if ( node.id && node.id !== "root") {
-      circle.setAttribute("fill", color);
+        circle.setAttribute("fill", color);
       }
-
-      // make r
-      // Add drag event handlers
-      group.addEventListener("mousedown", (e) => {
-        if (node.id === "root") return;
-        
-        e.stopPropagation();
-        e.preventDefault();
-        if (e.button !== 0) return;
-
-        const nodeId = node.id;
-        const nodeType = "skill";
-        let nodeText = node.name;
-        let displayText = this.filterType && this.filterId 
-          ? `Skill: ${nodeText} (${this.filterType} ${this.filterId})`
-          : `Skill: ${nodeText}`;
-
-        // Create ghost element with instant positioning
-        const ghost = document.createElement("div");
-        ghost.id = "node-drag-ghost";
-        ghost.textContent = displayText;
-        Object.assign(ghost.style, {
-          position: "fixed",
-          backgroundColor: color,
-          color: "#fff",
-          padding: "8px 12px",
-          borderRadius: "4px",
-          pointerEvents: "none",
-          zIndex: 9999,
-          fontSize: "14px",
-          boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-          transform: "translate(-50%, -50%)",
-          left: `${e.clientX}px`,
-          top: `${e.clientY}px`,
-          opacity: "0.9",
-          whiteSpace: "nowrap",
-          transition: 'none' // Remove transition for instant updates
-        });
-        document.body.appendChild(ghost);
-
-        const moveHandler = (moveEvent) => {
-          // Direct positioning without transitions
-          ghost.style.left = `${moveEvent.clientX}px`;
-          ghost.style.top = `${moveEvent.clientY}px`;
-
-          // Check for expression blocks
-          const expressionBlocks = document.querySelectorAll('.expr-block');
-          let isOverBlock = false;
-          
-          expressionBlocks.forEach(block => {
-            const rect = block.getBoundingClientRect();
-            const isOver = moveEvent.clientX >= rect.left && 
-                          moveEvent.clientX <= rect.right && 
-                          moveEvent.clientY >= rect.top && 
-                          moveEvent.clientY <= rect.bottom;
-
-            if (isOver) {
-              isOverBlock = true;
-              block.classList.add('block-drop-target');
-              ghost.style.boxShadow = '0 0 15px #4a90e2';
-            } else {
-              block.classList.remove('block-drop-target');
-            }
-          });
-
-          if (!isOverBlock) {
-            ghost.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
-          }
-        };
-
-        const upHandler = (upEvent) => {
-          document.removeEventListener("mousemove", moveHandler);
-          document.removeEventListener("mouseup", upHandler);
-
-          // Quick fade out and remove
-          ghost.style.opacity = "0";
-          setTimeout(() => ghost.remove(), 50);
-
-          // Clean up any remaining drop targets
-          document.querySelectorAll('.block-drop-target').forEach(el => {
-            el.classList.remove('block-drop-target');
-          });
-
-          const nodeDropEvent = new CustomEvent("nodedragend", {
-            detail: {
-              nodeId,
-              nodeType,
-              nodeText: displayText,
-              x: upEvent.clientX,
-              y: upEvent.clientY
-            }
-          });
-          window.dispatchEvent(nodeDropEvent);
-        };
-
-        document.addEventListener("mousemove", moveHandler);
-        document.addEventListener("mouseup", upHandler);
-      });
-
+      // Draw the circle first
       group.appendChild(circle);
 
+      // Draw the count perfectly centered using a foreignObject with flexbox for robust centering
       if (count > 0) {
-        const countText = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "text"
-        );
-        countText.setAttribute("x", "0");
-        countText.setAttribute("y", "0"); // Center vertically
-        countText.setAttribute("dominant-baseline", "middle"); // Vertical centering
-        countText.setAttribute("text-anchor", "middle"); // Horizontal centering
-        countText.setAttribute("font-size", Math.min(radius * 0.8, 16)); // Dynamic font size
-        countText.setAttribute("font-weight", "bold");
-        countText.setAttribute(
-          "filter",
-          "drop-shadow(0 1px 1px rgba(0,0,0,0.3))"
-        ); // Add subtle shadow
-        countText.textContent = count;
-        group.appendChild(countText);
+        const fo = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
+        fo.setAttribute("x", -radius);
+        fo.setAttribute("y", -radius);
+        fo.setAttribute("width", radius * 2);
+        fo.setAttribute("height", radius * 2);
+        fo.setAttribute("pointer-events", "none");
+        fo.style.overflow = "visible";
+        // Create a div for flexbox centering
+        const div = document.createElement("div");
+        div.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+        div.style.display = "flex";
+        div.style.alignItems = "center";
+        div.style.justifyContent = "center";
+        div.style.width = `${radius * 2}px`;
+        div.style.height = `${radius * 2}px`;
+        div.style.fontWeight = "normal";
+        div.style.fontSize = `${Math.min(radius * 0.8, 16)}px`;
+        div.style.color = "#000";
+        div.style.textShadow = "none";
+        div.style.userSelect = "none";
+        div.textContent = count;
+        fo.appendChild(div);
+        group.appendChild(fo);
       }
 
+      // Draw the label outside the node
       const text = document.createElementNS(
         "http://www.w3.org/2000/svg",
         "text"
       );
       text.setAttribute("x", radius + 8);
-      text.setAttribute("y", 4);
+      text.setAttribute("y", "0");
+      text.setAttribute("text-anchor", "start");
+      text.setAttribute("alignment-baseline", "middle");
       text.setAttribute("class", "node-label");
       text.textContent = node.name;
       group.appendChild(text);
@@ -877,7 +796,6 @@ class SkillTreeComponent {
         const relationships = this.relationships.filter(
           (r) => r.from === node.id || r.to === node.id
         );
-
         this.tooltip.innerHTML = `
             <div class="tooltip-title">${node.name}</div>
             <div class="tooltip-content">
@@ -889,13 +807,11 @@ class SkillTreeComponent {
               }
             </div>
           `;
-
         this.tooltip.style.display = "block";
         const rect = group.getBoundingClientRect();
         this.tooltip.style.left = `${rect.left + 20}px`;
         this.tooltip.style.top = `${rect.top + 20}px`;
       });
-
       group.addEventListener("mouseleave", () => {
         this.tooltip.style.display = "none";
       });
