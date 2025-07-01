@@ -317,9 +317,9 @@ class SkillTreeComponent {
 
     const index = value
       ? Math.min(
-          Math.floor((value / this.maxEmployeeCount) * (colors.length - 1)) + 1,
-          colors.length - 1
-        )
+        Math.floor((value / this.maxEmployeeCount) * (colors.length - 1)) + 1,
+        colors.length - 1
+      )
       : 0;
 
     return colors[index];
@@ -438,7 +438,7 @@ class SkillTreeComponent {
                   $(rel).attr("role") === this.filterId)
               ) {
                 match = true;
-                return false; 
+                return false;
               }
             });
         }
@@ -721,7 +721,7 @@ class SkillTreeComponent {
         count === 0
           ? baseRadius
           : baseRadius +
-            (count / this.maxEmployeeCount) * (maxRadius - baseRadius);
+          (count / this.maxEmployeeCount) * (maxRadius - baseRadius);
       this.currentSkillId = node.id;
       const color = node.id
         ? getSkillIdColor(node.id)
@@ -745,11 +745,85 @@ class SkillTreeComponent {
         }
         circle.setAttribute("data-skill-id", node.id);
       }
-      if ( node.id && node.id !== "root") {
+      if (node.id && node.id !== "root") {
         circle.setAttribute("fill", color);
       }
       // Draw the circle first
       group.appendChild(circle);
+      // Ghost-preview drag handlers
+      // Ghost-preview drag handlers (insert after group.appendChild(circle);)
+      group.addEventListener("mousedown", (e) => {
+        if (e.button !== 0 || node.id === "root") return;
+        e.stopPropagation();
+        e.preventDefault();
+
+        // Build the ghost element
+        const ghost = document.createElement("div");
+        ghost.id = "node-drag-ghost";
+        // include entity name/id and skill
+        // assume we have access to entityName and entityType here:
+        const entityName = this.filterId || "All";
+        const entityType = this.filterType || "Organization";
+        ghost.textContent = `${entityType}: ${entityName}\nSkill: ${node.id}`;
+
+        Object.assign(ghost.style, {
+          position: "fixed",
+          left: `${e.clientX}px`,
+          top: `${e.clientY}px`,
+          transform: "translate(-50%, -50%)",
+          backgroundColor: getSkillIdColor(node.id),
+          color: "#fff",
+          padding: "6px 10px",
+          borderRadius: "4px",
+          whiteSpace: "pre-line",
+          pointerEvents: "none",
+          zIndex: 9999,
+          fontSize: "13px",
+          lineHeight: "1.2",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.2)"
+        });
+        document.body.appendChild(ghost);
+
+        // Move handler
+        const onMouseMove = mv => {
+          ghost.style.left = `${mv.clientX}px`;
+          ghost.style.top = `${mv.clientY}px`;
+          // highlight expr blocks under cursor
+          document.querySelectorAll(".expr-block").forEach(block => {
+            const rect = block.getBoundingClientRect();
+            block.classList.toggle(
+              "block-drop-target",
+              mv.clientX >= rect.left && mv.clientX <= rect.right &&
+              mv.clientY >= rect.top && mv.clientY <= rect.bottom
+            );
+          });
+        };
+
+        // Release handler
+        const onMouseUp = up => {
+          document.removeEventListener("mousemove", onMouseMove);
+          document.removeEventListener("mouseup", onMouseUp);
+          ghost.remove();
+          document.querySelectorAll(".block-drop-target")
+            .forEach(b => b.classList.remove("block-drop-target"));
+          // dispatch drop event with node info
+          window.dispatchEvent(new CustomEvent("nodedragend", {
+            detail: {
+              nodeId: node.id,
+              nodeText: node.name,
+              nodeType: "skill",
+              entityType,
+              entityName,
+              x: up.clientX,
+              y: up.clientY
+            }
+          }));
+        };
+
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
+      });
+
 
       // Draw the count perfectly centered using a foreignObject with flexbox for robust centering
       if (count > 0) {
@@ -800,11 +874,10 @@ class SkillTreeComponent {
             <div class="tooltip-title">${node.name}</div>
             <div class="tooltip-content">
               <div>Employees: ${count}</div>
-              ${
-                relationships.length
-                  ? `<div>Connections: ${relationships.length}</div>`
-                  : ""
-              }
+              ${relationships.length
+            ? `<div>Connections: ${relationships.length}</div>`
+            : ""
+          }
             </div>
           `;
         this.tooltip.style.display = "block";
@@ -880,9 +953,8 @@ class SkillTreeComponent {
         this.tooltip.style.display = "block";
 
         const containerRect = this.el.getBoundingClientRect();
-        this.tooltip.style.left = `${
-          event.clientX - containerRect.left + 10
-        }px`;
+        this.tooltip.style.left = `${event.clientX - containerRect.left + 10
+          }px`;
         this.tooltip.style.top = `${event.clientY - containerRect.top - 40}px`;
       });
 
