@@ -281,37 +281,43 @@ class ExpressionBuilder {
  handleSubjectDrop({ detail }) {
   const { subjectId, uid, nodeText, x, y } = detail;
   const display = document.getElementById("currentExpression");
-  
-  // Ensure we have valid coordinates
-  if (!x || !y) return;
-  
-  // Create the subject item
-  const newItem = {
-    type: "subject",
-    value: subjectId,
-    uid: uid,
-    element: null,
-    displayValue: `Subject:${nodeText}`,
-  };
+  if (!display) return;
+  const rect = display.getBoundingClientRect();
 
-  // Find target block based on drop position
-  const targetBlock = this.findTargetBlock(x, y);
-
-  if (targetBlock) {
-    if (targetBlock.items.length > 0) {
-      if (!targetBlock.operators) targetBlock.operators = [];
-      targetBlock.operators.push("AND");
-    }
-    targetBlock.items.push(newItem);
-  } else {
-    this.currentExpression.push({
-      type: "andBlock",
-      items: [newItem],
-      operators: [],
-    });
+  // Only accept drops inside the expression box
+  if (typeof x !== "number" || typeof y !== "number" || x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+    return;
   }
 
-  this.updateExpressionDisplay();
+  this.saveExpressionState();
+
+    // Create the subject item
+    const newItem = {
+      type: "subject",
+      value: subjectId,
+      uid: uid,
+      element: null,
+      displayValue: `Subject:${nodeText}`,
+    };
+
+    // Find target block based on drop position
+    const targetBlock = this.findTargetBlock(x, y);
+
+    if (targetBlock) {
+      if (targetBlock.items.length > 0) {
+        if (!targetBlock.operators) targetBlock.operators = [];
+        targetBlock.operators.push("AND");
+      }
+      targetBlock.items.push(newItem);
+    } else {
+      this.currentExpression.push({
+        type: "andBlock",
+        items: [newItem],
+        operators: [],
+      });
+    }
+
+    this.updateExpressionDisplay();
 }
 
   createExpressionBuilderUI() {
