@@ -190,104 +190,116 @@
                style="margin-left: ${level * 20}px; 
                      border-left: 3px solid ${color};
                      padding: 5px;"
-                     draggable="true">
+                     draggable="false">
            ${skillId}
          </div>
          `);
 
           skillsContainer.append(skillElem);
-          
-          // Simplified drag handling
-          skillElem.on("dragstart", function (e) {
-            const dt = e.originalEvent.dataTransfer;
-            
-            // Create a custom drag image
-            const dragImage = document.createElement("div");
-            dragImage.textContent = `Skill:${skillId}`;
-            Object.assign(dragImage.style, {
-              position: "fixed",
-              top: "-1000px", // Move off screen
-              padding: "8px 12px",
-              backgroundColor: color,
-              color: "#fff",
-              borderRadius: "4px",
-              fontFamily: "Arial, sans-serif",
-              fontSize: "14px",
-              fontWeight: "normal",
-              whiteSpace: "nowrap",
-              opacity: "0.9"
-            });
-            
-            document.body.appendChild(dragImage);
-            dt.setDragImage(dragImage, 0, 0);
-            
-            // Set drag data
-            dt.setData("application/json", JSON.stringify({
-              type: "skill",
-              pathId: skillId,
-              id: skillId,
-              entityId: "",
-              entityType: "skill",
-              displayValue: `Skill:${skillId}`,
-            }));
 
-            // Check expression blocks during drag
-            const checkDropTargets = (e) => {
-              const expressionBlocks = document.querySelectorAll('.expr-block');
-              let isOverExprBlock = false;
-              let isOverCurrentExpr = false;
-              
-              // Check if over currentExpression first
-              const currentExpr = document.getElementById("currentExpression");
-              if (currentExpr) {
-                const rect = currentExpr.getBoundingClientRect();
-                if (e.clientX >= rect.left && 
-                    e.clientX <= rect.right && 
-                    e.clientY >= rect.top && 
-                    e.clientY <= rect.bottom) {
-                  currentExpr.classList.add('drop-target');
-                  isOverCurrentExpr = true;
-                } else {
-                  currentExpr.classList.remove('drop-target');
-                }
-              }
-              
-              expressionBlocks.forEach(block => {
-                const rect = block.getBoundingClientRect();
-                if (e.clientX >= rect.left && 
-                    e.clientX <= rect.right && 
-                    e.clientY >= rect.top && 
-                    e.clientY <= rect.bottom) {
-                  block.classList.add('block-drop-target');
-                  isOverExprBlock = true;
-                } else {
-                  block.classList.remove('block-drop-target');
-                }
-              });
+          // --- Custom drag logic to match orbit/circle drag ---
+          skillElem.on("pointerdown", function (e) {
+            if (e.button !== 0) return; // Only left click
+            e.preventDefault();
+            let isDragging = false;
+            let ghostBox = null;
+            let startX = e.clientX;
+            let startY = e.clientY;
+            const DRAG_THRESH = 5;
 
-              // If not over any valid target, remove all highlighting
-              if (!isOverExprBlock && !isOverCurrentExpr) {
-                document.querySelectorAll('.block-drop-target').forEach(block => {
-                  block.classList.remove('block-drop-target');
+            function moveHandler(ev) {
+              const dx = ev.clientX - startX;
+              const dy = ev.clientY - startY;
+              if (!isDragging && Math.sqrt(dx*dx + dy*dy) > DRAG_THRESH) {
+                isDragging = true;
+                // Create ghost box
+                ghostBox = document.createElement("div");
+                ghostBox.id = "skill-drag-ghost";
+                ghostBox.textContent = `Skill: ${skillId}`;
+                Object.assign(ghostBox.style, {
+                  position: "fixed",
+                  left: `${ev.clientX}px`,
+                  top: `${ev.clientY}px`,
+                  padding: "8px 12px",
+                  backgroundColor: color,
+                  color: "#fff",
+                  borderRadius: "4px",
+                  fontFamily: "Arial, sans-serif",
+                  fontSize: "14px",
+                  fontWeight: "normal",
+                  pointerEvents: "none",
+                  zIndex: "9999",
+                  whiteSpace: "nowrap",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+                  animation: "pulse 1s infinite",
+                  transform: "translate(-50%, -50%)"
                 });
-                if (currentExpr) {
-                  currentExpr.classList.remove('drop-target');
+                document.body.appendChild(ghostBox);
+                skillElem.addClass("dragging");
+              }
+              if (isDragging && ghostBox) {
+                ghostBox.style.left = `${ev.clientX}px`;
+                ghostBox.style.top = `${ev.clientY}px`;
+                // Highlight expression blocks
+                const expressionBlocks = document.querySelectorAll('.expr-block');
+                let isOverBlock = false;
+                expressionBlocks.forEach(block => {
+                  const rect = block.getBoundingClientRect();
+                  const isOver = ev.clientX >= rect.left && 
+                                 ev.clientX <= rect.right && 
+                                 ev.clientY >= rect.top && 
+                                 ev.clientY <= rect.bottom;
+                  if (isOver) {
+                    isOverBlock = true;
+                    block.classList.add('block-drop-target');
+                    ghostBox.classList.add('over-expression');
+                  } else {
+                    block.classList.remove('block-drop-target');
+                  }
+                });
+                // Highlight main expression display
+                const exprDisplay = document.getElementById('currentExpression');
+                if (exprDisplay) {
+                  const rect = exprDisplay.getBoundingClientRect();
+                  if (ev.clientX >= rect.left && ev.clientX <= rect.right && ev.clientY >= rect.top && ev.clientY <= rect.bottom) {
+                    exprDisplay.classList.add('drop-target-active');
+                  } else {
+                    exprDisplay.classList.remove('drop-target-active');
+                  }
+                }
+                if (!isOverBlock && ghostBox) {
+                  ghostBox.classList.remove('over-expression');
                 }
               }
-            };
+            }
 
+            function upHandler(ev) {
+              document.removeEventListener("pointermove", moveHandler);
+              document.removeEventListener("pointerup", upHandler);
+              document.removeEventListener("pointercancel", upHandler);
+              if (ghostBox) ghostBox.remove();
+              skillElem.removeClass("dragging");
+              document.querySelectorAll('.block-drop-target').forEach(el => el.classList.remove('block-drop-target'));
+              const exprDisplay = document.getElementById('currentExpression');
+              if (exprDisplay) exprDisplay.classList.remove('drop-target-active');
+              if (isDragging) {
+                // Dispatch drop event
+                window.dispatchEvent(new CustomEvent("skilldragend", {
+                  detail: {
+                    skillId: skillId,
+                    entityName: "",
+                    entityType: "skill",
+                    pathId: skillId,
+                    x: ev.clientX,
+                    y: ev.clientY
+                  }
+                }));
+              }
+            }
 
-            // Cleanup
-            const cleanup = () => {
-  dragImage.remove();
-  // Remove any leftover drop target classes
-  document.querySelectorAll('.drop-target, .block-drop-target').forEach(el => {
-    el.classList.remove('drop-target', 'block-drop-target');
-  });
-};
-
-            document.addEventListener('dragend', cleanup, { once: true });
-            document.addEventListener('drop', cleanup, { once: true });
+            document.addEventListener("pointermove", moveHandler);
+            document.addEventListener("pointerup", upHandler);
+            document.addEventListener("pointercancel", upHandler);
           });
 
           // Render children recursively
