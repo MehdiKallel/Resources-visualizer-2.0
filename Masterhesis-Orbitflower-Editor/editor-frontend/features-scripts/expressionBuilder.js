@@ -234,49 +234,53 @@ class ExpressionBuilder {
   return null;
 }
 
-  handleNodeDrop({ detail }) {
-    const { nodeId, nodeType, nodeText, x, y } = detail;
-    const display = document.getElementById("currentExpression");
-    const rect = display.getBoundingClientRect();
-
-
-    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
-      return;
-    }
-
-    this.saveExpressionState();
-
-    // Check if nodeText already contains "Skill:"
-    const displayValue = nodeText.includes("Skill:") ? nodeText : `${nodeType.toUpperCase()}:${nodeText}`;
-
-    const newItem = {
-      type: nodeType,
-      value: nodeId,
-      element: null,
-      displayValue: displayValue,
-    };
-
-    // Find target block based on drop position
-    const targetBlock = this.findTargetBlock(x, y);
-
-    if (targetBlock) {
-      // Add to existing block
-      if (targetBlock.items.length > 0) {
-        if (!targetBlock.operators) targetBlock.operators = [];
-        targetBlock.operators.push("AND");
-      }
-      targetBlock.items.push(newItem);
-    } else {
-      // Create new block
-      this.currentExpression.push({
-        type: "andBlock",
-        items: [newItem],
-        operators: [],
-      });
-    }
-
-    this.updateExpressionDisplay();
+handleNodeDrop({ detail }) {
+  const {
+    nodeId,
+    nodeType,
+    nodeText,
+    entityType = "Org",
+    entityName = "All",
+    x,
+    y
+  } = detail;
+  const display = document.getElementById("currentExpression");
+  const rect = display.getBoundingClientRect();
+  if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+    return;
   }
+  this.saveExpressionState();
+
+  // Build a richer label including entity context
+  const label = `${nodeType.toUpperCase()}: ${nodeText} (${entityType} ${entityName})`;
+
+  const newItem = {
+    type: nodeType,
+    value: nodeId,
+    element: null,
+    entityType,
+    entityId: entityName,
+    displayValue: label,
+  };
+
+  // drop into an existing block or create a new one
+  const targetBlock = this.findTargetBlock(x, y);
+  if (targetBlock) {
+    if (targetBlock.items.length > 0) {
+      if (!targetBlock.operators) targetBlock.operators = [];
+      targetBlock.operators.push("AND");
+    }
+    targetBlock.items.push(newItem);
+  } else {
+    this.currentExpression.push({
+      type: "andBlock",
+      items: [newItem],
+      operators: [],
+    });
+  }
+
+  this.updateExpressionDisplay();
+}
 
  handleSubjectDrop({ detail }) {
   const { subjectId, uid, nodeText, x, y } = detail;
