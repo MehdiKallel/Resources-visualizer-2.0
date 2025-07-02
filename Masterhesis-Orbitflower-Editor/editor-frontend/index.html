@@ -95,6 +95,8 @@
     <script type="text/javascript" src="helpers/orbitScript.js"></script>
     <link rel="stylesheet" href="helpers/custom.css" type="text/css" />
     <link rel="stylesheet" href="styles/dropdown.css" type="text/css" />
+    <link rel="stylesheet" href="styles/gauge.css" type="text/css" />
+    
     <link
       rel="stylesheet"
       href="styles/orbitflower-styles.css"
@@ -315,10 +317,8 @@
         });
       }
       // Add near the top of your script
-      let isSplitView = false;
-
-      function splitGraphContainer(show) {
-        const mainSvg = $("svg");
+      let isSplitView = false;      function splitGraphContainer(show) {
+        const mainSvg = $("#main-svg");
         const container = $("#graph");
 
         if (show) {
@@ -327,7 +327,6 @@
               '<div id="detailed-graph-skills" style="width: 100%; height: 50%; position: relative;"></div>'
             );
           }
-
           mainSvg.css("height", "50%");
           $("#detailed-graph-skills").show();
         } else {
@@ -773,6 +772,14 @@
             );
             isZoomed = true;
           }
+          if (clickedElement.classList.contains("node")) {
+            // filter users container
+            const skillId = clickedElement.getAttribute("data-skill-id");
+            // find g which doesnt have hidden in class
+            const parentNode = clickedElement.closest("g.node");
+            console.error("parentNode", parentNode);
+          }
+          console.error("Clicked element:", clickedElement);
         });
       });
     </script>
