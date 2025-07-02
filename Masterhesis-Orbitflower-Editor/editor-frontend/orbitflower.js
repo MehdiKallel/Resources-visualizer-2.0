@@ -402,44 +402,46 @@ class OrbitFlower {
       const midAngle = (o[1] + o[2]) / 2;
       const orbitRadius = o[4];
 
-     // In renderOrganisationGraph function:
-Object.entries(skills).forEach(([skillId, count], index) => {
-  const angleOffset = (index - (Object.keys(skills).length - 1) / 2) * 5;
-  const angle = midAngle + angleOffset;
-  const [sx, sy] = SVG.circle_point(
-    center_x,
-    center_y,
-    radius + orbitRadius,
-    angle
-  );
+      Object.entries(skills).forEach(([skillId, count], index) => {
+        const angleOffset = (index - (Object.keys(skills).length - 1) / 2) * 5;
+        const angle = midAngle + angleOffset;
+        const [sx, sy] = SVG.circle_point(
+          center_x,
+          center_y,
+          radius + orbitRadius,
+          angle
+        );
 
-  // Use fixed size instead of percentage-based
-  const iconSize = 10; // Fixed pixel size
-
-  s.add_group(
-    `skill-${orbitKey}-${skillId}`,
-    {
-      class: "skill-indicator",
-      style: "opacity: 1;", // Remove transition
-      "data-orbit": orbitKey,
-    },
-    () => {
-      s.add_path(
-        `M ${sx - iconSize/2} ${sy - iconSize/2} 
-         L ${sx + iconSize/2} ${sy - iconSize/2}
-         L ${sx + iconSize/2} ${sy + iconSize/2}
-         L ${sx - iconSize/2} ${sy + iconSize/2} Z`,
-        {
-          class: "skill-shape",
-          fill: "#4e9a06",
-          stroke: "#73d216",
-          "stroke-width": "1.5",
-          "vector-effect": "non-scaling-stroke" // Maintain stroke width
-        }
-      );
-    }
-  );
-});
+        s.add_group(
+          `skill-${orbitKey}-${skillId}`,
+          {
+            class: "skill-indicator",
+            style: "opacity: 0; transition: opacity 0.3s;",
+            "data-orbit": orbitKey,
+          },
+          () => {
+            s.add_path(
+              `M ${sx - 5} ${sy} L ${sx} ${sy - 5} L ${sx + 5} ${sy} L ${sx} ${sy + 5
+              } Z`,
+              {
+                class: "skill-shape",
+                fill: "#4e9a06",
+                stroke: "#73d216",
+                "stroke-width": "1.5",
+              }
+            );
+            s.add_text(
+              sx,
+              sy + 15,
+              {
+                class: "skill-count",
+                style: "text-anchor: middle; font-size: 8px;",
+              },
+              () => `${skillId}: ${count}`
+            );
+          }
+        );
+      });
     });
 
     let subjectintensity = {};
@@ -475,9 +477,18 @@ Object.entries(skills).forEach(([skillId, count], index) => {
                                   transition: width 0.3s, background-color 0.3s;">
                         </div>
                       </div>
-                      <button class="explore-skills-btn" 
-                              onclick="event.stopPropagation(); splitGraphContainer(true); workerGraph.show(currentorgmodel, 'subject', '${u.shortid}', null);"
-                              title="Explore skills"
+                   <button class="explore-skills-btn"
+        onclick="
+          event.stopPropagation();
+          splitGraphContainer(true);
+          // create and show a brand-new SkillTreeComponent right here:
+          (()=>{
+            const container = document.getElementById('detailed-graph-skills');
+            const g = new SkillTreeComponent({ container });
+            g.reset('#detailed-graph-skills');
+            g.show(currentorgmodel, 'subject', '${u.uid}', null);
+          })();
+        "      title="Explore skills"
                               style="
                                 width: 20px;
                                 height: 20px;

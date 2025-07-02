@@ -175,25 +175,49 @@ class SkillTreeComponent {
     this.linkDistance = 60; // Shorter links
     this.setupZoomPan();
   }
-
-  handleResize() {
-    if (this.container) {
-      const containerWidth = this.container.clientWidth;
-      const containerHeight = this.container.clientHeight;
-
-      this.el.style.width = `${containerWidth}px`;
-      this.el.style.height = `${containerHeight}px`;
-
-      this.particleCanvas.width = containerWidth;
-      this.particleCanvas.height = containerHeight;
-
-      // Update SVG viewBox to fit container
-      this.svg.setAttribute(
-        "viewBox",
-        `0 0 ${containerWidth} ${containerHeight}`
-      );
+  getSubjectSkills(subjectUid) {
+    const skills = new Set();
+    // find the <subject uid="…"> node
+    const subj = $(this.xmlData).find(`subject[uid="${subjectUid}"]`);
+    if (!subj.length) {
+      console.error(`No subject found with uid=${subjectUid}`);
+      return [];
     }
+    // collect each <ref id="…"/>
+    subj
+      .find("subjectSkills ref")
+      .each((_, ref) => {
+        const id = $(ref).attr("id");
+        if (id) skills.add(id);
+      });
+    return Array.from(skills);
   }
+  handleResize() {
+    if (!this.container) return;
+
+    // 1) resize the container, canvas and viewBox
+    const w = this.container.clientWidth;
+    const h = this.container.clientHeight;
+    this.el.style.width = `${w}px`;
+    this.el.style.height = `${h}px`;
+    this.particleCanvas.width = w;
+    this.particleCanvas.height = h;
+    this.svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+
+    // 2) recompute everything — same as first render or double-click
+    this.computeLayout();
+    this.renderTree();
+    this.centerSVG();
+
+    // 3) reset particles so we repopulate them on the new paths
+    this.particles = [];
+    // (optionally clear activeParticles too)
+    this.activeParticles = [];
+
+    // 4) restart the particle animation loop
+    requestAnimationFrame(this.animateParticles.bind(this));
+  }
+
 
   getBackgroundColor(value) {
     return this.getSkillColor(value);
@@ -225,11 +249,10 @@ class SkillTreeComponent {
     this.tooltip.style.pointerEvents = "none";
 
     this.setupNavigation();
-    // 1) figure out whether we're filtering or not
+
+    // Unified logic for all filter types (subject, unit, role, etc.)
     if (
-      (parentNodeType === "unit" || parentNodeType === "role") &&
-      relatedText &&
-      !skillId
+      ((parentNodeType === "unit" || parentNodeType === "role" || parentNodeType === "subject") && relatedText && !skillId)
     ) {
       this.filterType = parentNodeType;
       this.filterId = relatedText;
@@ -253,12 +276,9 @@ class SkillTreeComponent {
     }
 
     this.computeLayout();
-
     this.render();
     this.centerSVG();
-
     requestAnimationFrame(this.animateParticles.bind(this));
-
     this.isFirstRender = true;
 
     if (window.ResizeObserver) {
@@ -278,11 +298,8 @@ class SkillTreeComponent {
     });
 
     window.addEventListener("resize", this.handleResize.bind(this));
-
     this.activeParticles = [];
-
     this.setupCanvasClickHandler();
-
     this.layoutType = "radial";
   }
 
@@ -458,41 +475,41 @@ class SkillTreeComponent {
       });
   }
   pruneSkillsByFilter() {
-    const relevantSubjects = new Set();
-
-    $(this.xmlData)
-      .find("subject")
-      .each((_, subject) => {
-        $(subject)
-          .find("relation")
-          .each((_, relation) => {
-            if (
-              (this.filterType === "unit" &&
-                $(relation).attr("unit") === this.filterId) ||
-              (this.filterType === "role" &&
-                $(relation).attr("role") === this.filterId)
-            ) {
-              $(subject)
-                .find("subjectSkills ref")
-                .each((_, skillRef) => {
-                  relevantSubjects.add($(skillRef).attr("id"));
-                });
-            }
-          });
+    let relevantSkills = new Set();
+    if (this.filterType === "subject") {
+      // For subject filter, collect the subject's skills by UID
+      const subject = $(this.xmlData).find(`subject[uid="${this.filterId}"]`);
+      subject.find("subjectSkills ref").each((_, skillRef) => {
+        relevantSkills.add($(skillRef).attr("id"));
       });
+    } else {
+      // For unit/role filters, collect skills from matching subjects
+      $(this.xmlData).find("subject").each((_, subject) => {
+        let match = false;
+        $(subject).find("relation").each((_, relation) => {
+          if (
+            (this.filterType === "unit" && $(relation).attr("unit") === this.filterId) ||
+            (this.filterType === "role" && $(relation).attr("role") === this.filterId)
+          ) {
+            match = true;
+            return false; // Break the loop
+          }
+        });
+        if (match) {
+          $(subject).find("subjectSkills ref").each((_, skillRef) => {
+            relevantSkills.add($(skillRef).attr("id"));
+          });
+        }
+      });
+    }
 
-    console.error(
-      "Relevant subjects after filtering:",
-      Array.from(relevantSubjects)
-    );
-
-    // Prune function remains the same
+    // Prune function to keep only skills that are either relevant or have children that are relevant
     function prune(node) {
       if (!node.children) {
-        return relevantSubjects.has(node.id);
+        return relevantSkills.has(node.id);
       }
       node.children = node.children.filter((child) => prune(child));
-      return relevantSubjects.has(node.id) || node.children.length > 0;
+      return relevantSkills.has(node.id) || node.children.length > 0;
     }
 
     if (this.skillTree.isSynthetic) {
@@ -815,14 +832,14 @@ class SkillTreeComponent {
           clearTimeout(dragStartTimeout);
           document.removeEventListener("mousemove", onMouseMove);
           document.removeEventListener("mouseup", onMouseUp);
-          
+
           if (ghost) {
             ghost.remove();
           }
-          
+
           document.querySelectorAll(".block-drop-target")
             .forEach(b => b.classList.remove("block-drop-target"));
-            
+
           if (isDragging) {
             // Only dispatch drag end event if we actually started dragging
             window.dispatchEvent(new CustomEvent("nodedragend", {
@@ -844,31 +861,49 @@ class SkillTreeComponent {
       });
 
       // Draw the count perfectly centered using a foreignObject with flexbox for robust centering
-      if (count > 0) {
-        const fo = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
-        fo.setAttribute("x", -radius);
-        fo.setAttribute("y", -radius);
-        fo.setAttribute("width", radius * 2);
-        fo.setAttribute("height", radius * 2);
-        fo.setAttribute("pointer-events", "none");
-        fo.style.overflow = "visible";
-        // Create a div for flexbox centering
-        const div = document.createElement("div");
-        div.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
-        div.style.display = "flex";
-        div.style.alignItems = "center";
-        div.style.justifyContent = "center";
-        div.style.width = `${radius * 2}px`;
-        div.style.height = `${radius * 2}px`;
-        div.style.fontWeight = "normal";
-        div.style.fontSize = `${Math.min(radius * 0.8, 16)}px`;
-        div.style.color = "#000";
-        div.style.textShadow = "none";
-        div.style.userSelect = "none";
-        div.textContent = count;
-        fo.appendChild(div);
-        group.appendChild(fo);
+      // For subject filter: show 1 if subject has the skill, otherwise show nothing
+      let displayCount = count;
+      if (this.filterType === "subject") {
+        // Use the same logic as worker graph: check if this.filterId and this.filterType match the subject and skill
+        // Only show '1' if this skill is in the subject's skill list
+        const subject = $(this.xmlData).find(`subject[uid="${this.filterId}"]`);
+        let hasSkill = false;
+        if (subject.length && node.id && node.id !== "root") {
+          subject.find("subjectSkills ref").each((_, skillRef) => {
+            if ($(skillRef).attr("id") === node.id) {
+              hasSkill = true;
+              return false;
+            }
+          });
+        }
+        displayCount = hasSkill ? "1" : "";
       }
+      if (node.id === "root") {
+        displayCount = "";
+      }
+      const fo = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
+      fo.setAttribute("x", -radius);
+      fo.setAttribute("y", -radius);
+      fo.setAttribute("width", radius * 2);
+      fo.setAttribute("height", radius * 2);
+      fo.setAttribute("pointer-events", "none");
+      fo.style.overflow = "visible";
+      // Create a div for flexbox centering
+      const div = document.createElement("div");
+      div.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+      div.style.display = "flex";
+      div.style.alignItems = "center";
+      div.style.justifyContent = "center";
+      div.style.width = `${radius * 2}px`;
+      div.style.height = `${radius * 2}px`;
+      div.style.fontWeight = "normal";
+      div.style.fontSize = `${Math.min(radius * 0.8, 16)}px`;
+      div.style.color = "#000";
+      div.style.textShadow = "none";
+      div.style.userSelect = "none";
+      div.textContent = displayCount;
+      fo.appendChild(div);
+      group.appendChild(fo);
 
       // Draw the label outside the node
       const text = document.createElementNS(
@@ -889,7 +924,8 @@ class SkillTreeComponent {
           type: "skill",
           x: node.x,
           y: node.y,
-        });});
+        });
+      });
 
       group.addEventListener("mouseover", (e) => {
         const count = this.skillEmployeeMap.get(node.id) || 0;
