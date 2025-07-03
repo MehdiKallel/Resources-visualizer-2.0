@@ -130,41 +130,41 @@
       <relation unit="Knowledge Engineering" role="Project"/>
       <relation unit="Knowledge Engineering" role="Assistant"/>
       <subjectSkills>
-        <ref id="Supervised Learning"/>
+        <ref id="Supervised Learning" strength="80"/>
       </subjectSkills>
     </subject>
     <subject id="Ada Lovelace" uid="lovela4">
 
       <relation unit="Software Architectures" role="Univ.Prof."/>
       <subjectSkills>
-        <ref id="Infrastructure Security"/>
-        <ref id="Network Security"/>
-        <ref id="Infrastructure Security"/>
-        <ref id="Network Security"/>
-        <ref id="Azure"/>
+        <ref id="Infrastructure Security" strength="80"/>
+        <ref id="Network Security" strength="80"/>
+        <ref id="Infrastructure Security" strength="80"/>
+        <ref id="Network Security" strength="80"/>
+        <ref id="Azure" strength="80"/>
       </subjectSkills>
     </subject>
     <subject id="Grace Hopper" uid="hopperg3">
       <relation unit="Scientific Computing" role="Senior Lecturer"/>
       <relation unit="Data Analytics and Computing" role="Teaching"/>
       <subjectSkills>
-        <ref id="Cloud Security"/>
-        <ref id="DevOps"/>
+        <ref id="Cloud Security" strength="80"/>
+        <ref id="DevOps" strength="80"/>
       </subjectSkills>
     </subject>
     <subject id="Alan Turing" uid="turina1">
       <relation unit="Theory and Applications of Algorithms" role="Univ.Prof."/>
       <relation unit="Theory and Applications of Algorithms" role="Teaching"/>
       <subjectSkills>
-        <ref id="Machine Learning"/>
-        <ref id="Deep Learning"/>
-      </subjectSkills>
+        <ref id="Machine Learning" strength="80"/>
+        <ref id="Deep Learning" strength="80"/>
+      </subjectSkills>  
     </subject>
     <subject id="Margaret Hamilton" uid="hamiltonm7">
       <relation unit="Workflow Systems and Technology" role="Ass.Prof."/>
       <relation unit="Workflow Systems and Technology" role="Project"/>
       <subjectSkills>
-        <ref id="Automation"/>
+        <ref id="Automation" strength="80"/>
       </subjectSkills>
     </subject>
     <subject id="Simone Kriglstein" uid="kriglss9">
@@ -173,7 +173,7 @@
       <relation unit="Educational Technologies" role="Regular"/>
       <relation unit="Educational Technologies" role="Assistant"/>
       <subjectSkills>
-        <ref id="Cloud"/>
+        <ref id="Cloud" strength="80"/>
       </subjectSkills>
     </subject>
     <subject id="Juergen Manlger" uid="manglej6">
@@ -229,7 +229,7 @@
     </subject>
     <subject id="Andreas Harapat" uid="harapata97">
       <subjectSkills>
-        <ref id="Azure"/>
+        <ref id="Azure" strength="80"/>
       </subjectSkills>
       <relation unit="Educational Technologies" role="Regular"/>
     </subject>
@@ -354,7 +354,7 @@
     </subject>
     <subject id="Atakan Aral" uid="arala86">
       <subjectSkills>
-        <ref id="AWS"/>
+        <ref id="AWS" strength="80"/>
       </subjectSkills>
       <relation unit="Scientific Computing" role="Teaching"/>
       <relation unit="Scientific Computing" role="Project"/>
@@ -576,7 +576,7 @@
       <relation unit="Knowledge Engineering" role="Regular"/>
       <relation unit="Knowledge Engineering" role="Assistant"/>
       <subjectSkills>
-        <ref id="Azure"/>
+        <ref id="Azure" strength="80"/>
       </subjectSkills>
     </subject>
     <subject id="Karlheinz Wachauer" uid="wachauk2">
@@ -644,7 +644,7 @@
       <relation unit="Workflow Systems and Technology" role="Regular"/>
       <relation unit="Workflow Systems and Technology" role="Assistant"/>
       <subjectSkills>
-        <ref id="TypeScript"/>
+        <ref id="TypeScript" strength="80"/>
       </subjectSkills>
     </subject>
     <subject id="Tobias Pfaller" uid="pfallert96">
@@ -728,8 +728,8 @@
     </subject>
     <subject id="Albert Rafetseder" uid="rafetsa2">
       <subjectSkills>
-        <ref id="AWS"/>
-        <ref id="Google Cloud"/>
+        <ref id="AWS" strength="80"/>
+        <ref id="Google Cloud" strength="80"/>
       </subjectSkills>
       <relation unit="Cooperative Systems" role="Teaching"/>
       <relation unit="Cooperative Systems" role="Regular"/>
@@ -847,17 +847,17 @@
       <relation unit="Data Mining" role="Regular"/>
       <relation unit="Data Mining" role="Staff"/>
       <subjectSkills>
-        <ref id="Python"/>
-        <ref id="Machine Learning"/>
+        <ref id="Python" strength="80"/>
+        <ref id="Machine Learning" strength="80"/>
       </subjectSkills>
     </subject>
     <subject id="Erion Çano" uid="erionc99">
       <relation unit="Data Mining" role="Regular"/>
       <relation unit="Data Mining" role="Assistant"/>
       <subjectSkills>
-        <ref id="NLP"/>
-        <ref id="Python"/>
-        <ref id="Deep Learning"/>
+        <ref id="NLP" strength="80"/>
+        <ref id="Python" strength="80"/>
+        <ref id="Deep Learning" strength="80"/>
       </subjectSkills>
     </subject>
   </subjects>
