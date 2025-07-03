@@ -757,9 +757,9 @@ class SkillTreeComponent {
       const circle = document.createElementNS(
         "http://www.w3.org/2000/svg",
         "circle"
-      );
-      if (node.id === "root") {
-        radius = radius * 4; // Increase root node size
+      );      if (node.id === "root") {
+        // Make root node size smaller for subject view
+        radius = this.filterType === "subject" ? radius * 2 : radius * 4;
       }
       circle.setAttribute("r", radius);
       if (node.id === "root") {
@@ -770,6 +770,10 @@ class SkillTreeComponent {
         } else if (this.filterType === "role") {
           circle.setAttribute("fill", "#ad7fa8");
           circle.setAttribute("stroke", "#5c3566");
+        } else if (this.filterType === "subject") {
+          // Use a nice teal color for subject view
+          circle.setAttribute("fill", "#4fd1c5");
+          circle.setAttribute("stroke", "#319795");
         }
         circle.setAttribute("data-skill-id", node.id);
       }
