@@ -67,7 +67,6 @@ function initializeZooming() {
   function handleWheel(e) {
     e.preventDefault();
 
-    if (e.ctrlKey) return;
     const zoomIntensity = 0.1;
     const delta = e.deltaY;
     
@@ -223,5 +222,4 @@ function initializeZooming() {
   svgElement.addEventListener('touchend', endPan);
   svgElement.addEventListener('touchcancel', endPan);
 }
-
 

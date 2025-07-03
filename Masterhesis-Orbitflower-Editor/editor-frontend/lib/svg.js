@@ -3,17 +3,6 @@ const textMeasurements = {
   defaultHeight: 10,
 };
 
-const SVG_TEMPLATE = `
-<svg id="svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" version="1.1" width='8' height='12'>
-  <defs>
-    <filter id="glow" x="-0.2" width="2" y="-0.1" height="2">
-      <feGaussianBlur stdDeviation="0.5" id="feGaussianBlur3794"/>
-    </filter>
-%s
-  </defs>
-%s
-</svg>
-`;
 
 class SVG {
   constructor() {
@@ -24,15 +13,18 @@ class SVG {
   dump(h = 50, w = 50) {
       console.log("awww yess");
       return `
-        <svg id="svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" version="1.1" width=${w} height='${h}'>
         <defs>
           <filter id="glow" x="-0.2" width="2" y="-0.1" height="2">
             <feGaussianBlur stdDeviation="0.5" id="feGaussianBlur3794"/>
           </filter>
         </defs> 
         ${this._res}
-      </svg>
       `;
+  }
+
+  dumpIcon(width = 12, height = 12) {
+    // Returns a standalone SVG for icons, without extra <defs> or filters
+    return `<svg width='${width}' height='${height}' viewBox='0 0 ${width} ${height}' xmlns='http://www.w3.org/2000/svg'>${this._res}</svg>`;
   }
 
   add_group(nid, options = {}, block) {

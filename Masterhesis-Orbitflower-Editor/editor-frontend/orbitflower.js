@@ -456,7 +456,8 @@ class OrbitFlower {
         const pct = Math.round(level * 100);
         const color = getSkillColor(level); // Use the helper function
 
-        const svgMarkup = si.dump(12, 12); subjects.push(`          <table class="subject" id="${u.id}" data-uid="${u.uid}" data-subject-id="${u.shortid}" onmouseover="s_relationstoggle(this)" onmouseout="s_relationstoggle(this)" onclick="openSubjectEditor('${u.uid}')" style="margin-bottom: 5px; width: 100%; border-collapse: separate; border-spacing: 0;">
+        const svgMarkup = si.dumpIcon(12, 12); // Use dumpIcon to wrap icon in <svg>
+        subjects.push(`          <table class="subject" id="${u.id}" data-uid="${u.uid}" data-subject-id="${u.shortid}" onmouseover="s_relationstoggle(this)" onmouseout="s_relationstoggle(this)" onclick="openSubjectEditor('${u.uid}')" style="margin-bottom: 5px; width: 100%; border-collapse: separate; border-spacing: 0;">
   <tbody>
   <tr>
       <td style="width: 24px; text-align: center; vertical-align: middle; padding: 4px 8px 4px 4px;">${svgMarkup}</td>

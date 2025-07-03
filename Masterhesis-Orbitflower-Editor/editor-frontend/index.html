@@ -29,15 +29,14 @@
   <script type="text/javascript" src="lib/worker.js"></script>
   <script type="text/javascript" src="lib/relation.js"></script>
   <script type="text/javascript" src="features-scripts/myUtils.js"></script>
-  <!--script type="text/javascript" src="orbitflower.js"></script-->
   <script type="text/javascript" src="features-scripts/skillsFeature.js"></script>
   <script type="text/javascript" src="features-scripts/expressionBuilder.js"></script>
   <script type="text/javascript" src="features-scripts/expanderWorker.js"></script>
   <script type="text/javascript" src="features-scripts/worker.js"></script>
   <script type="text/javascript" src="form-handlers/formHandler.js"></script>
   <script type="text/javascript" src="orbitflower.js"></script>
-  <script type="text/javascript" src="features-scripts/zooming.js"></script>
   <script type="text/javascript" src="helpers/orbitScript.js"></script>
+  <script type="text/javascript" src="features-scripts/zooming.js"></script>
   <link rel="stylesheet" href="helpers/custom.css" type="text/css" />
   <link rel="stylesheet" href="styles/dropdown.css" type="text/css" />
   <link rel="stylesheet" href="styles/gauge.css" type="text/css" />
@@ -74,7 +73,6 @@
       let skillsContainer = $("#details-skills");
       skillsContainer.empty();
 
-      // Add "All Skills" button at the top with styling matching skill items
       const allSkillsBtn = $(`
           <div id="all-skills-btn" class="skill-item" style="
             margin-left: 0px;
@@ -90,7 +88,6 @@
       skillsContainer.append(allSkillsBtn);
 
       allSkillsBtn.on("click", function () {
-        // Reset any active filters
         $(".skill-segment").css("fill", "");
         $("#users table").removeClass("hidden highlight-skill");
         $("#details-skills .skill-item").removeClass("active");
@@ -101,7 +98,6 @@
         }
       });
 
-      // Create a map for quick lookup
       const skillMap = new Map();
       skills.each(function () {
         const skill = $(this);
@@ -112,7 +108,6 @@
         });
       });
 
-      // Build hierarchy
       skillMap.forEach((skillData, id) => {
         const relations = skillData.element.find('relation[type="Child"]');
         relations.each(function () {
@@ -501,7 +496,7 @@
             .toggleClass("highlight-skill", inUnit && hasSkill);
         });
       }
-     
+
 
 
 
@@ -640,13 +635,11 @@
             if (!used) $role.remove();
           });
 
-        // Update the visualization
         $("#users").empty();
         viz.show(clonedModel);
-        // render skill segments
         skillsFeature = new SkillsFeature($("svg"), clonedModel);
         skillsFeature.initialize();
-                updateSubjectGaugesForSkill(targetSkillId);
+        updateSubjectGaugesForSkill(targetSkillId);
 
       });
 
@@ -654,7 +647,6 @@
         var clickedElement = e.target;
         if (clickedElement.tagName === "circle") {
           if (!clickedElement.hasAttribute("data-is-active")) {
-            // First click: hide elements
             $("#users")
               .find("table")
               .each(function () {
@@ -703,9 +695,7 @@
           isZoomed = true;
         }
         if (clickedElement.classList.contains("node")) {
-          // filter users container
           const skillId = clickedElement.getAttribute("data-skill-id");
-          // find g which doesnt have hidden in class
           const parentNode = clickedElement.closest("g.node");
           console.error("parentNode", parentNode);
         }
@@ -713,36 +703,33 @@
       });
     });
     function updateSubjectGaugesForSkill(skillId) {
-  $("#users table").each(function () {
-    const $userRow = $(this);
-    const userId   = $userRow.attr("data-uid");
-    const $ref     = $(currentorgmodel)
-                      .find(`subject[uid='${userId}'] ref[id='${skillId}']`);
+      $("#users table").each(function () {
+        const $userRow = $(this);
+        const userId = $userRow.attr("data-uid");
+        const $ref = $(currentorgmodel)
+          .find(`subject[uid='${userId}'] ref[id='${skillId}']`);
 
-    // determine normalized strength [0..1]
-    let normalized = 0;
-    if ($ref.length) {
-      const strength = parseFloat($ref.attr("strength") || "0");
-      if (!isNaN(strength)) {
-        normalized = strength > 1 ? Math.min(1, strength/100) : Math.min(1, strength);
-      }
+        let normalized = 0;
+        if ($ref.length) {
+          const strength = parseFloat($ref.attr("strength") || "0");
+          if (!isNaN(strength)) {
+            normalized = strength > 1 ? Math.min(1, strength / 100) : Math.min(1, strength);
+          }
+        }
+
+        const pct = Math.round(normalized * 100);
+        const $gauge = $userRow.find(".gauge-bar");
+        if (!$gauge.length) return;
+
+        $gauge
+          .attr("data-level", normalized)
+          .css({
+            width: pct + "%",
+            background: normalized > 0 ? "#4CAF50" : "#eee"
+          })
+          .attr("title", pct + "%");
+      });
     }
-
-    const pct = Math.round(normalized * 100);
-    const $gauge = $userRow.find(".gauge-bar");
-    console.error("current gauge data-level:", $gauge.attr("data-level"));
-    console.error("Updating gauge for user:", userId, "skill:", skillId, "normalized:", normalized, "pct:", pct);
-    if (!$gauge.length) return;
-
-    $gauge
-      .attr("data-level", normalized)
-      .css({
-        width: pct + "%",
-        background: normalized > 0 ? "#4CAF50" : "#eee"
-      })
-      .attr("title", pct + "%");
-  });
-}
 
   </script>
 </head>
@@ -765,7 +752,6 @@
       <ui-area data-belongs-to-tab="graph" style="border-right: 1px solid var(--x-ui-border-color)">
         <div class="x-ui-layout tab-content" id="graph" style="height: 100%; min-height: 500px">
           <svg style="width: 100%; height: 100%"></svg>
-          <!-- Add the centered container for the skill graph -->
         </div>
       </ui-area>
       <ui-resizehandle data-belongs-to-tab="graph" data-label="drag to resize"></ui-resizehandle>
@@ -863,10 +849,8 @@
               <label for="skill-id">Skill ID:</label>
               <input type="text" id="skill-id" placeholder="Skill ID" required="" />
             </div>
-            <!-- Relations container -->
             <div id="relations-container">
               <h4>Relations</h4>
-              <!-- You can start with one relation item, or leave it empty -->
               <div class="relation-item">
                 <input type="text" class="relation-id" placeholder="Related Skill ID" />
                 <input type="text" class="relation-value" placeholder="Relation Value" />
