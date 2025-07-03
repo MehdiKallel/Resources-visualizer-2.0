@@ -1,6 +1,9 @@
 window.detailedView = false;
 var isSplitting = false;
 
+// Add static reference to current instance
+window.currentSkillTreeInstance = null;
+
 function getSkillIdColor(skillId) {
   const colorPalette = [
     "#60A5FA", // Soft blue
@@ -29,6 +32,14 @@ function getSkillIdColor(skillId) {
 
 class SkillTreeComponent {
   constructor(options) {
+    // Destroy any existing instance
+    if (window.currentSkillTreeInstance) {
+      window.currentSkillTreeInstance.destroy();
+    }
+    
+    // Set this as the current instance
+    window.currentSkillTreeInstance = this;
+    
     this.tooltip = document.createElement("div");
     this.tooltip.id = "tooltip";
     this.nodeSize = 80; // Reduced node spacing
@@ -1472,7 +1483,7 @@ class SkillTreeComponent {
       return p.alpha > 0.05;
     });
 
-    requestAnimationFrame(this.animateParticles.bind(this));
+    this.animationFrameId = requestAnimationFrame(this.animateParticles.bind(this));
   }
 
   findNodeById(node, id) {
@@ -1539,6 +1550,53 @@ class SkillTreeComponent {
         console.log("No particle detected at this position");
       }
     });
+  }
+
+  destroy() {
+    console.log("Destroying SkillTreeComponent instance");
+    // Remove event listeners
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+    }
+    window.removeEventListener("resize", this.handleResize.bind(this));
+    
+    // Clear animation frame
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+    }
+    
+    // Clear particles
+    this.particles = [];
+    this.activeParticles = [];
+    
+    // Clear the canvas
+    if (this.particleCtx && this.particleCanvas) {
+      this.particleCtx.clearRect(0, 0, this.particleCanvas.width, this.particleCanvas.height);
+    }
+
+    // Clear SVG content
+    if (this.svg) {
+      while (this.svg.firstChild) {
+        this.svg.removeChild(this.svg.firstChild);
+      }
+    }
+
+    // Remove tooltip
+    if (this.tooltip && this.tooltip.parentNode) {
+      this.tooltip.parentNode.removeChild(this.tooltip);
+    }
+
+    // Remove the component from container
+    if (this.el && this.el.parentNode) {
+      this.el.parentNode.removeChild(this.el);
+    }
+
+    // Clear references
+    this.container = null;
+    this.svg = null;
+    this.particleCanvas = null;
+    this.particleCtx = null;
+    this.svgContent = null;
   }
 }
 
