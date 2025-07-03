@@ -1,19 +1,12 @@
 var doc = null;
 
-// Helper function to get color based on skill level
 function getSkillColor(level) {
   level = level || Math.random();
-  if (level < 0.3) return '#ef4444';  // Red for low skill (0-30%)
-  if (level < 0.7) return '#f59e0b';  // Orange for medium skill (30-70%)
-  return '#22c55e';                   // Green for high skill (70-100%)
-
-  // TODO: If you want to use a different color scheme, uncomment these lines:
-  // if (level < 0.3) return '#dc2626';  // A deeper red for low skill (0-30%)
-  // if (level < 0.7) return '#ea580c';  // A richer orange for medium skill (30-70%)
-  // return '#16a34a';                   // A richer green for high skill (70-100%)
+  if (level < 0.3) return '#ef4444';
+  if (level < 0.7) return '#f59e0b';
+  return '#22c55e';
 }
 
-// OrbitFlower class definition to work with index.html initialization
 class OrbitFlower {
   constructor(svgElement) {
     this.svgElement = svgElement;
@@ -21,7 +14,6 @@ class OrbitFlower {
     this.initialized = false;
     console.log("OrbitFlower instance created with SVG element:", svgElement);
 
-    // Set initial size for SVG element
     if (this.svgElement && this.svgElement.length) {
       this.svgElement.attr({
         width: "100%",
@@ -58,7 +50,6 @@ class OrbitFlower {
     );
     container.style.display = "none";
 
-    // Background rectangle
     const rect = document.createElementNS(ns, "rect");
     rect.setAttribute("width", "600");
     rect.setAttribute("height", "400");
@@ -70,7 +61,6 @@ class OrbitFlower {
     rect.setAttribute("stroke-width", "2");
     rect.setAttribute("filter", "url(#drop-shadow)");
 
-    // Close button
     const closeBtn = document.createElementNS(ns, "text");
     closeBtn.setAttribute("x", "280");
     closeBtn.setAttribute("y", "-180");
@@ -79,7 +69,6 @@ class OrbitFlower {
     closeBtn.style.cursor = "pointer";
     closeBtn.addEventListener("click", () => this.hideCenteredContainer());
 
-    // Add shadow filter definition
     const defs = document.createElementNS(ns, "defs");
     const filter = `<filter id="drop-shadow" height="130%">
       <feGaussianBlur in="SourceAlpha" stdDeviation="3"/> 
@@ -459,65 +448,68 @@ class OrbitFlower {
         si.add_subject_icon(4, 1, "subjecticon", subjectheadradius);
 
         // Compute the level once with proper fallback
-        const level = (typeof u.skillLevel === 'number') ? u.skillLevel : Math.random();
+        // Use only real data: u.skillLevel if present, otherwise 0
+        let level = 0;
+        if (typeof u.skillLevel === 'number' && !isNaN(u.skillLevel)) {
+          level = u.skillLevel;
+        }
         const pct = Math.round(level * 100);
         const color = getSkillColor(level); // Use the helper function
 
         const svgMarkup = si.dump(12, 12); subjects.push(`          <table class="subject" id="${u.id}" data-uid="${u.uid}" data-subject-id="${u.shortid}" onmouseover="s_relationstoggle(this)" onmouseout="s_relationstoggle(this)" onclick="openSubjectEditor('${u.uid}')" style="margin-bottom: 5px; width: 100%; border-collapse: separate; border-spacing: 0;">
-              <tbody>
-              <tr>
-                  <td style="width: 24px; text-align: center; vertical-align: middle; padding: 4px 8px 4px 4px;">${svgMarkup}</td>
-                  <td class="labeltext" style="text-align: left; padding: 4px 12px; vertical-align: middle;">${u.shortid}</td>                  <td style="width: 80px; text-align: right; vertical-align: middle; padding: 4px 4px;">
-                    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
-                      <div class="skill-gauge" 
-                           style="position: relative; width: 60px; height: 4px; flex-shrink: 0; background: #f3f4f6; border-radius: 2px; overflow: hidden;" 
-                           title="${pct}%">
-                        <div style="position: absolute; top: 0; left: 0; height: 100%; width: ${pct}%; 
-                                  background: ${color}; 
-                                  transition: width 0.3s, background-color 0.3s;">
-                        </div>
-                      </div>
-                   <button class="explore-skills-btn"
-        onclick="
-          event.stopPropagation();
-          splitGraphContainer(true);
-          // create and show a brand-new SkillTreeComponent right here:
-          (()=>{
-            const container = document.getElementById('detailed-graph-skills');
-            const g = new SkillTreeComponent({ container });
-            g.reset('#detailed-graph-skills');
-            g.show(currentorgmodel, 'subject', '${u.uid}', null);
-          })();
-        "      title="Explore skills"
-                              style="
-                                width: 20px;
-                                height: 20px;
-                                min-width: 20px;
-                                padding: 3px;
-                                margin: 0;
-                                background: white;
-                                border: 1px solid #e4e6e8;
-                                border-radius: 4px;
-                                cursor: pointer;
-                                transition: all 0.15s ease;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                flex-shrink: 0;">
-                      <svg width="14" height="14" viewBox="0 0 24 24">
-                        <g fill="none" stroke-width="2">
-                          <rect x="4" y="14" width="4" height="6" fill="#60a5fa" stroke="#60a5fa" rx="1"/>
-                          <rect x="10" y="10" width="4" height="10" fill="#34d399" stroke="#34d399" rx="1"/>
-                          <rect x="16" y="6" width="4" height="14" fill="#f472b6" stroke="#f472b6" rx="1"/>
-                        </g>
-                      </svg>
-                      </svg>
-                    </button>
-                  </td>
-              </tr>
-              </tbody>
-          </table>
-      `);
+  <tbody>
+  <tr>
+      <td style="width: 24px; text-align: center; vertical-align: middle; padding: 4px 8px 4px 4px;">${svgMarkup}</td>
+      <td class="labeltext" style="text-align: left; padding: 4px 12px; vertical-align: middle;">${u.shortid}</td>                  <td style="width: 80px; text-align: right; vertical-align: middle; padding: 4px 4px;">
+        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+          <div class="skill-gauge" 
+               style="position: relative; width: 60px; height: 4px; flex-shrink: 0; background: #f3f4f6; border-radius: 2px; overflow: hidden;" 
+               title="${pct}%">
+            <div class="gauge-bar" data-level="${level}" style="position: absolute; top: 0; left: 0; height: 100%; width: ${pct}%; 
+                      background: ${color}; 
+                      transition: width 0.3s, background-color 0.3s;"></div>
+          </div>
+       <button class="explore-skills-btn"
+onclick="
+  event.stopPropagation();
+  splitGraphContainer(true);
+  // create and show a brand-new SkillTreeComponent right here:
+  (()=>{
+    const container = document.getElementById('detailed-graph-skills');
+    const g = new SkillTreeComponent({ container });
+    g.reset('#detailed-graph-skills');
+    g.show(currentorgmodel, 'subject', '${u.uid}', null);
+  })();
+"      title="Explore skills"
+                      style="
+                        width: 20px;
+                        height: 20px;
+                        min-width: 20px;
+                        padding: 3px;
+                        margin: 0;
+                        background: white;
+                        border: 1px solid #e4e6e8;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        transition: all 0.15s ease;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        flex-shrink: 0;">
+              <svg width="14" height="14" viewBox="0 0 24 24">
+                <g fill="none" stroke-width="2">
+                  <rect x="4" y="14" width="4" height="6" fill="#60a5fa" stroke="#60a5fa" rx="1"/>
+                  <rect x="10" y="10" width="4" height="10" fill="#34d399" stroke="#34d399" rx="1"/>
+                  <rect x="16" y="6" width="4" height="14" fill="#f472b6" stroke="#f472b6" rx="1"/>
+                </g>
+              </svg>
+              </svg>
+            </button>
+          </td>
+      </tr>
+      </tbody>
+  </table>
+`);
 
         u.relations.forEach((r) => {
           const [x1, y1] = SVG.circle_point(
@@ -816,7 +808,7 @@ class OrbitFlower {
             const group = circle.parentNode;
             const nodeType = group.classList.contains('unit') ? 'unit' : 'role';
             console.error(`Dispatching nodedragend for ${nodeType}: ${group.id}`);
-            const nodeText =  document.querySelector(`#${group.id}_text`)?.textContent;            
+            const nodeText = document.querySelector(`#${group.id}_text`)?.textContent;
             window.dispatchEvent(new CustomEvent('nodedragend', {
               detail: { nodeId: group.id, nodeType, nodeText, x: e.clientX, y: e.clientY }
             }));
@@ -835,29 +827,8 @@ class OrbitFlower {
             // ◉ SINGLE-CLICK LOGIC HERE
             clickTimer = null;
           }, CLICK_DELAY);
-        }); function startDrag(e) {
-          const currentTime = new Date().getTime();
-          const timeDiff = currentTime - lastClickTime;
+        });
 
-          if (timeDiff < doubleClickDelay) {
-            // This is a double-click, don't start drag
-            clearTimeout(clickTimeout);
-            lastClickTime = 0;
-            return;
-          }
-
-          lastClickTime = currentTime;
-          startPoint.x = e.clientX;
-          startPoint.y = e.clientY;
-
-          const svg = circle.ownerSVGElement;
-          svg.setPointerCapture(e.pointerId);
-
-          // Add listeners immediately but don't create ghost box until actual drag occurs
-          svg.addEventListener("pointermove", drag);
-          svg.addEventListener("pointerup", stopDrag);
-          svg.addEventListener("pointercancel", stopDrag);
-        }
 
         function drag(e) {
           const dx = e.clientX - startPoint.x;
@@ -938,50 +909,11 @@ class OrbitFlower {
           }
         }
 
-        function stopDrag(e) {
-          const svg = circle.ownerSVGElement;
-          svg.releasePointerCapture(e.pointerId);
-          svg.removeEventListener("pointermove", drag);
-          svg.removeEventListener("pointerup", stopDrag);
-          svg.removeEventListener("pointercancel", stopDrag); clearTimeout(clickTimeout);
-          if (isDragging) {
-            isDragging = false;
-
-            if (ghostBox) {
-              document.body.removeChild(ghostBox);
-              ghostBox = null;
-            }
-
-            // Remove dragging class
-            circle.classList.remove("dragging");
-
-            // Fix text extraction for the drag end event
-            const nodeType = group.classList.contains("unit") ? "unit" : "role";
-            const nodeText = group.querySelector(".labeltext")?.textContent ||
-              document.querySelector(`#${group.id}_text`)?.textContent ||
-              "Unknown";
-
-            console.error("Dispatching nodedragend for", group.id, nodeType, nodeText);
-            const labelText = document.querySelector(`#${group.id}_text`)?.textContent ||
-              "Unknown";
-            const dragEndEvent = new CustomEvent("nodedragend", {
-              detail: {
-                nodeId: group.id,
-                nodeType: nodeType,
-                nodeText: nodeText,
-                x: e.clientX,
-                y: e.clientY
-              }
-            });
-            window.dispatchEvent(dragEndEvent);
-          }
-        }
 
         circle.addEventListener("click", (e) => {
           console.error("Circle clicked, but no action defined.");
         });
         circle.addEventListener('dblclick', e => {
-          // cancel single-click if pending
           if (clickTimer) {
             clearTimeout(clickTimer);
             clickTimer = null;
@@ -989,7 +921,6 @@ class OrbitFlower {
           isPointerDown = false;
           e.preventDefault();
 
-          // ◉ DOUBLE-CLICK LOGIC HERE
           const group = circle.parentNode;
           const nodeId = group.id;
           const nodeType = group.classList.contains('unit') ? 'unit' : 'role';
@@ -1134,11 +1065,14 @@ class OrbitFlower {
       });
     }
 
+
+
     const renderedEvent = new Event("graphRendered");
     document.dispatchEvent(renderedEvent);
     this.addCenteredContainer(maxwidth, maxheight);
     return { graphSvg, usersSvg };
   }
+
 }
 
 const renderOrganisationGraph = (doc) => {
