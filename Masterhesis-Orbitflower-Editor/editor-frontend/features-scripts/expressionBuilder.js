@@ -11,7 +11,10 @@ class ExpressionBuilder {
     window.addEventListener("skilldragend", this.handleSkillDrop.bind(this));
     window.addEventListener("circledragend", this.handleCircleDrop.bind(this));
     window.addEventListener("nodedragend", this.handleNodeDrop.bind(this));
-    window.addEventListener("subjectdragend", this.handleSubjectDrop.bind(this));
+    window.addEventListener(
+      "subjectdragend",
+      this.handleSubjectDrop.bind(this)
+    );
 
     this.onGraphRendered = this.onGraphRendered.bind(this);
 
@@ -41,22 +44,22 @@ class ExpressionBuilder {
       },
     });
 
-    document.addEventListener('dragging-over-expression', (e) => {
+    document.addEventListener("dragging-over-expression", (e) => {
       const display = document.getElementById("currentExpression");
       if (!this.dropTargetActive) {
         this.dropTargetActive = true;
-        display.classList.add('drop-target-active');
+        display.classList.add("drop-target-active");
         // Pulse animation on the box
-        display.style.animation = 'dropPulse 1s ease-in-out infinite';
+        display.style.animation = "dropPulse 1s ease-in-out infinite";
       }
     });
 
-    document.addEventListener('dragging-exit-expression', () => {
+    document.addEventListener("dragging-exit-expression", () => {
       const display = document.getElementById("currentExpression");
       if (this.dropTargetActive) {
         this.dropTargetActive = false;
-        display.classList.remove('drop-target-active');
-        display.style.animation = '';
+        display.classList.remove("drop-target-active");
+        display.style.animation = "";
       }
     });
   }
@@ -80,14 +83,13 @@ class ExpressionBuilder {
 
     this.saveExpressionState();
 
-    
     const newItem = {
       type: nodeType, // e.g. "unit" or "role"
       value: nodeName, // the ID/text of the node
       element: null, // no DOM element to highlight
       displayValue: `${nodeType.toUpperCase()}:${nodeName}`,
     };
-    console.error("new item", newItem); 
+    console.error("new item", newItem);
 
     // Find target block based on drop position
     const targetBlock = this.findTargetBlock(x, y);
@@ -192,20 +194,20 @@ class ExpressionBuilder {
       type: "skill",
       value: skillId,
       element: null,
-      entityId: entityName, 
+      entityId: entityName,
       entityType: entityType,
       displayValue: `Skill:${skillId} (${entityType} ${entityName})`,
       pathId: pathId,
     };
 
-    // Find target block based on drop position 
+    // Find target block based on drop position
     const targetBlock = this.findTargetBlock(x, y);
 
     if (targetBlock) {
       // Add to existing block
       if (targetBlock.items.length > 0) {
         if (!targetBlock.operators) targetBlock.operators = [];
-        targetBlock.operators.push("AND");  
+        targetBlock.operators.push("AND");
       }
       targetBlock.items.push(newItem);
     } else {
@@ -221,79 +223,94 @@ class ExpressionBuilder {
   }
 
   findTargetBlock(x, y) {
-  const elements = Array.from(this.expressionDisplay.children);
-  for (const element of elements) {
-    const rect = element.getBoundingClientRect();
-    if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-      if (element.classList.contains("expr-block")) {
-        const blockIndex = parseInt(element.getAttribute("data-block-index"), 10);
-        return this.currentExpression[blockIndex];
+    const elements = Array.from(this.expressionDisplay.children);
+    for (const element of elements) {
+      const rect = element.getBoundingClientRect();
+      if (
+        x >= rect.left &&
+        x <= rect.right &&
+        y >= rect.top &&
+        y <= rect.bottom
+      ) {
+        if (element.classList.contains("expr-block")) {
+          const blockIndex = parseInt(
+            element.getAttribute("data-block-index"),
+            10
+          );
+          return this.currentExpression[blockIndex];
+        }
       }
     }
+    return null;
   }
-  return null;
-}
 
-handleNodeDrop({ detail }) {
-  const {
-    nodeId,
-    nodeType,
-    nodeText,
-    entityType = "Org",
-    entityName = "All",
-    x,
-    y
-  } = detail;
-  const display = document.getElementById("currentExpression");
-  const rect = display.getBoundingClientRect();
-  if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
-    return;
-  }
-  this.saveExpressionState();
-
-  // Build a richer label including entity context
-  const label = `${nodeType.toUpperCase()}: ${nodeText} (${entityType} ${entityName})`;
-
-  const newItem = {
-    type: nodeType,
-    value: nodeId,
-    element: null,
-    entityType,
-    entityId: entityName,
-    displayValue: label,
-  };
-
-  // drop into an existing block or create a new one
-  const targetBlock = this.findTargetBlock(x, y);
-  if (targetBlock) {
-    if (targetBlock.items.length > 0) {
-      if (!targetBlock.operators) targetBlock.operators = [];
-      targetBlock.operators.push("AND");
+  handleNodeDrop({ detail }) {
+    const {
+      nodeId,
+      nodeType,
+      nodeText,
+      entityType = "Org",
+      entityName = "All",
+      x,
+      y,
+    } = detail;
+    const display = document.getElementById("currentExpression");
+    const rect = display.getBoundingClientRect();
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      return;
     }
-    targetBlock.items.push(newItem);
-  } else {
-    this.currentExpression.push({
-      type: "andBlock",
-      items: [newItem],
-      operators: [],
-    });
+    this.saveExpressionState();
+
+    // Build a richer label including entity context
+    const label = `${nodeType.toUpperCase()}: ${nodeText} (${entityType} ${entityName})`;
+
+    const newItem = {
+      type: nodeType,
+      value: nodeId,
+      element: null,
+      entityType,
+      entityId: entityName,
+      displayValue: label,
+    };
+
+    // drop into an existing block or create a new one
+    const targetBlock = this.findTargetBlock(x, y);
+    if (targetBlock) {
+      if (targetBlock.items.length > 0) {
+        if (!targetBlock.operators) targetBlock.operators = [];
+        targetBlock.operators.push("AND");
+      }
+      targetBlock.items.push(newItem);
+    } else {
+      this.currentExpression.push({
+        type: "andBlock",
+        items: [newItem],
+        operators: [],
+      });
+    }
+
+    this.updateExpressionDisplay();
   }
 
-  this.updateExpressionDisplay();
-}
+  handleSubjectDrop({ detail }) {
+    const { subjectId, uid, nodeText, x, y } = detail;
+    const display = document.getElementById("currentExpression");
+    if (!display) return;
+    const rect = display.getBoundingClientRect();
 
- handleSubjectDrop({ detail }) {
-  const { subjectId, uid, nodeText, x, y } = detail;
-  const display = document.getElementById("currentExpression");
-  if (!display) return;
-  const rect = display.getBoundingClientRect();
+    // Only accept drops inside the expression box
+    if (
+      typeof x !== "number" ||
+      typeof y !== "number" ||
+      x < rect.left ||
+      x > rect.right ||
+      y < rect.top ||
+      y > rect.bottom
+    ) {
+      return;
+    }
 
-  // Only accept drops inside the expression box
-  if (typeof x !== "number" || typeof y !== "number" || x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
-    return;
-  }
-
-  this.saveExpressionState();
+    this.saveExpressionState();
 
     // Create the subject item
     const newItem = {
@@ -322,7 +339,7 @@ handleNodeDrop({ detail }) {
     }
 
     this.updateExpressionDisplay();
-}
+  }
 
   createExpressionBuilderUI() {
     const container = document.querySelector(`#${this.containerId}`);
@@ -372,16 +389,14 @@ handleNodeDrop({ detail }) {
 
     this.expressionDisplay = expressionDisplay; // Store reference
 
-    
     expressionDisplay.addEventListener("dragover", (e) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
 
       // Check if we have JSON data being dragged
-      const hasJsonData = e.dataTransfer.types.includes('application/json');
-      
+      const hasJsonData = e.dataTransfer.types.includes("application/json");
+
       // If it's a dragged circle or other element with JSON data
-      
 
       // Existing handling for expression elements
       Array.from(expressionDisplay.children).forEach((child) => {
@@ -430,8 +445,7 @@ handleNodeDrop({ detail }) {
           closestElement.classList.add("drop-target");
         }
       }
-          this.showBlockDropIndicator(e.clientX, e.clientY);
-
+      this.showBlockDropIndicator(e.clientX, e.clientY);
     });
 
     expressionDisplay.addEventListener("dragleave", () => {
@@ -443,7 +457,7 @@ handleNodeDrop({ detail }) {
 
     expressionDisplay.addEventListener("drop", (e) => {
       e.preventDefault();
-      
+
       // Remove all drag highlights first
       Array.from(expressionDisplay.children).forEach((child) => {
         child.classList.remove("drop-target");
@@ -453,10 +467,10 @@ handleNodeDrop({ detail }) {
       const elements = Array.from(expressionDisplay.children).filter(
         (el) => el.id !== "drop-indicator"
       );
-      
+
       let directTarget = null;
       let directTargetIndex = -1;
-      
+
       // Find the direct target element under cursor
       for (let i = 0; i < elements.length; i++) {
         const rect = elements[i].getBoundingClientRect();
@@ -496,7 +510,7 @@ handleNodeDrop({ detail }) {
 
         // Find target block based on drop position
         const targetBlock = this.findTargetBlock(e.clientX, e.clientY);
-        
+
         if (targetBlock) {
           if (targetBlock.items.length > 0) {
             if (!targetBlock.operators) targetBlock.operators = [];
@@ -516,10 +530,20 @@ handleNodeDrop({ detail }) {
       }
 
       // Handle external entity drops
-      if (payload && (payload.type === "external-entity" || payload.type === "external-subject")) {
+      if (
+        payload &&
+        (payload.type === "external-entity" ||
+          payload.type === "external-subject")
+      ) {
         const nodeText = payload.nodeText || payload.entityId || "";
         const entityType = payload.entityType || "subject";
-        this.addEntityToExpression(nodeText, entityType, null, e.clientX, e.clientY);
+        this.addEntityToExpression(
+          nodeText,
+          entityType,
+          null,
+          e.clientX,
+          e.clientY
+        );
         return;
       }
 
@@ -565,7 +589,7 @@ handleNodeDrop({ detail }) {
         this.saveExpressionState();
         const sourceBlock = this.currentExpression[sourceIndex];
         const targetBlock = this.currentExpression[dropPosition.index];
-        
+
         // Add AND operator between the last item of target and first item of source
         if (targetBlock.items.length > 0) {
           if (!targetBlock.operators) {
@@ -573,13 +597,15 @@ handleNodeDrop({ detail }) {
           }
           targetBlock.operators.push("AND");
         }
-        
+
         // Merge items and operators
         targetBlock.items = targetBlock.items.concat(sourceBlock.items);
         if (sourceBlock.operators) {
-          targetBlock.operators = targetBlock.operators.concat(sourceBlock.operators);
+          targetBlock.operators = targetBlock.operators.concat(
+            sourceBlock.operators
+          );
         }
-        
+
         // Remove the source block
         this.currentExpression.splice(sourceIndex, 1);
         this.updateExpressionDisplay();
@@ -634,14 +660,14 @@ handleNodeDrop({ detail }) {
           console.warn("Invalid source block or missing items array");
           return;
         }
-        
+
         try {
           draggedItem = sourceBlock.items.splice(sourceItemIndex, 1)[0];
           if (!draggedItem) {
             console.warn("Failed to remove item from source block");
             return;
           }
-          
+
           // Remove empty blocks
           if (sourceBlock.items.length === 0) {
             this.currentExpression.splice(sourceBlockIndex, 1);
@@ -673,23 +699,46 @@ handleNodeDrop({ detail }) {
       // ── Handle dropping item at the new location ──
       if (dropPosition.type === "block" && draggedItem.type !== "operator") {
         // Add to existing block
-        if (this.currentExpression[dropPosition.index] && 
-            this.currentExpression[dropPosition.index].items) {
+        if (
+          this.currentExpression[dropPosition.index] &&
+          this.currentExpression[dropPosition.index].items
+        ) {
           this.currentExpression[dropPosition.index].items.push(draggedItem);
         }
       } else {
-        // Create new block for single items
-        if (draggedItem.type !== "operator" && draggedItem.type !== "andBlock") {
-          draggedItem = {
+        let opToInsert = "AND";
+        if (sourceType === "blockItem") {
+          const srcBlock = this.currentExpression[sourceBlockIndex] || {};
+          const origOps = srcBlock.operators || [];
+          opToInsert =
+            origOps[sourceItemIndex - 1] || origOps[sourceItemIndex] || "AND";
+        }
+
+        let newBlock = draggedItem;
+        if (
+          draggedItem.type !== "operator" &&
+          draggedItem.type !== "andBlock"
+        ) {
+          newBlock = {
             type: "andBlock",
             items: [draggedItem],
-            operators: []
+            operators: [],
           };
         }
-        this.currentExpression.splice(dropPosition.index, 0, draggedItem);
+
+        this.currentExpression.splice(
+          dropPosition.index,
+          0,
+          {
+            type: "operator",
+            value: opToInsert,
+            displayValue: opToInsert,
+            flippable: true,
+          },
+          newBlock
+        );
       }
 
-      // clean up highlights & update UI
       Array.from(expressionDisplay.children).forEach((child) => {
         child.classList.remove("drop-target");
       });
@@ -735,13 +784,13 @@ handleNodeDrop({ detail }) {
 
     // Add explanation text for threshold slider
     const sliderExplanation = document.createElement("small");
-    sliderExplanation.textContent = "Adjust similarity threshold between skills (higher = more strict matching)";
+    sliderExplanation.textContent =
+      "Adjust similarity threshold between skills (higher = more strict matching)";
     sliderExplanation.style.color = "#666";
     sliderExplanation.style.display = "block";
     sliderExplanation.style.marginBottom = "5px";
     buttonsContainer.appendChild(sliderExplanation);
 
-    // Create a container for slider and its label
     const sliderContainer = document.createElement("div");
     sliderContainer.style.display = "flex";
     sliderContainer.style.alignItems = "center";
@@ -751,7 +800,7 @@ handleNodeDrop({ detail }) {
     thresholdSlider.type = "range";
     thresholdSlider.min = 0;
     thresholdSlider.max = 100;
-    thresholdSlider.value = this.similarityThreshold || 50; // default to 50%
+    thresholdSlider.value = this.similarityThreshold || 50;
 
     const thresholdLabel = document.createElement("span");
     thresholdLabel.textContent = `${thresholdSlider.value}%`;
@@ -945,29 +994,33 @@ handleNodeDrop({ detail }) {
     }
   }
 
-
   showBlockDropIndicator(x, y) {
-  // Clear any existing indicators
-  this.clearBlockDropIndicators();
+    // Clear any existing indicators
+    this.clearBlockDropIndicators();
 
-  const elements = Array.from(this.expressionDisplay.children);
-  for (const element of elements) {
-    const rect = element.getBoundingClientRect();
-    if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-      if (element.classList.contains("expr-block")) {
-        // Visual feedback for block targeting
-        element.classList.add("block-drop-target");
-        return;
+    const elements = Array.from(this.expressionDisplay.children);
+    for (const element of elements) {
+      const rect = element.getBoundingClientRect();
+      if (
+        x >= rect.left &&
+        x <= rect.right &&
+        y >= rect.top &&
+        y <= rect.bottom
+      ) {
+        if (element.classList.contains("expr-block")) {
+          // Visual feedback for block targeting
+          element.classList.add("block-drop-target");
+          return;
+        }
       }
     }
   }
-} 
 
-clearBlockDropIndicators() {
-  document.querySelectorAll(".block-drop-target").forEach(el => {
-    el.classList.remove("block-drop-target");
-  });
-}
+  clearBlockDropIndicators() {
+    document.querySelectorAll(".block-drop-target").forEach((el) => {
+      el.classList.remove("block-drop-target");
+    });
+  }
 
   infixToPostfix(infix) {
     if (!infix || !Array.isArray(infix)) {
@@ -1167,7 +1220,8 @@ clearBlockDropIndicators() {
     return btn;
   }
 
-  addEntityToExpression(entityId, entityType, element, x, y) { // Add x, y parameters
+  addEntityToExpression(entityId, entityType, element, x, y) {
+    // Add x, y parameters
     this.saveExpressionState();
 
     const newItem = {
@@ -1198,7 +1252,8 @@ clearBlockDropIndicators() {
       if (element.classList != "special") {
         element.classList.add("active-filter-element");
       } else {
-        const circleElement = element.parentElement.parentElement.querySelector("circle");
+        const circleElement =
+          element.parentElement.parentElement.querySelector("circle");
         circleElement.classList.add("active-filter-element");
       }
     }
@@ -1619,53 +1674,55 @@ clearBlockDropIndicators() {
   }
 
   normalizeBlockOperators() {
-    // Remove ANDs from start and end
+    // 1) Remove any leading/trailing AND or OR
     while (
-      this.currentExpression.length > 0 && 
-      this.currentExpression[0].type === "operator" && 
-      this.currentExpression[0].value === "AND"
+      this.currentExpression.length > 0 &&
+      this.currentExpression[0].type === "operator" &&
+      (this.currentExpression[0].value === "AND" ||
+        this.currentExpression[0].value === "OR")
     ) {
       this.currentExpression.shift();
     }
     while (
-      this.currentExpression.length > 0 && 
-      this.currentExpression[this.currentExpression.length - 1].type === "operator" && 
-      this.currentExpression[this.currentExpression.length - 1].value === "AND"
+      this.currentExpression.length > 0 &&
+      this.currentExpression[this.currentExpression.length - 1].type ===
+        "operator" &&
+      (this.currentExpression[this.currentExpression.length - 1].value ===
+        "AND" ||
+        this.currentExpression[this.currentExpression.length - 1].value ===
+          "OR")
     ) {
       this.currentExpression.pop();
     }
 
-    // Remove consecutive ANDs
+    // 2) Collapse any adjacent operator pairs
     for (let i = this.currentExpression.length - 1; i > 0; i--) {
-      const current = this.currentExpression[i];
+      const curr = this.currentExpression[i];
       const prev = this.currentExpression[i - 1];
-
-      if (
-        current?.type === "operator" && current.value === "AND" &&
-        prev?.type === "operator" && prev.value === "AND"
-      ) {
-        // Remove one of the consecutive ANDs
-        this.currentExpression.splice(i, 1);
+      if (curr.type === "operator" && prev.type === "operator") {
+        if (curr.value !== prev.value) {
+          // Mixed AND/OR → drop both
+          this.currentExpression.splice(i - 1, 2);
+          i--; // skip past what we just removed
+        } else {
+          // Duplicate AND/AND or OR/OR → collapse to single
+          this.currentExpression.splice(i, 1);
+        }
       }
     }
-    // Scan for missing ANDs between blocks
-    for (let i = 0; i < this.currentExpression.length - 1; i++) {
-      const current = this.currentExpression[i];
-      const next = this.currentExpression[i + 1];
 
-      // If we have two consecutive blocks or items without an operator between them
-      if (
-        (!this.isOperator(current) && !this.isOperator(next)) ||
-        (current.type === "andBlock" && next.type === "andBlock")
-      ) {
-        // Insert a flippable AND operator
+    // 3) Now scan for missing ANDs between two non-operator elements or blocks
+    for (let i = 0; i < this.currentExpression.length - 1; i++) {
+      const curr = this.currentExpression[i];
+      const next = this.currentExpression[i + 1];
+      if (!this.isOperator(curr) && !this.isOperator(next)) {
         this.currentExpression.splice(i + 1, 0, {
           type: "operator",
           value: "AND",
           displayValue: "AND",
-          flippable: true
+          flippable: true,
         });
-        i++; // Skip the newly inserted operator
+        i++; // skip over the newly inserted AND
       }
     }
   }
