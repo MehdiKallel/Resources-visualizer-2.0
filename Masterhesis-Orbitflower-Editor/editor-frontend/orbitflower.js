@@ -6,7 +6,7 @@ function getSkillColor(level) {
   if (level < 0.3) return '#ef4444';  // Red for low skill (0-30%)
   if (level < 0.7) return '#f59e0b';  // Orange for medium skill (30-70%)
   return '#22c55e';                   // Green for high skill (70-100%)
-  
+
   // TODO: If you want to use a different color scheme, uncomment these lines:
   // if (level < 0.3) return '#dc2626';  // A deeper red for low skill (0-30%)
   // if (level < 0.7) return '#ea580c';  // A richer orange for medium skill (30-70%)
@@ -453,7 +453,7 @@ class OrbitFlower {
         if (a.shortid < b.shortid) return -1;
         if (a.shortid > b.shortid) return 1;
         return 0;
-      })        .forEach((u) => {
+      }).forEach((u) => {
         const subjectheadradius = 2.0;
         const si = new SVG();
         si.add_subject_icon(4, 1, "subjecticon", subjectheadradius);
@@ -696,17 +696,73 @@ class OrbitFlower {
       });
 
       svgRoot.querySelectorAll("circle").forEach((circle) => {
+
+        let isPointerDown = false;
+
         circle.style.cursor = "pointer";
         const group = circle.parentNode;
 
-        // Add tooltip on hover
+
+        circle.addEventListener('pointermove', e => {
+          if (!isPointerDown) return;
+          const dx = e.clientX - startPoint.x;
+          const dy = e.clientY - startPoint.y;
+          const dist = Math.hypot(dx, dy);
+
+          if (!isDragging && dist > DRAG_THRESH) {
+            isDragging = true;
+            if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; }
+
+            ghostBox = document.createElement('div');
+            ghostBox.id = 'circle-drag-ghost';
+            const labelText = document.querySelector(`#${group.id}_text`)?.textContent ||
+              "Unknown";
+            const nodeType = group.classList.contains('unit') ? 'Unit' : 'Role';
+            ghostBox.textContent = `${nodeType}: ${labelText}`;
+            Object.assign(ghostBox.style, {
+              position: 'fixed',
+              padding: '8px 12px',
+              backgroundColor: '#4a90e2',
+              color: '#fff',
+              borderRadius: '4px',
+              pointerEvents: 'none',
+              zIndex: '9999',
+              transform: 'translate(-50%, -50%)',
+              animation: 'pulse 1s infinite'
+            });
+            document.body.appendChild(ghostBox);
+            circle.classList.add('dragging');
+          }
+
+          if (isDragging && ghostBox) {
+            ghostBox.style.transition = 'none';
+            ghostBox.style.left = `${e.clientX}px`;
+            ghostBox.style.top = `${e.clientY}px`;
+
+            document.querySelectorAll('.expr-block').forEach(block => {
+              const r = block.getBoundingClientRect();
+              if (
+                e.clientX >= r.left && e.clientX <= r.right &&
+                e.clientY >= r.top && e.clientY <= r.bottom
+              ) {
+                block.classList.add('block-drop-target');
+                ghostBox.classList.add('over-expression');
+              } else {
+                block.classList.remove('block-drop-target');
+                ghostBox.classList.remove('over-expression');
+              }
+            });
+          }
+        });
+
         circle.addEventListener("mouseenter", (e) => {
+          // Only show tooltip if not dragging
+          if (isDragging) return;
           // Remove any existing tooltips first
           const existingTooltip = document.getElementById("circle-tooltip");
           if (existingTooltip) {
             existingTooltip.remove();
           }
-
 
           const tooltip = document.createElement("div");
           tooltip.id = "circle-tooltip";
@@ -741,10 +797,45 @@ class OrbitFlower {
         let ghostBox = null;
         let startPoint = { x: 0, y: 0 };
         const DRAG_THRESH = 10; let clickTimeout;
+        let clickTimer = null;
+        const CLICK_DELAY = 10; // ms to wait before firing single-click event
         let lastClickTime = 0;
-        const doubleClickDelay = 300; // ms between clicks to count as double-click
+        const doubleClickDelay = 1000; // ms between clicks to count as double-click
 
-        circle.addEventListener("pointerdown", startDrag); function startDrag(e) {
+        circle.addEventListener('pointerup', e => {
+          if (!isPointerDown) return;
+          isPointerDown = false;
+          e.target.releasePointerCapture(e.pointerId);
+
+          if (isDragging) {
+            if (ghostBox) {
+              document.body.removeChild(ghostBox);
+              ghostBox = null;
+            }
+            circle.classList.remove('dragging');
+            const group = circle.parentNode;
+            const nodeType = group.classList.contains('unit') ? 'unit' : 'role';
+            console.error(`Dispatching nodedragend for ${nodeType}: ${group.id}`);
+            const nodeText =  document.querySelector(`#${group.id}_text`)?.textContent;            
+            window.dispatchEvent(new CustomEvent('nodedragend', {
+              detail: { nodeId: group.id, nodeType, nodeText, x: e.clientX, y: e.clientY }
+            }));
+          }
+        });
+        circle.addEventListener('pointerdown', e => {
+          isPointerDown = true;
+          startPoint = { x: e.clientX, y: e.clientY };
+          isDragging = false;
+          e.target.setPointerCapture(e.pointerId);
+
+          // schedule a single-click unless dblclick arrives first
+          if (clickTimer) clearTimeout(clickTimer);
+          clickTimer = setTimeout(() => {
+            console.log('Circle clicked');
+            // ◉ SINGLE-CLICK LOGIC HERE
+            clickTimer = null;
+          }, CLICK_DELAY);
+        }); function startDrag(e) {
           const currentTime = new Date().getTime();
           const timeDiff = currentTime - lastClickTime;
 
@@ -785,6 +876,7 @@ class OrbitFlower {
             ghostBox.id = "circle-drag-ghost";
             const nodeType = group.classList.contains("unit") ? "Unit" : "Role";
 
+            console.error("Creating ghost box for dragging", nodeType, group.id);
             // Fix text extraction by looking for text in the correct place
             const labelText = group.querySelector(".labeltext")?.textContent ||
               document.querySelector(`#${group.id}_text`)?.textContent ||
@@ -869,6 +961,9 @@ class OrbitFlower {
               document.querySelector(`#${group.id}_text`)?.textContent ||
               "Unknown";
 
+            console.error("Dispatching nodedragend for", group.id, nodeType, nodeText);
+            const labelText = document.querySelector(`#${group.id}_text`)?.textContent ||
+              "Unknown";
             const dragEndEvent = new CustomEvent("nodedragend", {
               detail: {
                 nodeId: group.id,
@@ -885,21 +980,29 @@ class OrbitFlower {
         circle.addEventListener("click", (e) => {
           console.error("Circle clicked, but no action defined.");
         });
-        circle.addEventListener("dblclick", (e) => {
+        circle.addEventListener('dblclick', e => {
+          // cancel single-click if pending
+          if (clickTimer) {
+            clearTimeout(clickTimer);
+            clickTimer = null;
+          }
+          isPointerDown = false;
           e.preventDefault();
 
+          // ◉ DOUBLE-CLICK LOGIC HERE
+          const group = circle.parentNode;
           const nodeId = group.id;
-          const nodeType = group.classList.contains("unit") ? "unit" : "role";
+          const nodeType = group.classList.contains('unit') ? 'unit' : 'role';
           const nodeText = document.querySelector(`#${nodeId}_text`).textContent;
 
           splitGraphContainer(true);
           this.createBackButton(svgRoot);
-          const container = document.getElementById("detailed-graph-skills");
-          container.innerHTML = "";
+          const container = document.getElementById('detailed-graph-skills');
+          container.innerHTML = '';
           const workerGraph = new SkillTreeComponent({ container });
-          workerGraph.reset("#detailed-graph-skills");
+          workerGraph.reset('#detailed-graph-skills');
           workerGraph.show(currentorgmodel, nodeType, nodeText, null);
-          isolateTargetGraphNode(nodeId, "svg", "main-svg");
+          isolateTargetGraphNode(nodeId, 'svg', 'main-svg');
         });
 
       });
