@@ -1,140 +1,81 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <style media="screen" type="text/css"></style>
-    <title>Masterthesis visualization</title>
-    <script
-      type="text/javascript"
-      src="https://cpee.org/js_libs/jquery.min.js"
-    ></script>
-    <script
-      type="text/javascript"
-      src="https://cpee.org/js_libs/jquery.browser.js"
-    ></script>
-    <script
-      type="text/javascript"
-      src="https://cpee.org/js_libs/jquery.svg.min.js"
-    ></script>
-    <script
-      type="text/javascript"
-      src="https://cpee.org/js_libs/jquery.svgdom.min.js"
-    ></script>
-    <script
-      type="text/javascript"
-      src="https://cpee.org/js_libs/vkbeautify.js"
-    ></script>
-    <script
-      type="text/javascript"
-      src="https://cpee.org/js_libs/util.js"
-    ></script>
-    <script
-      type="text/javascript"
-      src="https://cpee.org/js_libs/printf.js"
-    ></script>
-    <script
-      type="text/javascript"
-      src="https://cpee.org/js_libs/strftime.min.js"
-    ></script>
-    <script
-      type="text/javascript"
-      src="https://cpee.org/js_libs/parsequery.js"
-    ></script>
-    <script
-      type="text/javascript"
-      src="https://cpee.org/js_libs/underscore.min.js"
-    ></script>
-    <script
-      type="text/javascript"
-      src="https://cpee.org/js_libs/jquery.caret.min.js"
-    ></script>
-    <script
-      type="text/javascript"
-      src="https://cpee.org/js_libs/jquery.cookie.js"
-    ></script>
-    <script
-      type="text/javascript"
-      src="https://cpee.org/js_libs/uidash.js"
-    ></script>
-    <link
-      rel="stylesheet"
-      href="https://cpee.org/js_libs/uidash.css"
-      type="text/css"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cpee.org/js_libs/ui.css"
-      type="text/css"
-    />
-    <script type="text/javascript" src="lib/html.js"></script>
-    <script type="text/javascript" src="lib/svg.js"></script>
-    <script type="text/javascript" src="lib/node.js"></script>
-    <script type="text/javascript" src="lib/skill.js"></script>
-    <script type="text/javascript" src="lib/subject.js"></script>
-    <script type="text/javascript" src="lib/utils.js"></script>
-    <script type="text/javascript" src="lib/worker.js"></script>
-    <script type="text/javascript" src="lib/relation.js"></script>
-    <script type="text/javascript" src="features-scripts/myUtils.js"></script>
-    <!--script type="text/javascript" src="orbitflower.js"></script-->
-    <script
-      type="text/javascript"
-      src="features-scripts/skillsFeature.js"
-    ></script>
-    <script
-      type="text/javascript"
-      src="features-scripts/expressionBuilder.js"
-    ></script>
-    <script
-      type="text/javascript"
-      src="features-scripts/expanderWorker.js"
-    ></script>
-    <script type="text/javascript" src="features-scripts/worker.js"></script>
-    <script type="text/javascript" src="form-handlers/formHandler.js"></script>
-    <script type="text/javascript" src="orbitflower.js"></script>
-    <script type="text/javascript" src="features-scripts/zooming.js"></script>
-    <script type="text/javascript" src="helpers/orbitScript.js"></script>
-    <link rel="stylesheet" href="helpers/custom.css" type="text/css" />
-    <link rel="stylesheet" href="styles/dropdown.css" type="text/css" />
-    <link rel="stylesheet" href="styles/gauge.css" type="text/css" />
-    
-    <link
-      rel="stylesheet"
-      href="styles/orbitflower-styles.css"
-      type="text/css"
-    />
-    <script type="text/javascript">
-      var filter = "";
-      var viz;
-      var serverlocation;
-      var currentorgmodel;
 
-      var skillsFeature;
-      var parentNodeType;
-      var relatedText;
-      let activeSkillSegments = {};
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <style media="screen" type="text/css"></style>
+  <title>Masterthesis visualization</title>
+  <script type="text/javascript" src="https://cpee.org/js_libs/jquery.min.js"></script>
+  <script type="text/javascript" src="https://cpee.org/js_libs/jquery.browser.js"></script>
+  <script type="text/javascript" src="https://cpee.org/js_libs/jquery.svg.min.js"></script>
+  <script type="text/javascript" src="https://cpee.org/js_libs/jquery.svgdom.min.js"></script>
+  <script type="text/javascript" src="https://cpee.org/js_libs/vkbeautify.js"></script>
+  <script type="text/javascript" src="https://cpee.org/js_libs/util.js"></script>
+  <script type="text/javascript" src="https://cpee.org/js_libs/printf.js"></script>
+  <script type="text/javascript" src="https://cpee.org/js_libs/strftime.min.js"></script>
+  <script type="text/javascript" src="https://cpee.org/js_libs/parsequery.js"></script>
+  <script type="text/javascript" src="https://cpee.org/js_libs/underscore.min.js"></script>
+  <script type="text/javascript" src="https://cpee.org/js_libs/jquery.caret.min.js"></script>
+  <script type="text/javascript" src="https://cpee.org/js_libs/jquery.cookie.js"></script>
+  <script type="text/javascript" src="https://cpee.org/js_libs/uidash.js"></script>
+  <link rel="stylesheet" href="https://cpee.org/js_libs/uidash.css" type="text/css" />
+  <link rel="stylesheet" href="https://cpee.org/js_libs/ui.css" type="text/css" />
+  <script type="text/javascript" src="lib/html.js"></script>
+  <script type="text/javascript" src="lib/svg.js"></script>
+  <script type="text/javascript" src="lib/node.js"></script>
+  <script type="text/javascript" src="lib/skill.js"></script>
+  <script type="text/javascript" src="lib/subject.js"></script>
+  <script type="text/javascript" src="lib/utils.js"></script>
+  <script type="text/javascript" src="lib/worker.js"></script>
+  <script type="text/javascript" src="lib/relation.js"></script>
+  <script type="text/javascript" src="features-scripts/myUtils.js"></script>
+  <!--script type="text/javascript" src="orbitflower.js"></script-->
+  <script type="text/javascript" src="features-scripts/skillsFeature.js"></script>
+  <script type="text/javascript" src="features-scripts/expressionBuilder.js"></script>
+  <script type="text/javascript" src="features-scripts/expanderWorker.js"></script>
+  <script type="text/javascript" src="features-scripts/worker.js"></script>
+  <script type="text/javascript" src="form-handlers/formHandler.js"></script>
+  <script type="text/javascript" src="orbitflower.js"></script>
+  <script type="text/javascript" src="features-scripts/zooming.js"></script>
+  <script type="text/javascript" src="helpers/orbitScript.js"></script>
+  <link rel="stylesheet" href="helpers/custom.css" type="text/css" />
+  <link rel="stylesheet" href="styles/dropdown.css" type="text/css" />
+  <link rel="stylesheet" href="styles/gauge.css" type="text/css" />
 
-      function getSkills(who) {
-        let skills = $(
-          "subject[uid=" + who + "] subjectSkills ref",
-          currentorgmodel
-        );
-      }
+  <link rel="stylesheet" href="styles/orbitflower-styles.css" type="text/css" />
+  <script type="text/javascript">
+    var filter = "";
+    var viz;
+    var serverlocation;
+    var currentorgmodel;
 
-      function getSkillsFromSkillAndEntity(skill, entity) {
-        let skills = $("skill[uid=" + skill + "] ref", currentorgmodel);
-        let entitySkills = $(
-          "subject[uid=" + entity + "] subjectSkills ref",
-          currentorgmodel
-        );
-      }
+    var skillsFeature;
+    var parentNodeType;
+    var relatedText;
+    let activeSkillSegments = {};
 
-      function fillSkillsContainer() {
-        let skills = $("skill", currentorgmodel);
-        let skillsContainer = $("#details-skills");
-        skillsContainer.empty();
+    function getSkills(who) {
+      let skills = $(
+        "subject[uid=" + who + "] subjectSkills ref",
+        currentorgmodel
+      );
+    }
 
-        // Add "All Skills" button at the top with styling matching skill items
-        const allSkillsBtn = $(`
+    function getSkillsFromSkillAndEntity(skill, entity) {
+      let skills = $("skill[uid=" + skill + "] ref", currentorgmodel);
+      let entitySkills = $(
+        "subject[uid=" + entity + "] subjectSkills ref",
+        currentorgmodel
+      );
+    }
+
+    function fillSkillsContainer() {
+      let skills = $("skill", currentorgmodel);
+      let skillsContainer = $("#details-skills");
+      skillsContainer.empty();
+
+      // Add "All Skills" button at the top with styling matching skill items
+      const allSkillsBtn = $(`
           <div id="all-skills-btn" class="skill-item" style="
             margin-left: 0px;
             border-left: 3px solid #4CAF50;
@@ -146,48 +87,48 @@
           </div>
         `);
 
-        skillsContainer.append(allSkillsBtn);
+      skillsContainer.append(allSkillsBtn);
 
-        allSkillsBtn.on("click", function () {
-          // Reset any active filters
-          $(".skill-segment").css("fill", "");
-          $("#users table").removeClass("hidden highlight-skill");
-          $("#details-skills .skill-item").removeClass("active");
-          viz.show(currentorgmodel);
-          if (skillsFeature) {
-            skillsFeature = new SkillsFeature($("svg"), currentorgmodel);
-            skillsFeature.initialize();
+      allSkillsBtn.on("click", function () {
+        // Reset any active filters
+        $(".skill-segment").css("fill", "");
+        $("#users table").removeClass("hidden highlight-skill");
+        $("#details-skills .skill-item").removeClass("active");
+        viz.show(currentorgmodel);
+        if (skillsFeature) {
+          skillsFeature = new SkillsFeature($("svg"), currentorgmodel);
+          skillsFeature.initialize();
+        }
+      });
+
+      // Create a map for quick lookup
+      const skillMap = new Map();
+      skills.each(function () {
+        const skill = $(this);
+        skillMap.set(skill.attr("id"), {
+          element: skill,
+          children: [],
+          parents: [],
+        });
+      });
+
+      // Build hierarchy
+      skillMap.forEach((skillData, id) => {
+        const relations = skillData.element.find('relation[type="Child"]');
+        relations.each(function () {
+          const parentId = $(this).attr("id");
+          if (skillMap.has(parentId)) {
+            skillMap.get(parentId).children.push(id);
+            skillData.parents.push(parentId);
           }
         });
+      });
 
-        // Create a map for quick lookup
-        const skillMap = new Map();
-        skills.each(function () {
-          const skill = $(this);
-          skillMap.set(skill.attr("id"), {
-            element: skill,
-            children: [],
-            parents: [],
-          });
-        });
+      function renderSkill(skillId, level = 0) {
+        const skillData = skillMap.get(skillId);
+        const color = window.getSkillIdColor(skillId);
 
-        // Build hierarchy
-        skillMap.forEach((skillData, id) => {
-          const relations = skillData.element.find('relation[type="Child"]');
-          relations.each(function () {
-            const parentId = $(this).attr("id");
-            if (skillMap.has(parentId)) {
-              skillMap.get(parentId).children.push(id);
-              skillData.parents.push(parentId);
-            }
-          });
-        });
-
-        function renderSkill(skillId, level = 0) {
-          const skillData = skillMap.get(skillId);
-          const color = window.getSkillIdColor(skillId);
-
-          const skillElem = $(`
+        const skillElem = $(`
          <div class="skill-item" data-skill-id="${skillId}" 
                style="margin-left: ${level * 20}px; 
                      border-left: 3px solid ${color};
@@ -197,195 +138,166 @@
          </div>
          `);
 
-          skillsContainer.append(skillElem);
+        skillsContainer.append(skillElem);
 
-          // --- Custom drag logic to match orbit/circle drag ---
-          skillElem.on("pointerdown", function (e) {
-            if (e.button !== 0) return; // Only left click
-            e.preventDefault();
-            let isDragging = false;
-            let ghostBox = null;
-            let startX = e.clientX;
-            let startY = e.clientY;
-            const DRAG_THRESH = 5;
+        // --- Custom drag logic to match orbit/circle drag ---
+        skillElem.on("pointerdown", function (e) {
+          if (e.button !== 0) return; // Only left click
+          e.preventDefault();
+          let isDragging = false;
+          let ghostBox = null;
+          let startX = e.clientX;
+          let startY = e.clientY;
+          const DRAG_THRESH = 5;
 
-            function moveHandler(ev) {
-              const dx = ev.clientX - startX;
-              const dy = ev.clientY - startY;
-              if (!isDragging && Math.sqrt(dx*dx + dy*dy) > DRAG_THRESH) {
-                isDragging = true;
-                // Create ghost box
-                ghostBox = document.createElement("div");
-                ghostBox.id = "skill-drag-ghost";
-                ghostBox.textContent = `Skill: ${skillId}`;
-                Object.assign(ghostBox.style, {
-                  position: "fixed",
-                  left: `${ev.clientX}px`,
-                  top: `${ev.clientY}px`,
-                  padding: "8px 12px",
-                  backgroundColor: color,
-                  color: "#fff",
-                  borderRadius: "4px",
-                  fontFamily: "Arial, sans-serif",
-                  fontSize: "14px",
-                  fontWeight: "normal",
-                  pointerEvents: "none",
-                  zIndex: "9999",
-                  whiteSpace: "nowrap",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-                  animation: "pulse 1s infinite",
-                  transform: "translate(-50%, -50%)"
-                });
-                document.body.appendChild(ghostBox);
-                skillElem.addClass("dragging");
-              }
-              if (isDragging && ghostBox) {
-                ghostBox.style.left = `${ev.clientX}px`;
-                ghostBox.style.top = `${ev.clientY}px`;
-                // Highlight expression blocks
-                const expressionBlocks = document.querySelectorAll('.expr-block');
-                let isOverBlock = false;
-                expressionBlocks.forEach(block => {
-                  const rect = block.getBoundingClientRect();
-                  const isOver = ev.clientX >= rect.left && 
-                                 ev.clientX <= rect.right && 
-                                 ev.clientY >= rect.top && 
-                                 ev.clientY <= rect.bottom;
-                  if (isOver) {
-                    isOverBlock = true;
-                    block.classList.add('block-drop-target');
-                    ghostBox.classList.add('over-expression');
-                  } else {
-                    block.classList.remove('block-drop-target');
-                  }
-                });
-                // Highlight main expression display
-                const exprDisplay = document.getElementById('currentExpression');
-                if (exprDisplay) {
-                  const rect = exprDisplay.getBoundingClientRect();
-                  if (ev.clientX >= rect.left && ev.clientX <= rect.right && ev.clientY >= rect.top && ev.clientY <= rect.bottom) {
-                    exprDisplay.classList.add('drop-target-active');
-                  } else {
-                    exprDisplay.classList.remove('drop-target-active');
-                  }
-                }
-                if (!isOverBlock && ghostBox) {
-                  ghostBox.classList.remove('over-expression');
-                }
-              }
+          function moveHandler(ev) {
+            const dx = ev.clientX - startX;
+            const dy = ev.clientY - startY;
+            if (!isDragging && Math.sqrt(dx * dx + dy * dy) > DRAG_THRESH) {
+              isDragging = true;
+              // Create ghost box
+              ghostBox = document.createElement("div");
+              ghostBox.id = "skill-drag-ghost";
+              ghostBox.textContent = `Skill: ${skillId}`;
+              Object.assign(ghostBox.style, {
+                position: "fixed",
+                left: `${ev.clientX}px`,
+                top: `${ev.clientY}px`,
+                padding: "8px 12px",
+                backgroundColor: color,
+                color: "#fff",
+                borderRadius: "4px",
+                fontFamily: "Arial, sans-serif",
+                fontSize: "14px",
+                fontWeight: "normal",
+                pointerEvents: "none",
+                zIndex: "9999",
+                whiteSpace: "nowrap",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+                animation: "pulse 1s infinite",
+                transform: "translate(-50%, -50%)"
+              });
+              document.body.appendChild(ghostBox);
+              skillElem.addClass("dragging");
             }
-
-            function upHandler(ev) {
-              document.removeEventListener("pointermove", moveHandler);
-              document.removeEventListener("pointerup", upHandler);
-              document.removeEventListener("pointercancel", upHandler);
-              if (ghostBox) ghostBox.remove();
-              skillElem.removeClass("dragging");
-              document.querySelectorAll('.block-drop-target').forEach(el => el.classList.remove('block-drop-target'));
+            if (isDragging && ghostBox) {
+              ghostBox.style.left = `${ev.clientX}px`;
+              ghostBox.style.top = `${ev.clientY}px`;
+              // Highlight expression blocks
+              const expressionBlocks = document.querySelectorAll('.expr-block');
+              let isOverBlock = false;
+              expressionBlocks.forEach(block => {
+                const rect = block.getBoundingClientRect();
+                const isOver = ev.clientX >= rect.left &&
+                  ev.clientX <= rect.right &&
+                  ev.clientY >= rect.top &&
+                  ev.clientY <= rect.bottom;
+                if (isOver) {
+                  isOverBlock = true;
+                  block.classList.add('block-drop-target');
+                  ghostBox.classList.add('over-expression');
+                } else {
+                  block.classList.remove('block-drop-target');
+                }
+              });
+              // Highlight main expression display
               const exprDisplay = document.getElementById('currentExpression');
-              if (exprDisplay) exprDisplay.classList.remove('drop-target-active');
-              if (isDragging) {
-                // Dispatch drop event
-                window.dispatchEvent(new CustomEvent("skilldragend", {
-                  detail: {
-                    skillId: skillId,
-                    entityName: "",
-                    entityType: "skill",
-                    pathId: skillId,
-                    x: ev.clientX,
-                    y: ev.clientY
-                  }
-                }));
+              if (exprDisplay) {
+                const rect = exprDisplay.getBoundingClientRect();
+                if (ev.clientX >= rect.left && ev.clientX <= rect.right && ev.clientY >= rect.top && ev.clientY <= rect.bottom) {
+                  exprDisplay.classList.add('drop-target-active');
+                } else {
+                  exprDisplay.classList.remove('drop-target-active');
+                }
+              }
+              if (!isOverBlock && ghostBox) {
+                ghostBox.classList.remove('over-expression');
               }
             }
-
-            document.addEventListener("pointermove", moveHandler);
-            document.addEventListener("pointerup", upHandler);
-            document.addEventListener("pointercancel", upHandler);
-          });
-
-          // Render children recursively
-          skillData.children.forEach((childId) => {
-            renderSkill(childId, level + 1);
-          });
-        }
-
-        skillMap.forEach((skillData, id) => {
-          if (skillData.parents.length === 0) {
-            renderSkill(id);
           }
-        });
-      }
-      // Add near the top of your script
-      let isSplitView = false;      function splitGraphContainer(show) {
-        const mainSvg = $("#main-svg");
-        const container = $("#graph");
 
-        if (show) {
-          if ($("#detailed-graph-skills").length === 0) {
-            container.append(
-              '<div id="detailed-graph-skills" style="width: 100%; height: 50%; position: relative;"></div>'
-            );
-          }
-          mainSvg.css("height", "50%");
-          $("#detailed-graph-skills").show();
-        } else {
-          mainSvg.css("height", "100%");
-          $("#detailed-graph-skills").hide();
-        }
-      }
-
-      
-      // Add to your $(document).ready() function:
-      function setupSSEEventListeners() {
-        const eventSource = new EventSource(
-          `${serverlocation.replace(/\/$/, "")}/events/`
-        );
-        console.error("Listening for real-time updates...");
-
-        eventSource.onopen = () => {
-          console.error("SSE connection established");
-          console.error("[SSE] Connection OPENED", new Date().toISOString());
-        };
-        eventSource.addEventListener("error", (e) => {
-          console.error("[SSE] Error state:", e.eventPhase);
-        });
-
-        eventSource.addEventListener("update", (event) => {
-          console.error("Update event received:", event.data);
-          try {
-            const updateData = JSON.parse(event.data);
-            console.log("Update type:", updateData.type);
-
-            $.ajax({
-              url: serverlocation + "/organisation",
-              success: function (res) {
-                currentorgmodel = res;
-                viz.show(currentorgmodel);
-
-                if (skillsFeature) {
-                  skillsFeature = new SkillsFeature($("svg"), currentorgmodel);
-                  skillsFeature.initialize();
+          function upHandler(ev) {
+            document.removeEventListener("pointermove", moveHandler);
+            document.removeEventListener("pointerup", upHandler);
+            document.removeEventListener("pointercancel", upHandler);
+            if (ghostBox) ghostBox.remove();
+            skillElem.removeClass("dragging");
+            document.querySelectorAll('.block-drop-target').forEach(el => el.classList.remove('block-drop-target'));
+            const exprDisplay = document.getElementById('currentExpression');
+            if (exprDisplay) exprDisplay.classList.remove('drop-target-active');
+            if (isDragging) {
+              // Dispatch drop event
+              window.dispatchEvent(new CustomEvent("skilldragend", {
+                detail: {
+                  skillId: skillId,
+                  entityName: "",
+                  entityType: "skill",
+                  pathId: skillId,
+                  x: ev.clientX,
+                  y: ev.clientY
                 }
-              },
-              error: function (err) {
-                console.error(
-                  "Failed to load updated organization model:",
-                  err
-                );
-              },
-            });
-          } catch (error) {
-            console.error("Error parsing update data:", error);
+              }));
+            }
           }
+
+          document.addEventListener("pointermove", moveHandler);
+          document.addEventListener("pointerup", upHandler);
+          document.addEventListener("pointercancel", upHandler);
         });
 
-        eventSource.addEventListener("connected", (event) => {
-          console.log("Connected to SSE stream:", event.data);
+        // Render children recursively
+        skillData.children.forEach((childId) => {
+          renderSkill(childId, level + 1);
         });
+      }
 
-        eventSource.onmessage = (event) => {
-          console.log("Generic message received:", event.data);
+      skillMap.forEach((skillData, id) => {
+        if (skillData.parents.length === 0) {
+          renderSkill(id);
+        }
+      });
+    }
+    // Add near the top of your script
+    let isSplitView = false; function splitGraphContainer(show) {
+      const mainSvg = $("#main-svg");
+      const container = $("#graph");
+
+      if (show) {
+        if ($("#detailed-graph-skills").length === 0) {
+          container.append(
+            '<div id="detailed-graph-skills" style="width: 100%; height: 50%; position: relative;"></div>'
+          );
+        }
+        mainSvg.css("height", "50%");
+        $("#detailed-graph-skills").show();
+      } else {
+        mainSvg.css("height", "100%");
+        $("#detailed-graph-skills").hide();
+      }
+    }
+
+
+    // Add to your $(document).ready() function:
+    function setupSSEEventListeners() {
+      const eventSource = new EventSource(
+        `${serverlocation.replace(/\/$/, "")}/events/`
+      );
+      console.error("Listening for real-time updates...");
+
+      eventSource.onopen = () => {
+        console.error("SSE connection established");
+        console.error("[SSE] Connection OPENED", new Date().toISOString());
+      };
+      eventSource.addEventListener("error", (e) => {
+        console.error("[SSE] Error state:", e.eventPhase);
+      });
+
+      eventSource.addEventListener("update", (event) => {
+        console.error("Update event received:", event.data);
+        try {
+          const updateData = JSON.parse(event.data);
+          console.log("Update type:", updateData.type);
+
           $.ajax({
             url: serverlocation + "/organisation",
             success: function (res) {
@@ -398,607 +310,583 @@
               }
             },
             error: function (err) {
-              console.error("Failed to load updated organization model:", err);
+              console.error(
+                "Failed to load updated organization model:",
+                err
+              );
             },
           });
-        };
+        } catch (error) {
+          console.error("Error parsing update data:", error);
+        }
+      });
 
-        eventSource.onerror = (error) => {
-          console.error("EventSource error:", error);
-          setTimeout(() => {
-            console.log("Attempting to reconnect to event stream...");
-            eventSource.close();
-            setupSSEEventListeners();
-          }, 5000);
-        };
-      }
+      eventSource.addEventListener("connected", (event) => {
+        console.log("Connected to SSE stream:", event.data);
+      });
 
-      $(document).ready(function () {
-        $("svg").attr({
-          width: "100%",
-          height: "100%",
-        });
-        viz = new OrbitFlower($("svg"));
-
+      eventSource.onmessage = (event) => {
+        console.log("Generic message received:", event.data);
         $.ajax({
-          url: "index.conf",
-          dataType: "json",
+          url: serverlocation + "/organisation",
           success: function (res) {
-            serverlocation = res.server;
-            $.ajax({
-              url: serverlocation + "/organisation",
-              success: function (res) {
-                originalModel = res.cloneNode(true);
-                currentorgmodel = res.cloneNode(true);
-                fillSkillsContainer();
-                getSkills("harapata97");
-                viz.show(currentorgmodel);
+            currentorgmodel = res;
+            viz.show(currentorgmodel);
 
-                skillsFeature = new SkillsFeature($("svg"), currentorgmodel);
-                skillsFeature.initialize();
-
-                setupSSEEventListeners();
-                initializeZooming();
-              },
-              error: function (err) {
-                console.error("Failed to load organization model:", err);
-              },
-            });
+            if (skillsFeature) {
+              skillsFeature = new SkillsFeature($("svg"), currentorgmodel);
+              skillsFeature.initialize();
+            }
+          },
+          error: function (err) {
+            console.error("Failed to load updated organization model:", err);
           },
         });
-        console.error("Server location:'''''''''''''''''''", serverlocation);
+      };
 
-        const expressionBuilder = new ExpressionBuilder("expressionBuilder");
-        window.expressionBuilderPaused = expressionBuilder.paused;
-
-        // Listen for changes in the expression builder state
-        document.addEventListener("expressionBuilder:change", function (event) {
-          window.expressionBuilderPaused = event.detail.builder.paused;
-        });
-
-        let originalUserStates = [];
-        var relatedSkills = [];
-        let currentSkillFilter = null;
-        let originalSkillStates = [];
-        var unitId = null;
-        var isZoomed = false;
-        var originalModel = null;
-        function storeOriginalUserStates() {
-          originalUserStates = [];
-          $("#users table").each(function () {
-            originalUserStates.push({
-              element: this,
-              hidden: $(this).hasClass("hidden"),
-            });
-          });
-        }
-
-        function restoreOriginalUserStates() {
-          originalUserStates.forEach((state) => {
-            $(state.element).toggleClass("hidden", state.hidden);
-          });
-        }
-
-        function storeOriginalSkillStates() {
-          originalSkillStates = [];
-          $("#details-skills .skill-item").each(function () {
-            originalSkillStates.push({
-              element: this,
-              hidden: $(this).hasClass("hidden"),
-            });
-          });
-        }
-        function restoreOriginalSkillStates() {
-          originalSkillStates.forEach((state) => {
-            $(state.element).toggleClass("hidden", state.hidden);
-          });
-        }
-        $("svg").on("click", ".skill-segment", function (e) {
-          const skillSegment = $(this);
-          const parentNode = skillSegment.closest("g").parent();
-          const parentId = parentNode.attr("id");
-          const unitId = document.querySelector(
-            `text[id="${parentId}_text"]`
-          )?.textContent;
-
-          const skillId = skillSegment.attr("data-skill-id");
-          const key = `${unitId}_${skillId}`;
-          if (activeSkillSegments[key]) {
-            delete activeSkillSegments[key];
-            skillSegment.css("fill", "");
-
-            if (Object.keys(activeSkillSegments).length === 0) {
-              restoreOriginalUserStates();
-            }
-          } else {
-            if (Object.keys(activeSkillSegments).length === 0) {
-              storeOriginalUserStates();
-            }
-
-            activeSkillSegments = {};
-            $(".skill-segment").css("fill", "");
-
-            activeSkillSegments[key] = true;
-            relatedSkills = getAllRelatedSkills(skillId);
-            console.error("filtering by unitId", unitId);
-            filterUsersByUnitAndSkill(unitId, relatedSkills);
-            console.error("current selected users")
-            skillSegment.css("fill", "#4CAF50");
-          }
-
-          $("#details-skills .skill-item").removeClass("active");
-          relatedSkills.forEach((skillId) => {
-            $(
-              `#details-skills .skill-item[data-skill-id="${skillId}"]`
-            ).addClass("active");
-          });
-        });
-
-        function filterUsersByUnitAndSkill(unitId, skillIds) {
-          const skillIdsArray = Array.isArray(skillIds) ? skillIds : [skillIds];
-          $("#users table").each(function () {
-            const $userRow = $(this);
-            const userId = $userRow.attr("data-uid");
-            const inUnit =
-              $(
-                `subject[uid="${userId}"] relation[unit="${unitId}"], subject[uid="${userId}"] relation[role="${unitId}"]`,
-                currentorgmodel
-              ).length > 0;
-            let hasSkill = false;
-            skillIdsArray.forEach((skillId) => {
-              if (
-                $(
-                  `subject[uid="${userId}"] subjectSkills ref[id="${skillId}"]`,
-                  currentorgmodel
-                ).length > 0
-              ) {
-                hasSkill = true;
-              }
-            });
-            $userRow
-              .toggleClass("hidden", !(inUnit && hasSkill))
-              .toggleClass("highlight-skill", inUnit && hasSkill);
-          });
-        }
-
-        function getAllRelatedSkills(skillId) {
-          const skills = new Set();
-          const visited = new Set();
-
-          function traverse(currentSkillId) {
-            if (visited.has(currentSkillId)) return;
-            visited.add(currentSkillId);
-            skills.add(currentSkillId);
-
-            $(
-              `skill[id="${currentSkillId}"] relation[type="Parent"]`,
-              currentorgmodel
-            ).each(function () {
-              const parentId = $(this).attr("id");
-              if (parentId && !visited.has(parentId)) {
-                traverse(parentId);
-              }
-            });
-
-            $(
-              `skill relation[type="Child"][id="${currentSkillId}"]`,
-              currentorgmodel
-            ).each(function () {
-              const parentSkillId = $(this).closest("skill").attr("id");
-              if (parentSkillId && !visited.has(parentSkillId)) {
-                traverse(parentSkillId);
-              }
-            });
-          }
-
-          traverse(skillId);
-
-          return Array.from(skills);
-        }
-        var control = true;
-        var currentActiveSkill = null; // Track currently active skill
-
-        $("#details-skills").on("mouseover", ".skill-item", function () {
-          var targetSkillId = $(this).attr("data-skill-id");
-          if (!targetSkillId) return;
-          $("#svg")
-            .find(".skill-segment")
-            .each(function () {
-              var skillSegment = $(this);
-              var segmentSkillId = skillSegment.attr("data-skill-id");
-              var relatedSkills = getAllRelatedSkills(targetSkillId);
-
-              if (relatedSkills.includes(segmentSkillId)) {
-                $(this).addClass("hover-highlight");
-              } else {
-                $(this).removeClass("hover-highlight");
-              }
-            });
-
-            // find g with class node and which has child text with content equal to targetSkillId
-            $("#testing-svg")
-              .find("g.node")
-              .each(function () {
-                var node = $(this);
-                var nodeId = node.attr("data-skill-id");
-                  if (nodeId === targetSkillId) {
-                    node.addClass("hover-highlight");
-                  } else {
-                    node.removeClass("hover-highlight");
-                  }
-                
-              });
-        });
-
-        $("#details-skills").on("mouseout", ".skill-item", function() {
-          $("#svg").find(".skill-segment").removeClass("hover-highlight");
-          $("#testing-svg").find("g.node").removeClass("hover-highlight");
-        });
-        
-        $("#details-skills").on("click", function (e) {
-          $("#details-skills .skill-item").removeClass("active");
-          $("#details-skills .skill-item").removeClass("selected");
-          var targetSkillId = e.target.getAttribute("data-skill-id");
-          if (!targetSkillId || targetSkillId === currentActiveSkill) return;
-      
-  if (isSplitView) {
-    $("#detailed-graph-skills").empty();
-    currentActiveSkill = targetSkillId;
-
-    // Reuse existing instance or create new
-    if (!window.workerGraphInstance) {
-      window.workerGraphInstance = new SkillTreeComponent({ container: "detailed-graph-skills" });
+      eventSource.onerror = (error) => {
+        console.error("EventSource error:", error);
+        setTimeout(() => {
+          console.log("Attempting to reconnect to event stream...");
+          eventSource.close();
+          setupSSEEventListeners();
+        }, 5000);
+      };
     }
-    window.workerGraphInstance.reset("#detailed-graph-skills");
-    window.workerGraphInstance.show(
-      currentorgmodel,
-      parentNodeType,
-      relatedText,
-      targetSkillId
-    );
-  }
-          var clonedModel = currentorgmodel.cloneNode(true);
-          var allRelatedSkills = getAllRelatedSkills(targetSkillId);
 
-          $(
-            `#details-skills .skill-item[data-skill-id="${targetSkillId}"]`
-          ).addClass("selected");
-          // adding active class to related skills
-          allRelatedSkills.forEach((skillId) => {
-            $(
-              `#details-skills .skill-item[data-skill-id="${skillId}"]`
-            ).addClass("active");
+    $(document).ready(function () {
+      $("svg").attr({
+        width: "100%",
+        height: "100%",
+      });
+      viz = new OrbitFlower($("svg"));
+
+      $.ajax({
+        url: "index.conf",
+        dataType: "json",
+        success: function (res) {
+          serverlocation = res.server;
+          $.ajax({
+            url: serverlocation + "/organisation",
+            success: function (res) {
+              originalModel = res.cloneNode(true);
+              currentorgmodel = res.cloneNode(true);
+              fillSkillsContainer();
+              getSkills("harapata97");
+              viz.show(currentorgmodel);
+
+              skillsFeature = new SkillsFeature($("svg"), currentorgmodel);
+              skillsFeature.initialize();
+
+              setupSSEEventListeners();
+              initializeZooming();
+            },
+            error: function (err) {
+              console.error("Failed to load organization model:", err);
+            },
           });
+        },
+      });
+      console.error("Server location:'''''''''''''''''''", serverlocation);
 
-          // Remove subjects that don't have any of the related skills
-          $(clonedModel)
-            .find("subject")
-            .each(function () {
-              const subject = $(this);
-              let hasSkill = false;
-              for (const skillId of allRelatedSkills) {
-                if (
-                  subject.find(`subjectSkills ref[id="${skillId}"]`).length > 0
-                ) {
-                  hasSkill = true;
-                  break;
-                }
-              }
-              if (!hasSkill) {
-                subject.remove();
-              }
-            });
+      const expressionBuilder = new ExpressionBuilder("expressionBuilder");
+      window.expressionBuilderPaused = expressionBuilder.paused;
 
-          // Remove unreferenced units and roles
-          $(clonedModel)
-            .find("unit")
-            .each(function () {
-              const $unit = $(this);
-              const unitId = $unit.attr("id");
-              const used =
-                $(clonedModel).find(`subject relation[unit="${unitId}"]`)
-                  .length > 0;
-              if (!used) $unit.remove();
-            });
+      // Listen for changes in the expression builder state
+      document.addEventListener("expressionBuilder:change", function (event) {
+        window.expressionBuilderPaused = event.detail.builder.paused;
+      });
 
-          $(clonedModel)
-            .find("role")
-            .each(function () {
-              const $role = $(this);
-              const roleId = $role.attr("id");
-              const used =
-                $(clonedModel).find(`subject relation[role="${roleId}"]`)
-                  .length > 0;
-              if (!used) $role.remove();
-            });
-
-          // Update the visualization
-          $("#users").empty();
-          viz.show(clonedModel);
-          // render skill segments
-          skillsFeature = new SkillsFeature($("svg"), clonedModel);
-          skillsFeature.initialize();
+      let originalUserStates = [];
+      var relatedSkills = [];
+      let currentSkillFilter = null;
+      let originalSkillStates = [];
+      var unitId = null;
+      var isZoomed = false;
+      var originalModel = null;
+      function storeOriginalUserStates() {
+        originalUserStates = [];
+        $("#users table").each(function () {
+          originalUserStates.push({
+            element: this,
+            hidden: $(this).hasClass("hidden"),
+          });
         });
+      }
 
-        $("svg").on("click", function (e) {
-          var clickedElement = e.target;
-          if (clickedElement.tagName === "circle") {
-            if (!clickedElement.hasAttribute("data-is-active")) {
-              // First click: hide elements
-              $("#users")
-                .find("table")
-                .each(function () {
-                  if (!$(this).hasClass("highlightrole")) {
-                    $(this).addClass("hidden");
-                  }
-                  if ($(this).hasClass("highlightunit")) {
-                    $(this).removeClass("hidden");
-                  }
-                });
-              clickedElement.setAttribute("data-is-active", "true");
-            } else {
-              $("#users")
-                .find("table")
-                .each(function () {
-                  $(this).removeClass("hidden");
-                });
-              clickedElement.removeAttribute("data-is-active");
-            }
+      function restoreOriginalUserStates() {
+        originalUserStates.forEach((state) => {
+          $(state.element).toggleClass("hidden", state.hidden);
+        });
+      }
+
+      function storeOriginalSkillStates() {
+        originalSkillStates = [];
+        $("#details-skills .skill-item").each(function () {
+          originalSkillStates.push({
+            element: this,
+            hidden: $(this).hasClass("hidden"),
+          });
+        });
+      }
+      function restoreOriginalSkillStates() {
+        originalSkillStates.forEach((state) => {
+          $(state.element).toggleClass("hidden", state.hidden);
+        });
+      }
+      $("svg").on("click", ".skill-segment", function (e) {
+        const skillSegment = $(this);
+        const parentNode = skillSegment.closest("g").parent();
+        const parentId = parentNode.attr("id");
+        const unitId = document.querySelector(
+          `text[id="${parentId}_text"]`
+        )?.textContent;
+
+        const skillId = skillSegment.attr("data-skill-id");
+        const key = `${unitId}_${skillId}`;
+        if (activeSkillSegments[key]) {
+          delete activeSkillSegments[key];
+          skillSegment.css("fill", "");
+
+          if (Object.keys(activeSkillSegments).length === 0) {
+            restoreOriginalUserStates();
           }
-          if (
-            clickedElement.classList.contains("skill-segment") && !isSplitting &&
-            clickedElement.tagName === "path"
-          ) {          
-            var parentNodeId =
-              clickedElement.parentNode.parentNode.getAttribute("id");
-            parentNodeType =
-              clickedElement.parentNode.parentNode.getAttribute("class");
-            if (!isZoomed) {
-              relatedText =
-                document.querySelector(`text[id="${parentNodeId}_text"]`)
-                  ?.textContent || "";
-            }
-            const skillId = clickedElement.getAttribute("data-skill-id");
-            options = {
-              container: "detailed-graph-skills",
-            };
-            const workerGraph = new SkillTreeComponent(options);
-            workerGraph.reset("#detailed-graph-skills");
-            workerGraph.show(
-              currentorgmodel,
-              parentNodeType,
-              relatedText,
-              skillId
-            );
-            isZoomed = true;
+        } else {
+          if (Object.keys(activeSkillSegments).length === 0) {
+            storeOriginalUserStates();
           }
-          if (clickedElement.classList.contains("node")) {
-            // filter users container
-            const skillId = clickedElement.getAttribute("data-skill-id");
-            // find g which doesnt have hidden in class
-            const parentNode = clickedElement.closest("g.node");
-            console.error("parentNode", parentNode);
-          }
-          console.error("Clicked element:", clickedElement);
+
+          activeSkillSegments = {};
+          $(".skill-segment").css("fill", "");
+
+          activeSkillSegments[key] = true;
+          relatedSkills = getAllRelatedSkills(skillId);
+          console.error("filtering by unitId", unitId);
+          filterUsersByUnitAndSkill(unitId, relatedSkills);
+          console.error("current selected users")
+          skillSegment.css("fill", "#4CAF50");
+        }
+
+        $("#details-skills .skill-item").removeClass("active");
+        relatedSkills.forEach((skillId) => {
+          $(
+            `#details-skills .skill-item[data-skill-id="${skillId}"]`
+          ).addClass("active");
         });
       });
-    </script>
-  </head>
-  <body is="x-ui-">
-    <ui-rest id="main">
-      
 
-      <ui-tabbar>
-        <ui-before></ui-before>
-        <ui-tab class="default" data-tab="graph">Home</ui-tab>
-        <ui-tab class="inactive" data-tab="manage-subjects">Add Subject</ui-tab>
-        <ui-tab class="inactive" data-tab="manage-units">Add Unit</ui-tab>
-        <ui-tab class="inactive" data-tab="manage-roles">Add Role</ui-tab>
-        <ui-tab class="inactive" data-tab="manage-skills">Add Skill</ui-tab>
-        <ui-behind></ui-behind>
-        <ui-last></ui-last>
-      </ui-tabbar>
-      <ui-content class="noselect">
-        <ui-area
-          data-belongs-to-tab="graph"
-          style="border-right: 1px solid var(--x-ui-border-color)"
-        >
-          <div
-            class="x-ui-layout tab-content"
-            id="graph"
-            style="height: 100%; min-height: 500px"
-          >
-            <svg style="width: 100%; height: 100%"></svg>
-            <!-- Add the centered container for the skill graph -->
-          </div>
-        </ui-area>
-        <ui-resizehandle
-          data-belongs-to-tab="graph"
-          data-label="drag to resize"
-        ></ui-resizehandle>
-        <ui-area
-          is="x-ui-"
-          data-belongs-to-tab="graph"
-          style="border-right: 1px solid var(--x-ui-border-color); height: 100%"
-        >
-          <div
-            id="users-container"
-            style="
+      function filterUsersByUnitAndSkill(unitId, skillIds) {
+        const skillIdsArray = Array.isArray(skillIds) ? skillIds : [skillIds];
+        $("#users table").each(function () {
+          const $userRow = $(this);
+          const userId = $userRow.attr("data-uid");
+          const inUnit =
+            $(
+              `subject[uid="${userId}"] relation[unit="${unitId}"], subject[uid="${userId}"] relation[role="${unitId}"]`,
+              currentorgmodel
+            ).length > 0;
+          let hasSkill = false;
+          skillIdsArray.forEach((skillId) => {
+            if (
+              $(
+                `subject[uid="${userId}"] subjectSkills ref[id="${skillId}"]`,
+                currentorgmodel
+              ).length > 0
+            ) {
+              hasSkill = true;
+            }
+          });
+          $userRow
+            .toggleClass("hidden", !(inUnit && hasSkill))
+            .toggleClass("highlight-skill", inUnit && hasSkill);
+        });
+      }
+     
+
+
+
+      function getAllRelatedSkills(skillId) {
+        const skills = new Set();
+        const visited = new Set();
+
+        function traverse(currentSkillId) {
+          if (visited.has(currentSkillId)) return;
+          visited.add(currentSkillId);
+          skills.add(currentSkillId);
+
+          $(
+            `skill[id="${currentSkillId}"] relation[type="Parent"]`,
+            currentorgmodel
+          ).each(function () {
+            const parentId = $(this).attr("id");
+            if (parentId && !visited.has(parentId)) {
+              traverse(parentId);
+            }
+          });
+
+          $(
+            `skill relation[type="Child"][id="${currentSkillId}"]`,
+            currentorgmodel
+          ).each(function () {
+            const parentSkillId = $(this).closest("skill").attr("id");
+            if (parentSkillId && !visited.has(parentSkillId)) {
+              traverse(parentSkillId);
+            }
+          });
+        }
+
+        traverse(skillId);
+
+        return Array.from(skills);
+      }
+      var control = true;
+      var currentActiveSkill = null; // Track currently active skill
+
+      $("#details-skills").on("mouseover", ".skill-item", function () {
+        var targetSkillId = $(this).attr("data-skill-id");
+        if (!targetSkillId) return;
+        $("#svg")
+          .find(".skill-segment")
+          .each(function () {
+            var skillSegment = $(this);
+            var segmentSkillId = skillSegment.attr("data-skill-id");
+            var relatedSkills = getAllRelatedSkills(targetSkillId);
+
+            if (relatedSkills.includes(segmentSkillId)) {
+              $(this).addClass("hover-highlight");
+            } else {
+              $(this).removeClass("hover-highlight");
+            }
+          });
+
+        // find g with class node and which has child text with content equal to targetSkillId
+        $("#testing-svg")
+          .find("g.node")
+          .each(function () {
+            var node = $(this);
+            var nodeId = node.attr("data-skill-id");
+            if (nodeId === targetSkillId) {
+              node.addClass("hover-highlight");
+            } else {
+              node.removeClass("hover-highlight");
+            }
+
+          });
+      });
+
+      $("#details-skills").on("mouseout", ".skill-item", function () {
+        $("#svg").find(".skill-segment").removeClass("hover-highlight");
+        $("#testing-svg").find("g.node").removeClass("hover-highlight");
+      });
+
+      $("#details-skills").on("click", function (e) {
+        $("#details-skills .skill-item").removeClass("active");
+        $("#details-skills .skill-item").removeClass("selected");
+        var targetSkillId = e.target.getAttribute("data-skill-id");
+        if (!targetSkillId || targetSkillId === currentActiveSkill) return;
+
+
+        var clonedModel = currentorgmodel.cloneNode(true);
+        var allRelatedSkills = getAllRelatedSkills(targetSkillId);
+
+        $(
+          `#details-skills .skill-item[data-skill-id="${targetSkillId}"]`
+        ).addClass("selected");
+        // adding active class to related skills
+        allRelatedSkills.forEach((skillId) => {
+          $(
+            `#details-skills .skill-item[data-skill-id="${skillId}"]`
+          ).addClass("active");
+        });
+
+        // Remove subjects that don't have any of the related skills
+        $(clonedModel)
+          .find("subject")
+          .each(function () {
+            const subject = $(this);
+            let hasSkill = false;
+            for (const skillId of allRelatedSkills) {
+              if (
+                subject.find(`subjectSkills ref[id="${skillId}"]`).length > 0
+              ) {
+                hasSkill = true;
+                break;
+              }
+            }
+            if (!hasSkill) {
+              subject.remove();
+            }
+          });
+
+        $(clonedModel)
+          .find("unit")
+          .each(function () {
+            const $unit = $(this);
+            const unitId = $unit.attr("id");
+            const used =
+              $(clonedModel).find(`subject relation[unit="${unitId}"]`)
+                .length > 0;
+            if (!used) $unit.remove();
+          });
+
+        $(clonedModel)
+          .find("role")
+          .each(function () {
+            const $role = $(this);
+            const roleId = $role.attr("id");
+            const used =
+              $(clonedModel).find(`subject relation[role="${roleId}"]`)
+                .length > 0;
+            if (!used) $role.remove();
+          });
+
+        // Update the visualization
+        $("#users").empty();
+        viz.show(clonedModel);
+        // render skill segments
+        skillsFeature = new SkillsFeature($("svg"), clonedModel);
+        skillsFeature.initialize();
+                updateSubjectGaugesForSkill(targetSkillId);
+
+      });
+
+      $("svg").on("click", function (e) {
+        var clickedElement = e.target;
+        if (clickedElement.tagName === "circle") {
+          if (!clickedElement.hasAttribute("data-is-active")) {
+            // First click: hide elements
+            $("#users")
+              .find("table")
+              .each(function () {
+                if (!$(this).hasClass("highlightrole")) {
+                  $(this).addClass("hidden");
+                }
+                if ($(this).hasClass("highlightunit")) {
+                  $(this).removeClass("hidden");
+                }
+              });
+            clickedElement.setAttribute("data-is-active", "true");
+          } else {
+            $("#users")
+              .find("table")
+              .each(function () {
+                $(this).removeClass("hidden");
+              });
+            clickedElement.removeAttribute("data-is-active");
+          }
+        }
+        if (
+          clickedElement.classList.contains("skill-segment") && !isSplitting &&
+          clickedElement.tagName === "path"
+        ) {
+          var parentNodeId =
+            clickedElement.parentNode.parentNode.getAttribute("id");
+          parentNodeType =
+            clickedElement.parentNode.parentNode.getAttribute("class");
+          if (!isZoomed) {
+            relatedText =
+              document.querySelector(`text[id="${parentNodeId}_text"]`)
+                ?.textContent || "";
+          }
+          const skillId = clickedElement.getAttribute("data-skill-id");
+          options = {
+            container: "detailed-graph-skills",
+          };
+          const workerGraph = new SkillTreeComponent(options);
+          workerGraph.reset("#detailed-graph-skills");
+          workerGraph.show(
+            currentorgmodel,
+            parentNodeType,
+            relatedText,
+            skillId
+          );
+          isZoomed = true;
+        }
+        if (clickedElement.classList.contains("node")) {
+          // filter users container
+          const skillId = clickedElement.getAttribute("data-skill-id");
+          // find g which doesnt have hidden in class
+          const parentNode = clickedElement.closest("g.node");
+          console.error("parentNode", parentNode);
+        }
+        console.error("Clicked element:", clickedElement);
+      });
+    });
+    function updateSubjectGaugesForSkill(skillId) {
+  $("#users table").each(function () {
+    const $userRow = $(this);
+    const userId   = $userRow.attr("data-uid");
+    const $ref     = $(currentorgmodel)
+                      .find(`subject[uid='${userId}'] ref[id='${skillId}']`);
+
+    // determine normalized strength [0..1]
+    let normalized = 0;
+    if ($ref.length) {
+      const strength = parseFloat($ref.attr("strength") || "0");
+      if (!isNaN(strength)) {
+        normalized = strength > 1 ? Math.min(1, strength/100) : Math.min(1, strength);
+      }
+    }
+
+    const pct = Math.round(normalized * 100);
+    const $gauge = $userRow.find(".gauge-bar");
+    console.error("current gauge data-level:", $gauge.attr("data-level"));
+    console.error("Updating gauge for user:", userId, "skill:", skillId, "normalized:", normalized, "pct:", pct);
+    if (!$gauge.length) return;
+
+    $gauge
+      .attr("data-level", normalized)
+      .css({
+        width: pct + "%",
+        background: normalized > 0 ? "#4CAF50" : "#eee"
+      })
+      .attr("title", pct + "%");
+  });
+}
+
+  </script>
+</head>
+
+<body is="x-ui-">
+  <ui-rest id="main">
+
+
+    <ui-tabbar>
+      <ui-before></ui-before>
+      <ui-tab class="default" data-tab="graph">Home</ui-tab>
+      <ui-tab class="inactive" data-tab="manage-subjects">Add Subject</ui-tab>
+      <ui-tab class="inactive" data-tab="manage-units">Add Unit</ui-tab>
+      <ui-tab class="inactive" data-tab="manage-roles">Add Role</ui-tab>
+      <ui-tab class="inactive" data-tab="manage-skills">Add Skill</ui-tab>
+      <ui-behind></ui-behind>
+      <ui-last></ui-last>
+    </ui-tabbar>
+    <ui-content class="noselect">
+      <ui-area data-belongs-to-tab="graph" style="border-right: 1px solid var(--x-ui-border-color)">
+        <div class="x-ui-layout tab-content" id="graph" style="height: 100%; min-height: 500px">
+          <svg style="width: 100%; height: 100%"></svg>
+          <!-- Add the centered container for the skill graph -->
+        </div>
+      </ui-area>
+      <ui-resizehandle data-belongs-to-tab="graph" data-label="drag to resize"></ui-resizehandle>
+      <ui-area is="x-ui-" data-belongs-to-tab="graph"
+        style="border-right: 1px solid var(--x-ui-border-color); height: 100%">
+        <div id="users-container" style="
               display: flex;
               flex-direction: row;
               min-height: 200px;
               border-bottom: 1px solid var(--x-ui-border-color);
-            "
-          >
-            <div
-              id="users"
-              style="flex: 1; overflow: auto; margin-left: 20px"
-            ></div>
-            <div
-              id="details-skills"
-              style="flex: 1; overflow: auto; padding-left: 10px"
-            ></div>
-          </div>
-          <ui-resizehandle>drag to resize</ui-resizehandle>
-          <div
-            id="expressionBuilder"
-            style="flex: 1; min-height: 200px; overflow: auto"
-          ></div>
-        </ui-area>
-        <ui-area data-belongs-to-tab="manage-subjects" class="inactive">
-          <div id="manage-subjects">
-            <form id="manage-subjects-form" class="manage-form">
-              <div class="form-group">
-                <label for="subject-id">Subject ID:</label>
-                <input type="text" id="subject-id" placeholder="Subject ID" />
-              </div>
-              <div id="unit-role-pairs" class="form-group">
-                <div class="unit-role-pair">
-                  <input
-                    type="text"
-                    class="unit-id"
-                    placeholder="Unit ID"
-                    required=""
-                  />
-                  <input
-                    type="text"
-                    class="role-id"
-                    placeholder="Role ID"
-                    required=""
-                  />
-                  <button
-                    type="button"
-                    class="remove-btn"
-                    onclick="this.parentElement.remove()"
-                  >
-                    ×
-                  </button>
-                </div>
-              </div>
-              <div class="form-group">
-                <button
-                  type="button"
-                  id="add-unit-role-pair"
-                  onclick="window.addUnitRolePairToForm()"
-                >
-                  Add Another Unit-Role Pair
+            ">
+          <div id="users" style="flex: 1; overflow: auto; margin-left: 20px"></div>
+          <div id="details-skills" style="flex: 1; overflow: auto; padding-left: 10px"></div>
+        </div>
+        <ui-resizehandle>drag to resize</ui-resizehandle>
+        <div id="expressionBuilder" style="flex: 1; min-height: 200px; overflow: auto"></div>
+      </ui-area>
+      <ui-area data-belongs-to-tab="manage-subjects" class="inactive">
+        <div id="manage-subjects">
+          <form id="manage-subjects-form" class="manage-form">
+            <div class="form-group">
+              <label for="subject-id">Subject ID:</label>
+              <input type="text" id="subject-id" placeholder="Subject ID" />
+            </div>
+            <div id="unit-role-pairs" class="form-group">
+              <div class="unit-role-pair">
+                <input type="text" class="unit-id" placeholder="Unit ID" required="" />
+                <input type="text" class="role-id" placeholder="Role ID" required="" />
+                <button type="button" class="remove-btn" onclick="this.parentElement.remove()">
+                  ×
                 </button>
               </div>
-              <div class="form-group">
-                <button type="submit">Add Subject</button>
-              </div>
-              <div id="messages-subjects"></div>
-            </form>
-          </div>
-        </ui-area>
-        <ui-area data-belongs-to-tab="manage-units" class="inactive">
-          <div class="tab-content" id="manage-units">
-            <form id="manage-units-form" class="manage-form">
-              <div class="form-group">
-                <label for="unit-id">Unit ID:</label>
-                <input type="text" id="unit-id" placeholder="Unit ID" />
-              </div>
-              <div class="form-group">
-                <label for="unit-parent-id">Parent ID:</label>
-                <input
-                  type="text"
-                  id="unit-parent-id"
-                  placeholder="Parent ID"
-                />
-              </div>
-              <div class="form-group">
-                <button type="submit">Add Unit</button>
-              </div>
-              <div id="messages-units"></div>
-            </form>
-          </div>
-        </ui-area>
-        <ui-area data-belongs-to-tab="manage-roles" class="inactive">
-          <div class="tab-content" id="manage-roles">
-            <form id="manage-roles-form" class="manage-form">
-              <div class="form-group">
-                <label for="role-id">Role ID:</label>
-                <input type="text" id="role-id" placeholder="Role ID" />
-              </div>
-              <div id="role-parents" class="form-group">
-                <div class="role-parent-pair">
-                  <input
-                    type="text"
-                    class="role-parent-id"
-                    placeholder="Parent ID"
-                  />
-                  <button
-                    type="button"
-                    class="remove-btn"
-                    onclick="this.parentElement.remove()"
-                  >
-                    ×
-                  </button>
-                </div>
-              </div>
-              <div class="form-group">
-                <button
-                  type="button"
-                  id="add-role-parent"
-                  onclick="window.addRoleParentToForm()"
-                >
-                  Add Another Parent
-                </button>
-              </div>
-              <div class="form-group">
-                <button type="submit">Add Role</button>
-              </div>
-              <div id="messages-roles"></div>
-            </form>
-          </div>
-        </ui-area>
-        <ui-area data-belongs-to-tab="manage-skills" class="inactive">
-          <div class="tab-content" id="manage-skills">
-            <form id="manage-skills-form" class="manage-form">
-              <div class="form-group">
-                <label for="skill-id">Skill ID:</label>
-                <input
-                  type="text"
-                  id="skill-id"
-                  placeholder="Skill ID"
-                  required=""
-                />
-              </div>
-              <!-- Relations container -->
-              <div id="relations-container">
-                <h4>Relations</h4>
-                <!-- You can start with one relation item, or leave it empty -->
-                <div class="relation-item">
-                  <input
-                    type="text"
-                    class="relation-id"
-                    placeholder="Related Skill ID"
-                  />
-                  <input
-                    type="text"
-                    class="relation-value"
-                    placeholder="Relation Value"
-                  />
-                  <button type="button" class="remove-relation-btn">
-                    Remove
-                  </button>
-                </div>
-              </div>
-              <button
-                type="button"
-                id="add-relation-btn"
-                onclick="window.addRelationItem()"
-              >
-                Add Relation
+            </div>
+            <div class="form-group">
+              <button type="button" id="add-unit-role-pair" onclick="window.addUnitRolePairToForm()">
+                Add Another Unit-Role Pair
               </button>
-              <div class="form-group">
-                <button type="submit">Add Skill</button>
+            </div>
+            <div class="form-group">
+              <button type="submit">Add Subject</button>
+            </div>
+            <div id="messages-subjects"></div>
+          </form>
+        </div>
+      </ui-area>
+      <ui-area data-belongs-to-tab="manage-units" class="inactive">
+        <div class="tab-content" id="manage-units">
+          <form id="manage-units-form" class="manage-form">
+            <div class="form-group">
+              <label for="unit-id">Unit ID:</label>
+              <input type="text" id="unit-id" placeholder="Unit ID" />
+            </div>
+            <div class="form-group">
+              <label for="unit-parent-id">Parent ID:</label>
+              <input type="text" id="unit-parent-id" placeholder="Parent ID" />
+            </div>
+            <div class="form-group">
+              <button type="submit">Add Unit</button>
+            </div>
+            <div id="messages-units"></div>
+          </form>
+        </div>
+      </ui-area>
+      <ui-area data-belongs-to-tab="manage-roles" class="inactive">
+        <div class="tab-content" id="manage-roles">
+          <form id="manage-roles-form" class="manage-form">
+            <div class="form-group">
+              <label for="role-id">Role ID:</label>
+              <input type="text" id="role-id" placeholder="Role ID" />
+            </div>
+            <div id="role-parents" class="form-group">
+              <div class="role-parent-pair">
+                <input type="text" class="role-parent-id" placeholder="Parent ID" />
+                <button type="button" class="remove-btn" onclick="this.parentElement.remove()">
+                  ×
+                </button>
               </div>
-              <div id="messages-skills"></div>
-            </form>
-          </div>
-        </ui-area>
-      </ui-content>
-    </ui-rest>
-  </body>
+            </div>
+            <div class="form-group">
+              <button type="button" id="add-role-parent" onclick="window.addRoleParentToForm()">
+                Add Another Parent
+              </button>
+            </div>
+            <div class="form-group">
+              <button type="submit">Add Role</button>
+            </div>
+            <div id="messages-roles"></div>
+          </form>
+        </div>
+      </ui-area>
+      <ui-area data-belongs-to-tab="manage-skills" class="inactive">
+        <div class="tab-content" id="manage-skills">
+          <form id="manage-skills-form" class="manage-form">
+            <div class="form-group">
+              <label for="skill-id">Skill ID:</label>
+              <input type="text" id="skill-id" placeholder="Skill ID" required="" />
+            </div>
+            <!-- Relations container -->
+            <div id="relations-container">
+              <h4>Relations</h4>
+              <!-- You can start with one relation item, or leave it empty -->
+              <div class="relation-item">
+                <input type="text" class="relation-id" placeholder="Related Skill ID" />
+                <input type="text" class="relation-value" placeholder="Relation Value" />
+                <button type="button" class="remove-relation-btn">
+                  Remove
+                </button>
+              </div>
+            </div>
+            <button type="button" id="add-relation-btn" onclick="window.addRelationItem()">
+              Add Relation
+            </button>
+            <div class="form-group">
+              <button type="submit">Add Skill</button>
+            </div>
+            <div id="messages-skills"></div>
+          </form>
+        </div>
+      </ui-area>
+    </ui-content>
+  </ui-rest>
+</body>
+
 </html>
