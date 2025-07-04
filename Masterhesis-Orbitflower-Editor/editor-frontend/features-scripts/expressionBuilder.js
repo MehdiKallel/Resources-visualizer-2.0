@@ -162,7 +162,7 @@ class ExpressionBuilder {
             skillItem.classList.add("expr-highlight");
           }
           // iterate over all paths and find the one with the same pathId
-        } else if (it.type === "unit" || it.type === "role") {
+        } else if (it.type === "Unit" || it.type === "Role") {
           const element = document.getElementById(it.value);
 
           if (element) {
@@ -248,7 +248,7 @@ class ExpressionBuilder {
     this.saveExpressionState();
 
     // Build a richer label including entity context
-    const label = `${nodeType.toUpperCase()}: ${nodeText} (${entityType} ${entityName})`;
+    const label = `${nodeType}: ${nodeText} (${entityType} ${entityName})`;
 
     const newItem = {
       type: nodeType,
@@ -722,9 +722,7 @@ class ExpressionBuilder {
     const resetBtn = this.createOperatorButton("Reset", () =>
       this.resetExpression()
     );
-    const searchBtn = this.createOperatorButton("Search", () =>
-      this.executeSearch()
-    );
+    const searchBtn = this.createOperatorButton("Search", () => this.handleSearchClick());
 
     buttonsContainer.appendChild(resetBtn);
     buttonsContainer.appendChild(searchBtn);
@@ -789,11 +787,43 @@ class ExpressionBuilder {
     savedExpressionsContainer.appendChild(savedExpressionsList);
     savedExpressionsContainer.appendChild(saveExpressionBtn);
 
+    // Add a container for the search result URL
+    const searchUrlContainer = document.createElement("div");
+    searchUrlContainer.id = "searchUrlContainer";
+    searchUrlContainer.style.margin = "10px 0";
+    searchUrlContainer.style.display = "none";
+    searchUrlContainer.style.alignItems = "center";
+    searchUrlContainer.style.gap = "8px";
+
+    const searchUrlLabel = document.createElement("span");
+    searchUrlLabel.textContent = "Result URL:";
+    searchUrlLabel.style.fontWeight = "bold";
+    searchUrlLabel.style.marginRight = "5px";
+
+    const searchUrlField = document.createElement("input");
+    searchUrlField.type = "text";
+    searchUrlField.readOnly = true;
+    searchUrlField.style.width = "60%";
+    searchUrlField.style.marginRight = "5px";
+
+    const openUrlBtn = document.createElement("button");
+    openUrlBtn.textContent = "Open";
+    openUrlBtn.onclick = () => {
+      if (searchUrlField.value) window.open(searchUrlField.value, "_blank");
+    };
+    openUrlBtn.style.padding = "2px 8px";
+    openUrlBtn.style.fontSize = "12px";
+
+    searchUrlContainer.appendChild(searchUrlLabel);
+    searchUrlContainer.appendChild(searchUrlField);
+    searchUrlContainer.appendChild(openUrlBtn);
+
     // Append the content elements into the content container.
     contentContainer.appendChild(expressionDisplay);
     contentContainer.appendChild(instructionsText);
     contentContainer.appendChild(buttonsContainer);
     contentContainer.appendChild(savedExpressionsContainer);
+    contentContainer.appendChild(searchUrlContainer);
 
     // Append header and content container to the main container.
     container.appendChild(headerContainer);
@@ -912,6 +942,26 @@ class ExpressionBuilder {
       document.addEventListener("mouseup", mouseUpHandler);
       e.preventDefault();
     });
+  }
+
+  handleSearchClick() {
+    if (this.currentExpression.length === 0) {
+      alert("Please build an expression first");
+      return;
+    }
+    if (!this.validateExpression(this.currentExpression)) {
+      alert("The expression is invalid. Please check your expression structure.");
+      return;
+    }
+    const expr = this.getSerializableState().currentExpression;
+    const exprStr = encodeURIComponent(JSON.stringify(expr));
+    const url = `${this.apiBaseUrl}/search?expression=${exprStr}`;
+    const searchUrlContainer = document.getElementById("searchUrlContainer");
+    const searchUrlField = searchUrlContainer && searchUrlContainer.querySelector("input[type='text']");
+    if (searchUrlContainer && searchUrlField) {
+      searchUrlField.value = url;
+      searchUrlContainer.style.display = "flex";
+    }
   }
 
   executeSearch() {

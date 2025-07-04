@@ -807,7 +807,7 @@ onclick="
             }
             circle.classList.remove('dragging');
             const group = circle.parentNode;
-            const nodeType = group.classList.contains('unit') ? 'unit' : 'role';
+            const nodeType = group.classList.contains('unit') ? 'Unit' : 'Role';
             console.error(`Dispatching nodedragend for ${nodeType}: ${group.id}`);
             const nodeText = document.querySelector(`#${group.id}_text`)?.textContent;
             window.dispatchEvent(new CustomEvent('nodedragend', {

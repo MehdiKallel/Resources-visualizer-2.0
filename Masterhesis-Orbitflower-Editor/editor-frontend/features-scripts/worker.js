@@ -801,6 +801,8 @@ class SkillTreeComponent {
             ghost.id = "node-drag-ghost";
             const entityName = this.filterId || "All";
             const entityType = this.filterType || "Organization";
+            // make first letter of filterType uppercase
+            this.filterType = this.filterType.charAt(0).toUpperCase() + this.filterType.slice(1);
             ghost.textContent = `${entityType}: ${entityName}\nSkill: ${node.id}`;
 
             Object.assign(ghost.style, {
@@ -861,7 +863,7 @@ class SkillTreeComponent {
               detail: {
                 nodeId: node.id,
                 nodeText: node.name,
-                nodeType: "skill",
+                nodeType: "Skill",
                 entityType: this.filterType || "Organization",
                 entityName: this.filterId || "All",
                 x: up.clientX,

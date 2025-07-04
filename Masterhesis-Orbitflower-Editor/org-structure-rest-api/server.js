@@ -1611,6 +1611,125 @@ app.get("/subjects/byuid/:uid", (req, res) => {
   }
 });
 
+// --- Expression Search Endpoint ---
+app.get('/search', (req, res) => {
+  try {
+    const exprParam = req.query.expression;
+    if (!exprParam) {
+      return res.status(400).json({ error: 'Missing expression parameter' });
+    }
+    let expression;
+    try {
+      expression = JSON.parse(decodeURIComponent(exprParam));
+    } catch (e) {
+      return res.status(400).json({ error: 'Invalid expression format' });
+    }
+    // Read the org XML
+    const doc = readXML();
+    // Helper: get all subjects
+    const allSubjects = select(`//${NS_PREFIX}:organisation/${NS_PREFIX}:subjects/${NS_PREFIX}:subject`, doc);
+    // Helper: get subject by UID
+    const getSubjectByUid = (uid) => allSubjects.find(s => s.getAttribute('uid') === uid);
+    // Helper: get all subject UIDs
+    const allSubjectUids = allSubjects.map(s => s.getAttribute('uid'));
+    // Evaluate the expression (simple AND/OR/NOT/skill/unit/role/subject logic)
+    function evaluatePostfix(postfix) {
+      const stack = [];
+      postfix.forEach(token => {
+        if (!token) return;
+        if (token.type === 'subject') {
+          // Find subject by value (uid or id)
+          const matches = allSubjects.filter(s => s.getAttribute('uid') === token.value || s.getAttribute('id') === token.value);
+          stack.push(new Set(matches.map(s => s.getAttribute('uid'))));
+        } else if (token.type === 'unit') {
+          // Find subjects related to this unit
+          const matches = allSubjects.filter(s => {
+            const rels = select(`${NS_PREFIX}:relation`, s);
+            return rels.some(rel => rel.getAttribute('unit') === token.value);
+          });
+          stack.push(new Set(matches.map(s => s.getAttribute('uid'))));
+        } else if (token.type === 'role') {
+          // Find subjects related to this role
+          const matches = allSubjects.filter(s => {
+            const rels = select(`${NS_PREFIX}:relation`, s);
+            return rels.some(rel => rel.getAttribute('role') === token.value);
+          });
+          stack.push(new Set(matches.map(s => s.getAttribute('uid'))));
+        } else if (token.type === 'skill') {
+          // Find subjects with this skill
+          const matches = allSubjects.filter(s => {
+            const skills = select(`${NS_PREFIX}:skills/${NS_PREFIX}:skill`, s);
+            return skills.some(skill => skill.getAttribute('id') === token.value);
+          });
+          stack.push(new Set(matches.map(s => s.getAttribute('uid'))));
+        } else if (token.type === 'operator') {
+          if (token.value === 'NOT') {
+            const a = stack.pop() || new Set();
+            stack.push(new Set(allSubjectUids.filter(uid => !a.has(uid))));
+          } else if (token.value === 'AND') {
+            const b = stack.pop() || new Set();
+            const a = stack.pop() || new Set();
+            stack.push(new Set([...a].filter(uid => b.has(uid))));
+          } else if (token.value === 'OR') {
+            const b = stack.pop() || new Set();
+            const a = stack.pop() || new Set();
+            stack.push(new Set([...a, ...b]));
+          }
+        }
+      });
+      return stack.pop() || new Set();
+    }
+    // Convert infix to postfix (shunting yard, simplified for AND/OR/NOT)
+    function infixToPostfix(infix) {
+      const output = [];
+      const stack = [];
+      const precedence = { NOT: 3, AND: 2, OR: 1 };
+      for (const token of infix) {
+        if (!token) continue;
+        if (token.type === 'operator') {
+          if (token.value === '(') {
+            stack.push(token);
+          } else if (token.value === ')') {
+            while (stack.length && stack[stack.length - 1].value !== '(') {
+              output.push(stack.pop());
+            }
+            stack.pop();
+          } else {
+            while (
+              stack.length &&
+              stack[stack.length - 1].type === 'operator' &&
+              precedence[stack[stack.length - 1].value] >= precedence[token.value]
+            ) {
+              output.push(stack.pop());
+            }
+            stack.push(token);
+          }
+        } else if (token.type === 'andBlock' && Array.isArray(token.items)) {
+          // Flatten andBlock
+          token.items.forEach((item, idx) => {
+            if (idx > 0 && token.operators && token.operators[idx - 1]) {
+              output.push({ type: 'operator', value: token.operators[idx - 1] });
+            }
+            output.push(item);
+          });
+        } else {
+          output.push(token);
+        }
+      }
+      while (stack.length) output.push(stack.pop());
+      return output;
+    }
+    // Evaluate
+    const postfix = infixToPostfix(expression);
+    const resultSet = evaluatePostfix(postfix);
+    // Return the matching subject UIDs as JSON
+    res.json({ subjectUids: Array.from(resultSet) });
+  } catch (err) {
+    console.error('Error in /search:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log("Server running on port", PORT);
 });
