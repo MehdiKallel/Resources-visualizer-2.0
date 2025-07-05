@@ -679,7 +679,7 @@ class SkillsFeature {
         );
 
         // find entity name and type
-        const entityType = group.id.startsWith("u") ? "Role" : "Unit";
+        const entityType = group.id.startsWith("u") ? "Unit" : "Role";
         const entityName = svg.querySelector(
           `text#${group.id}_text`
         ).textContent;
