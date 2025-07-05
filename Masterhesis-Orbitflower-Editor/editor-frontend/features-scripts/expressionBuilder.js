@@ -1685,57 +1685,66 @@ class ExpressionBuilder {
     return wrapper;
   }
 
-  normalizeBlockOperators() {
-    // Remove ANDs from start and end
-    while (
-      this.currentExpression.length > 0 &&
-      this.currentExpression[0].type === "operator" &&
-      this.currentExpression[0].value === "AND"
-    ) {
-      this.currentExpression.shift();
-    }
-    while (
-      this.currentExpression.length > 0 &&
-      this.currentExpression[this.currentExpression.length - 1].type === "operator" &&
-      this.currentExpression[this.currentExpression.length - 1].value === "AND"
-    ) {
-      this.currentExpression.pop();
+ normalizeBlockOperators() {
+    let changed = true;
+    while (changed) {
+        changed = false;
+
+        while (
+            this.currentExpression.length > 0 &&
+            this.isOperator(this.currentExpression[0]) &&
+            (this.currentExpression[0].value === "AND" || 
+             this.currentExpression[0].value === "OR")
+        ) {
+            this.currentExpression.shift();
+            changed = true;
+        }
+
+        while (
+            this.currentExpression.length > 0 &&
+            this.isOperator(this.currentExpression[this.currentExpression.length - 1]) &&
+            (this.currentExpression[this.currentExpression.length - 1].value === "AND" || 
+             this.currentExpression[this.currentExpression.length - 1].value === "OR")
+        ) {
+            this.currentExpression.pop();
+            changed = true;
+        }
+
+        for (let i = 0; i < this.currentExpression.length - 1; i++) {
+            const current = this.currentExpression[i];
+            const next = this.currentExpression[i + 1];
+
+            if (
+                this.isOperator(current) &&
+                this.isOperator(next) &&
+                (current.value === "AND" || current.value === "OR") &&
+                (next.value === "AND" || next.value === "OR")
+            ) {
+                this.currentExpression.splice(i + 1, 1);
+                changed = true;
+                break; 
+            }
+        }
     }
 
-    // Remove consecutive ANDs
-    for (let i = this.currentExpression.length - 1; i > 0; i--) {
-      const current = this.currentExpression[i];
-      const prev = this.currentExpression[i - 1];
-
-      if (
-        current?.type === "operator" && current.value === "AND" &&
-        prev?.type === "operator" && prev.value === "AND"
-      ) {
-        // Remove one of the consecutive ANDs
-        this.currentExpression.splice(i, 1);
-      }
-    }
-    // Scan for missing ANDs between blocks
     for (let i = 0; i < this.currentExpression.length - 1; i++) {
-      const current = this.currentExpression[i];
-      const next = this.currentExpression[i + 1];
+        const current = this.currentExpression[i];
+        const next = this.currentExpression[i + 1];
 
-      // If we have two consecutive blocks or items without an operator between them
-      if (
-        (!this.isOperator(current) && !this.isOperator(next)) ||
-        (current.type === "andBlock" && next.type === "andBlock")
-      ) {
-        // Insert a flippable AND operator
-        this.currentExpression.splice(i + 1, 0, {
-          type: "operator",
-          value: "AND",
-          displayValue: "AND",
-          flippable: true
-        });
-        i++; // Skip the newly inserted operator
-      }
+        if (
+            (!this.isOperator(current) && !this.isOperator(next)) ||
+            (current.type === "andBlock" && next.type === "andBlock")
+        ) {
+            this.currentExpression.splice(i + 1, 0, {
+                type: "operator",
+                value: "AND",
+                displayValue: "AND",
+                flippable: true
+            });
+            i++; // Skip inserted operator
+        }
     }
-  }
+}
 
   updateExpressionDisplay() {
     const display = document.getElementById("currentExpression");
