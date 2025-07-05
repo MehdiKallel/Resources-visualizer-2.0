@@ -1628,102 +1628,278 @@ app.get('/search', (req, res) => {
     const doc = readXML();
     // Helper: get all subjects
     const allSubjects = select(`//${NS_PREFIX}:organisation/${NS_PREFIX}:subjects/${NS_PREFIX}:subject`, doc);
-    // Helper: get subject by UID
-    const getSubjectByUid = (uid) => allSubjects.find(s => s.getAttribute('uid') === uid);
-    // Helper: get all subject UIDs
     const allSubjectUids = allSubjects.map(s => s.getAttribute('uid'));
-    // Evaluate the expression (simple AND/OR/NOT/skill/unit/role/subject logic)
-    function evaluatePostfix(postfix) {
-      const stack = [];
-      postfix.forEach(token => {
-        if (!token) return;
-        if (token.type === 'subject') {
-          // Find subject by value (uid or id)
-          const matches = allSubjects.filter(s => s.getAttribute('uid') === token.value || s.getAttribute('id') === token.value);
-          stack.push(new Set(matches.map(s => s.getAttribute('uid'))));
-        } else if (token.type === 'unit') {
-          // Find subjects related to this unit
-          const matches = allSubjects.filter(s => {
-            const rels = select(`${NS_PREFIX}:relation`, s);
-            return rels.some(rel => rel.getAttribute('unit') === token.value);
-          });
-          stack.push(new Set(matches.map(s => s.getAttribute('uid'))));
-        } else if (token.type === 'role') {
-          // Find subjects related to this role
-          const matches = allSubjects.filter(s => {
-            const rels = select(`${NS_PREFIX}:relation`, s);
-            return rels.some(rel => rel.getAttribute('role') === token.value);
-          });
-          stack.push(new Set(matches.map(s => s.getAttribute('uid'))));
-        } else if (token.type === 'skill') {
-          // Find subjects with this skill
-          const matches = allSubjects.filter(s => {
-            const skills = select(`${NS_PREFIX}:skills/${NS_PREFIX}:skill`, s);
-            return skills.some(skill => skill.getAttribute('id') === token.value);
-          });
-          stack.push(new Set(matches.map(s => s.getAttribute('uid'))));
-        } else if (token.type === 'operator') {
-          if (token.value === 'NOT') {
-            const a = stack.pop() || new Set();
-            stack.push(new Set(allSubjectUids.filter(uid => !a.has(uid))));
-          } else if (token.value === 'AND') {
-            const b = stack.pop() || new Set();
-            const a = stack.pop() || new Set();
-            stack.push(new Set([...a].filter(uid => b.has(uid))));
-          } else if (token.value === 'OR') {
-            const b = stack.pop() || new Set();
-            const a = stack.pop() || new Set();
-            stack.push(new Set([...a, ...b]));
+
+    // Debug: print the received expression
+    console.log('--- Expression Search Debug ---');
+    console.log('Received expression:', JSON.stringify(expression, null, 2));
+
+    // Helper: parse displayValue for type and ids
+    function parseDisplayValue(displayValue) {
+      // Examples:
+      // Skill: SkillId
+      // Skill: SkillId (unitId)
+      // Skill: SkillId (roleId)
+      // Unit: UnitId
+      // Unit: UnitId (context)
+      // Role: RoleId
+      // Role: RoleId (context)
+      // Subject: SubjectId
+      if (!displayValue || typeof displayValue !== 'string') return null;
+      // Helper to resolve context displayName to ID
+      function resolveContextId(context) {
+        if (!context || typeof context !== 'string') return context;
+        // Role <id> or Role <displayName>
+        const roleDisplayMatch = context.match(/^Role (.+)$/);
+        if (roleDisplayMatch) {
+          const value = roleDisplayMatch[1].trim();
+          // Try by id
+          const roleNodes = select(`//${NS_PREFIX}:organisation/${NS_PREFIX}:roles/${NS_PREFIX}:role`, doc);
+          for (const roleNode of roleNodes) {
+            if (roleNode.getAttribute('id') === value) {
+              return value;
+            }
+          }
+          // Try by displayName
+          for (const roleNode of roleNodes) {
+            const displayNameNode = select(`${NS_PREFIX}:displayName`, roleNode)[0];
+            if (displayNameNode && displayNameNode.textContent.trim() === value) {
+              return roleNode.getAttribute('id');
+            }
           }
         }
-      });
-      return stack.pop() || new Set();
-    }
-    // Convert infix to postfix (shunting yard, simplified for AND/OR/NOT)
-    function infixToPostfix(infix) {
-      const output = [];
-      const stack = [];
-      const precedence = { NOT: 3, AND: 2, OR: 1 };
-      for (const token of infix) {
-        if (!token) continue;
-        if (token.type === 'operator') {
-          if (token.value === '(') {
-            stack.push(token);
-          } else if (token.value === ')') {
-            while (stack.length && stack[stack.length - 1].value !== '(') {
-              output.push(stack.pop());
+        // Unit <id> or Unit <displayName>
+        const unitDisplayMatch = context.match(/^Unit (.+)$/);
+        if (unitDisplayMatch) {
+          const value = unitDisplayMatch[1].trim();
+          // Try by id
+          const unitNodes = select(`//${NS_PREFIX}:organisation/${NS_PREFIX}:units/${NS_PREFIX}:unit`, doc);
+          for (const unitNode of unitNodes) {
+            if (unitNode.getAttribute('id') === value) {
+              return value;
             }
-            stack.pop();
-          } else {
-            while (
-              stack.length &&
-              stack[stack.length - 1].type === 'operator' &&
-              precedence[stack[stack.length - 1].value] >= precedence[token.value]
-            ) {
-              output.push(stack.pop());
-            }
-            stack.push(token);
           }
-        } else if (token.type === 'andBlock' && Array.isArray(token.items)) {
-          // Flatten andBlock
-          token.items.forEach((item, idx) => {
-            if (idx > 0 && token.operators && token.operators[idx - 1]) {
-              output.push({ type: 'operator', value: token.operators[idx - 1] });
+          // Try by displayName
+          for (const unitNode of unitNodes) {
+            const displayNameNode = select(`${NS_PREFIX}:displayName`, unitNode)[0];
+            if (displayNameNode && displayNameNode.textContent.trim() === value) {
+              return unitNode.getAttribute('id');
             }
-            output.push(item);
-          });
-        } else {
-          output.push(token);
+          }
+        }
+        // --- NEW: Try context as a unit or role displayName or id directly ---
+        // Try as unit id
+        const unitNodes = select(`//${NS_PREFIX}:organisation/${NS_PREFIX}:units/${NS_PREFIX}:unit`, doc);
+        for (const unitNode of unitNodes) {
+          if (unitNode.getAttribute('id') === context) {
+            return context;
+          }
+        }
+        // Try as unit displayName
+        for (const unitNode of unitNodes) {
+          const displayNameNode = select(`${NS_PREFIX}:displayName`, unitNode)[0];
+          if (displayNameNode && displayNameNode.textContent.trim() === context) {
+            return unitNode.getAttribute('id');
+          }
+        }
+        // Try as role id
+        const roleNodes = select(`//${NS_PREFIX}:organisation/${NS_PREFIX}:roles/${NS_PREFIX}:role`, doc);
+        for (const roleNode of roleNodes) {
+          if (roleNode.getAttribute('id') === context) {
+            return context;
+          }
+        }
+        // Try as role displayName
+        for (const roleNode of roleNodes) {
+          const displayNameNode = select(`${NS_PREFIX}:displayName`, roleNode)[0];
+          if (displayNameNode && displayNameNode.textContent.trim() === context) {
+            return roleNode.getAttribute('id');
+          }
+        }
+        return context;
+      }
+      const skillMatch = displayValue.match(/^Skill:\s*([^()]+?)(?: \(([^)]+)\))?$/);
+      if (skillMatch) {
+        let context = skillMatch[2] ? skillMatch[2].trim() : undefined;
+        if (context && context.length > 0) {
+          context = resolveContextId(context);
+        }
+        return { type: 'skill', skillId: skillMatch[1].trim(), contextId: context && context.length > 0 ? context : undefined };
+      }
+      const unitMatch = displayValue.match(/^Unit:\s*([^()]+?)(?: \(([^)]+)\))?$/);
+      if (unitMatch) {
+        let context = unitMatch[2] ? unitMatch[2].trim() : undefined;
+        if (context && context.length > 0) {
+          context = resolveContextId(context);
+        }
+        return { type: 'unit', unitId: unitMatch[1].trim(), contextId: context && context.length > 0 ? context : undefined };
+      }
+      const roleMatch = displayValue.match(/^Role:\s*([^()]+?)(?: \(([^)]+)\))?$/);
+      if (roleMatch) {
+        let context = roleMatch[2] ? roleMatch[2].trim() : undefined;
+        if (context && context.length > 0) {
+          context = resolveContextId(context);
+        }
+        return { type: 'role', roleId: roleMatch[1].trim(), contextId: context && context.length > 0 ? context : undefined };
+      }
+      const subjMatch = displayValue.match(/^Subject:\s*([^()]+)$/);
+      if (subjMatch) {
+        return { type: 'subject', subjectId: subjMatch[1].trim() };
+      }
+      return null;
+    }
+
+    // Recursively evaluate the expression array
+    function evalExpr(expr) {
+      if (!Array.isArray(expr)) return new Set();
+      let resultSet = null;
+      let currentOp = null;
+      for (let i = 0; i < expr.length; i++) {
+        const item = expr[i];
+        console.error(`[Block] Processing item ${i}:`, item);
+        if (Array.isArray(item)) {
+          console.log(`[Block] Entering sub-array at index ${i}:`, JSON.stringify(item));
+          const subResult = evalExpr(item);
+          console.log(`[Block] Sub-array result (${JSON.stringify(item)}):`, Array.from(subResult));
+          if (resultSet === null) {
+            resultSet = subResult;
+          } else if (currentOp) {
+            console.log(`[Block] Applying operator '${currentOp}' to block result`);
+            resultSet = applyOp(resultSet, subResult, currentOp);
+            currentOp = null;
+          }
+        } else if (item.operator) {
+          currentOp = item.operator;
+          console.log(`[Operator] Set current operator: ${currentOp}`);
+        } else if (item.displayValue) {
+          const parsed = parseDisplayValue(item.displayValue);
+          let matchSet = new Set();
+          console.log(`[Parse] Parsed displayValue '${item.displayValue}':`, parsed);
+          if (!parsed) {
+            console.log(`[Parse] Could not parse displayValue: ${item.displayValue}`);
+          } else if (parsed.type === 'skill' && !parsed.contextId) {
+            // Skill: SkillId
+            const matches = allSubjects.filter(s => {
+              const skills = select(`${NS_PREFIX}:subjectSkills/${NS_PREFIX}:ref`, s);
+              const hasSkill = skills.some(skill => skill.getAttribute('id') === parsed.skillId);
+              if (hasSkill) {
+                console.log(`[Skill] Subject ${s.getAttribute('uid')} has skill ${parsed.skillId}`);
+              }
+              return hasSkill;
+            });
+            matchSet = new Set(matches.map(s => s.getAttribute('uid')));
+            console.log(`[Skill] SkillId=${parsed.skillId} =>`, Array.from(matchSet));
+          } else if (parsed.type === 'skill' && parsed.contextId) {
+            // Check if contextId is a valid unit or role
+            const isUnit = select(`//${NS_PREFIX}:organisation/${NS_PREFIX}:units/${NS_PREFIX}:unit[@id='${parsed.contextId}']`, doc).length > 0;
+            const isRole = select(`//${NS_PREFIX}:organisation/${NS_PREFIX}:roles/${NS_PREFIX}:role[@id='${parsed.contextId}']`, doc).length > 0;
+            if (!isUnit && !isRole) {
+              console.log(`[Skill+Context] ContextId '${parsed.contextId}' is not a valid unit or role. Treating as Skill only.`);
+              const matches = allSubjects.filter(s => {
+                const skills = select(`${NS_PREFIX}:subjectSkills/${NS_PREFIX}:ref`, s);
+                const hasSkill = skills.some(skill => skill.getAttribute('id') === parsed.skillId);
+                if (hasSkill) {
+                  console.log(`[Skill] Subject ${s.getAttribute('uid')} has skill ${parsed.skillId}`);
+                }
+                return hasSkill;
+              });
+              matchSet = new Set(matches.map(s => s.getAttribute('uid')));
+              console.log(`[Skill] SkillId=${parsed.skillId} =>`, Array.from(matchSet));
+            } else {
+              // Skill: SkillId (unit or role Id) -- must have BOTH the skill and a relation with the context as role or unit
+              const matches = allSubjects.filter(s => {
+                const hasSkill = select(`${NS_PREFIX}:subjectSkills/${NS_PREFIX}:ref[@id='${parsed.skillId}']`, s).length > 0;
+                if (!hasSkill) {
+                  console.log(`[Skill+Context] Subject ${s.getAttribute('uid')} does NOT have skill ${parsed.skillId}`);
+                  return false;
+                }
+                const rels = select(`${NS_PREFIX}:relation`, s);
+                const hasRelation = rels.some(rel => rel.getAttribute('unit') === parsed.contextId || rel.getAttribute('role') === parsed.contextId);
+                if (hasRelation) {
+                  console.log(`[Skill+Context] Subject ${s.getAttribute('uid')} has skill ${parsed.skillId} AND relation with context ${parsed.contextId}`);
+                } else {
+                  console.log(`[Skill+Context] Subject ${s.getAttribute('uid')} has skill ${parsed.skillId} but NO relation with context ${parsed.contextId}`);
+                }
+                return hasRelation;
+              });
+              matchSet = new Set(matches.map(s => s.getAttribute('uid')));
+              console.log(`[Skill+Context] SkillId=${parsed.skillId}, ContextId=${parsed.contextId} =>`, Array.from(matchSet));
+            }
+          } else if (parsed.type === 'unit') {
+            // Unit: UnitId
+            const matches = allSubjects.filter(s => {
+              const rels = select(`${NS_PREFIX}:relation`, s);
+              const hasUnit = rels.some(rel => rel.getAttribute('unit') === parsed.unitId);
+              if (hasUnit) {
+                console.log(`[Unit] Subject ${s.getAttribute('uid')} has unit ${parsed.unitId}`);
+              }
+              return hasUnit;
+            });
+            matchSet = new Set(matches.map(s => s.getAttribute('uid')));
+            console.log(`[Unit] UnitId=${parsed.unitId} =>`, Array.from(matchSet));
+          } else if (parsed.type === 'role') {
+            // Role: RoleId
+            const matches = allSubjects.filter(s => {
+              const rels = select(`${NS_PREFIX}:relation`, s);
+              const hasRole = rels.some(rel => rel.getAttribute('role') === parsed.roleId);
+              if (hasRole) {
+                console.log(`[Role] Subject ${s.getAttribute('uid')} has role ${parsed.roleId}`);
+              }
+              return hasRole;
+            });
+            matchSet = new Set(matches.map(s => s.getAttribute('uid')));
+            console.log(`[Role] RoleId=${parsed.roleId} =>`, Array.from(matchSet));
+          } else if (parsed.type === 'subject') {
+            // Subject: SubjectId
+            const matches = allSubjects.filter(s => s.getAttribute('id') === parsed.subjectId || s.getAttribute('uid') === parsed.subjectId);
+            if (matches.length > 0) {
+              console.log(`[Subject] Found subject(s) for id/uid ${parsed.subjectId}:`, matches.map(s => s.getAttribute('uid')));
+            } else {
+              console.log(`[Subject] No subject found for id/uid ${parsed.subjectId}`);
+            }
+            matchSet = new Set(matches.map(s => s.getAttribute('uid')));
+            console.log(`[Subject] SubjectId=${parsed.subjectId} =>`, Array.from(matchSet));
+          }
+          if (resultSet === null) {
+            resultSet = matchSet;
+          } else if (currentOp) {
+            console.log(`[ApplyOp] Applying operator '${currentOp}' to sets:`, Array.from(resultSet), 'and', Array.from(matchSet));
+            resultSet = applyOp(resultSet, matchSet, currentOp);
+            currentOp = null;
+          }
         }
       }
-      while (stack.length) output.push(stack.pop());
-      return output;
+      return resultSet || new Set();
     }
-    // Evaluate
-    const postfix = infixToPostfix(expression);
-    const resultSet = evaluatePostfix(postfix);
-    // Return the matching subject UIDs as JSON
-    res.json({ subjectUids: Array.from(resultSet) });
+
+    // Apply logical operator
+    function applyOp(setA, setB, op) {
+      if (!setA) return setB;
+      if (!setB) return setA;
+      let result;
+      if (op === 'AND') {
+        result = new Set([...setA].filter(x => setB.has(x)));
+        console.log(`[AND]`, Array.from(setA), 'AND', Array.from(setB), '=', Array.from(result));
+      } else if (op === 'OR') {
+        result = new Set([...setA, ...setB]);
+        console.log(`[OR]`, Array.from(setA), 'OR', Array.from(setB), '=', Array.from(result));
+      } else if (op === 'NOT') {
+        result = new Set([...setA].filter(x => !setB.has(x)));
+        console.log(`[NOT]`, Array.from(setA), 'NOT', Array.from(setB), '=', Array.from(result));
+      } else {
+        result = setA;
+      }
+      return result;
+    }
+
+    // Evaluate the expression
+    const resultSet = evalExpr(expression);
+    const resultArr = Array.from(resultSet);
+    // Debug: print the final result
+    console.log('Final subjectUids:', resultArr);
+    // Compose a result URL (for example, a link to a filtered view)
+    const resultUrl = `/subjects?uids=${encodeURIComponent(resultArr.join(','))}`;
+    res.json({ subjectUids: resultArr, resultUrl });
   } catch (err) {
     console.error('Error in /search:', err);
     res.status(500).json({ error: 'Internal server error' });
