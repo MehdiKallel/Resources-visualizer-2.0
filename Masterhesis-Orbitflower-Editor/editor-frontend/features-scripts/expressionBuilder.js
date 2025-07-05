@@ -953,7 +953,28 @@ class ExpressionBuilder {
       alert("The expression is invalid. Please check your expression structure.");
       return;
     }
-    const expr = this.getSerializableState().currentExpression;
+    // Build a structured array: blocks as sub-arrays, include operators, only displayValue
+    const serializeExpr = (exprArr) => {
+      return exprArr.map(item => {
+        if (item.type === "andBlock" && Array.isArray(item.items)) {
+          // Block: array of displayValues and operators
+          const blockArr = [];
+          item.items.forEach((subItem, idx) => {
+            blockArr.push({ displayValue: subItem.displayValue });
+            if (item.operators && idx < item.operators.length) {
+              blockArr.push({ operator: item.operators[idx] });
+            }
+          });
+          return blockArr;
+        } else if (item.type === "operator") {
+          return { operator: item.value };
+        } else {
+          return { displayValue: item.displayValue };
+        }
+      });
+    };
+    const expr = serializeExpr(this.currentExpression);
+    console.log("Structured expression array sent to server:", expr);
     const exprStr = encodeURIComponent(JSON.stringify(expr));
     const url = `${this.apiBaseUrl}/search?expression=${exprStr}`;
     const searchUrlContainer = document.getElementById("searchUrlContainer");
