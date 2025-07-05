@@ -194,7 +194,6 @@ function initializeZooming() {
     switch(e.key) {
       case '0':
       case 'r':
-        resetView();
         e.preventDefault();
         break;
     }
