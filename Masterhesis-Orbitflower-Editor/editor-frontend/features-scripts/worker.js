@@ -735,6 +735,7 @@ class SkillTreeComponent {
       group.setAttribute("data-skill-id", node.id || "");
       group.setAttribute("data-node-type", "skill");
       group.setAttribute("draggable", node.id !== "root"); // Root not draggable
+      group.style.cursor = "pointer"; // <-- Set cursor to pointer for the group
       group.addEventListener("dragstart", (e) => {
         if (node.id === "root") {
           e.preventDefault();
@@ -762,6 +763,8 @@ class SkillTreeComponent {
         radius = this.filterType === "subject" ? radius * 2 : radius * 4;
       }
       circle.setAttribute("r", radius);
+      circle.setAttribute("cursor", "pointer");
+      // set pointer to cursor to pointer for the circle
       if (node.id === "root") {
         circle.setAttribute("stroke-width", "1.5");
         if (this.filterType === "unit") {
