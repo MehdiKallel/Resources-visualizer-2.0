@@ -26,7 +26,7 @@ function isolateTargetGraphNode(nodeId, sourceContainer, targetContainer) {
   // Update current node ID
   _isolationState.currentNodeId = nodeId;
 
-  const targetSvg = document.querySelector(`svg[id="svg"]`);
+  const targetSvg = document.querySelector(`svg[id="main-svg"]`);
   const children = targetSvg.children;
   let tooltipContainer = svgElement.querySelector(".skill-tooltip-container");
 
