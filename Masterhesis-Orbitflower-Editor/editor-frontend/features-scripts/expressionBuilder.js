@@ -1,4 +1,3 @@
-const { text } = require("express");
 
 class ExpressionBuilder {
   constructor(containerId) {
@@ -166,12 +165,26 @@ class ExpressionBuilder {
           // iterate over all paths and find the one with the same pathId
         } else if (it.type === "Unit" || it.type === "Role") {
           const element = document.getElementById(it.value);
-          console.error(it);
           const displayValueParts = it.displayValue.split(" ");
           const displayValue = displayValueParts[1];
-          console.error(displayValue, "test")
-          // look for text element with text content equals to displayValue
-          const targetElement = document.querySelectorAll('textContent' === displayValue)
+          // fetch all text elements in the SVG
+          const textElements = document.querySelectorAll("text");
+          textElements.forEach((textElement) => {
+            // check that text element has id attribute and text content equal to displayValue
+            if (textElement.id && textElement.textContent === displayValue) {
+              const targetId = textElement.id;
+              // separate the id by _
+              
+              const idParts = targetId.split("_");
+              const nodeId = idParts[0];
+              // look for g with id nodeId
+              const targetGroup = document.getElementById(nodeId);
+              if (targetGroup) {
+                targetGroup.classList.add("expr-highlight");
+              }
+            }
+          });
+
         }
       });
     });
