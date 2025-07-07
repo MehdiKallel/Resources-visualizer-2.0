@@ -95,6 +95,7 @@
           skillsFeature = new SkillsFeature($("svg"), currentorgmodel);
           skillsFeature.initialize();
         }
+        $(".skill-gauge").addClass("hidden");
       });
 
       const skillMap = new Map();
@@ -641,8 +642,11 @@
         viz.show(clonedModel);
         skillsFeature = new SkillsFeature($("svg"), clonedModel);
         skillsFeature.initialize();
+                                $(".skill-gauge").removeClass("hidden");
+
         updateSubjectGaugesForSkill(targetSkillId);
         expressionBuilder.highlightGraph()
+
 
       });
 
