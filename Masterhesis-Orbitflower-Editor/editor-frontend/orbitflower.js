@@ -463,7 +463,7 @@ var doc = null;
         <td style="width: 24px; text-align: center; vertical-align: middle; padding: 4px 8px 4px 4px;">${svgMarkup}</td>
         <td class="labeltext" onclick="openSubjectEditor('${u.uid}')" style="text-align: left; padding: 4px 12px; vertical-align: middle; cursor: pointer">${u.shortid}</td>                  <td style="width: 80px; text-align: right; vertical-align: middle; padding: 4px 4px;">
           <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
-            <div class="skill-gauge" 
+            <div class="skill-gauge hidden" 
                 style="position: relative; width: 60px; height: 4px; flex-shrink: 0; background: #f3f4f6; border-radius: 2px; overflow: hidden;" 
                 title="${pct}%">
               <div class="gauge-bar" data-level="${level}" style="position: absolute; top: 0; left: 0; height: 100%; width: ${pct}%; 
