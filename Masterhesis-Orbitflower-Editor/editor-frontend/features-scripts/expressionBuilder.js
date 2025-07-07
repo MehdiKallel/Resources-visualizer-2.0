@@ -1,3 +1,5 @@
+const { text } = require("express");
+
 class ExpressionBuilder {
   constructor(containerId) {
     this.containerId = containerId;
@@ -164,10 +166,12 @@ class ExpressionBuilder {
           // iterate over all paths and find the one with the same pathId
         } else if (it.type === "Unit" || it.type === "Role") {
           const element = document.getElementById(it.value);
-
-          if (element) {
-            element.classList.add("expr-highlight");
-          }
+          console.error(it);
+          const displayValueParts = it.displayValue.split(" ");
+          const displayValue = displayValueParts[1];
+          console.error(displayValue, "test")
+          // look for text element with text content equals to displayValue
+          const targetElement = document.querySelectorAll('textContent' === displayValue)
         }
       });
     });
