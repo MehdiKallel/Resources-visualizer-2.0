@@ -89,6 +89,7 @@ var doc = null;
       mainSVG.appendChild(container);
     }
     createBackButton(svg) {
+      console.error("yeeees")
       // Remove any existing back button
       const existingButton = document.getElementById("skills-back-button");
       if (existingButton) {
@@ -477,6 +478,9 @@ var doc = null;
     // create and show a brand-new SkillTreeComponent right here:
     (()=>{
       const container = document.getElementById('detailed-graph-skills');
+      const graphSvg = document.querySelector('#graph svg');
+      const orbitFlower = new OrbitFlower(graphSvg);
+      orbitFlower.createBackButton(graphSvg);
       const g = new SkillTreeComponent({ container });
       g.reset('#detailed-graph-skills');
       g.show(currentorgmodel, 'subject', '${u.uid}', null);
@@ -939,6 +943,10 @@ var doc = null;
             workerGraph.reset('#detailed-graph-skills');
             workerGraph.show(currentorgmodel, nodeType, nodeText, null);
             isolateTargetGraphNode(nodeId, 'main-svg', 'main-svg');
+
+            // dispatch custom event for double-click
+            window.dispatchEvent(new CustomEvent("nodedoubleclick"));
+            
           });
 
         });
