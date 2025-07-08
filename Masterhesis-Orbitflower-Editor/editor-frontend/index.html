@@ -648,7 +648,8 @@
       });
 
       // listened for dispatched event doubleclick
-      document.addEventListener("nodedoubleclick", function (event) {
+      window.addEventListener("nodedoubleclick", function (event) {
+        console.error("I heard that there was a double click event");
         expressionBuilder.highlightGraph();
       });
           let lastClickedSkill = null;
