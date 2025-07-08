@@ -113,6 +113,7 @@ class ExpressionBuilder {
   }
 
   highlightGraph() {
+    console.error("yess")
     document.querySelectorAll(".expr-highlight").forEach((el) => {
       el.classList.remove("expr-highlight");
     });
@@ -123,7 +124,7 @@ class ExpressionBuilder {
         blockOrItem.type === "andBlock" ? blockOrItem.items : [blockOrItem];
 
       items.forEach((it) => {
-        console.error(it.type)
+        console.error(it)
         if (it.type === "subject") {
           let subject = null;
           document.querySelectorAll("td.labeltext").forEach((element) => {
@@ -162,22 +163,15 @@ class ExpressionBuilder {
           if (skillItem) {
             skillItem.classList.add("expr-highlight");
           }
-          // iterate over all paths and find the one with the same pathId
         } else if (it.type === "Unit" || it.type === "Role") {
-          const element = document.getElementById(it.value);
           const displayValueParts = it.displayValue.split(" ");
           const displayValue = displayValueParts[1];
-          // fetch all text elements in the SVG
           const textElements = document.querySelectorAll("text");
           textElements.forEach((textElement) => {
-            // check that text element has id attribute and text content equal to displayValue
             if (textElement.id && textElement.textContent === displayValue) {
-              const targetId = textElement.id;
-              // separate the id by _
-              
+              const targetId = textElement.id;              
               const idParts = targetId.split("_");
               const nodeId = idParts[0];
-              // look for g with id nodeId
               const targetGroup = document.getElementById(nodeId);
               if (targetGroup) {
                 targetGroup.classList.add("expr-highlight");
@@ -185,6 +179,14 @@ class ExpressionBuilder {
             }
           });
 
+        } else if (it.entityType && it.entityId && (it.type === "Skill")) {
+          // look for g with class node and skill-id Typescript
+          const skillGroups = document.querySelectorAll(
+            `g.node[data-skill-id="${it.value}"]`
+          );
+          skillGroups.forEach((group) => {
+            group.classList.add("expr-highlight");
+          });
         }
       });
     });
@@ -746,7 +748,7 @@ class ExpressionBuilder {
 
     // Add explanation text for threshold slider
     const sliderExplanation = document.createElement("small");
-    sliderExplanation.textContent = "Adjust similarity threshold between skills (higher = more strict matching)";
+    //sliderExplanation.textContent = "Adjust similarity threshold between skills (higher = more strict matching)";
     sliderExplanation.style.color = "#666";
     sliderExplanation.style.display = "block";
     sliderExplanation.style.marginBottom = "5px";
@@ -773,8 +775,7 @@ class ExpressionBuilder {
       thresholdLabel.textContent = `${this.similarityThreshold}%`;
     };
 
-    sliderContainer.appendChild(thresholdSlider);
-    sliderContainer.appendChild(thresholdLabel);
+
     buttonsContainer.appendChild(sliderContainer);
 
     const savedExpressionsContainer = document.createElement("div");
@@ -1804,7 +1805,6 @@ class ExpressionBuilder {
       display.textContent = "Click on elements to build expression";
     }
 
-    // Apply highlighting to the graph based on current expression
     this.highlightGraph();
 
     this.notifyChange();
