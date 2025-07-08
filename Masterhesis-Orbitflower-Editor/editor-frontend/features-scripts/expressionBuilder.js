@@ -113,7 +113,7 @@ class ExpressionBuilder {
   }
 
   highlightGraph() {
-    console.error("yess")
+    console.error("we are calling highlight graph yesss nice")
     document.querySelectorAll(".expr-highlight").forEach((el) => {
       el.classList.remove("expr-highlight");
     });
@@ -124,7 +124,7 @@ class ExpressionBuilder {
         blockOrItem.type === "andBlock" ? blockOrItem.items : [blockOrItem];
 
       items.forEach((it) => {
-        console.error(it)
+        console.error("highlighting item", it);
         if (it.type === "subject") {
           let subject = null;
           document.querySelectorAll("td.labeltext").forEach((element) => {
@@ -169,7 +169,7 @@ class ExpressionBuilder {
           const textElements = document.querySelectorAll("text");
           textElements.forEach((textElement) => {
             if (textElement.id && textElement.textContent === displayValue) {
-              const targetId = textElement.id;              
+              const targetId = textElement.id;
               const idParts = targetId.split("_");
               const nodeId = idParts[0];
               const targetGroup = document.getElementById(nodeId);
@@ -179,8 +179,30 @@ class ExpressionBuilder {
             }
           });
 
-        } else if (it.entityType && it.entityId && (it.type === "Skill")) {
-          // look for g with class node and skill-id Typescript
+        } else if ((it.type === "Skill") && (it.entityType === "Subject")) {
+          // look for text with text with class node-label
+          const textElements = document.querySelectorAll("text.node-label");
+          console.error("length of results", textElements.length);
+          textElements.forEach((textElement) => {
+            console.error("comparing", it.entityId, textElement.textContent, it.entityId == textElement.textContent);
+            // remove spacing fromtextelement.textContent and it.entityId
+            if (textElement.textContent.trim() === it.entityId.trim()) {
+              console.error("we are inside the target statement")
+              const skillGroups = document.querySelectorAll(
+                `g.node[data-skill-id="${it.value}"]`
+              );
+              console.error("skillGroups", skillGroups);
+              skillGroups.forEach((group) => {
+                group.classList.add("expr-highlight");
+              });
+              // exit loop
+              return;
+            }
+          });
+
+        }
+
+        else if (it.entityType && it.entityId && (it.type === "Skill")) {
           const skillGroups = document.querySelectorAll(
             `g.node[data-skill-id="${it.value}"]`
           );
@@ -392,7 +414,7 @@ class ExpressionBuilder {
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
 
-      // Check if we have JSON data being dragged
+      // Check if we have JSON data being draggweed
       const hasJsonData = e.dataTransfer.types.includes('application/json');
 
       // If it's a dragged circle or other element with JSON data
@@ -1703,66 +1725,66 @@ class ExpressionBuilder {
     return wrapper;
   }
 
- normalizeBlockOperators() {
+  normalizeBlockOperators() {
     let changed = true;
     while (changed) {
-        changed = false;
+      changed = false;
 
-        while (
-            this.currentExpression.length > 0 &&
-            this.isOperator(this.currentExpression[0]) &&
-            (this.currentExpression[0].value === "AND" || 
-             this.currentExpression[0].value === "OR")
-        ) {
-            this.currentExpression.shift();
-            changed = true;
-        }
+      while (
+        this.currentExpression.length > 0 &&
+        this.isOperator(this.currentExpression[0]) &&
+        (this.currentExpression[0].value === "AND" ||
+          this.currentExpression[0].value === "OR")
+      ) {
+        this.currentExpression.shift();
+        changed = true;
+      }
 
-        while (
-            this.currentExpression.length > 0 &&
-            this.isOperator(this.currentExpression[this.currentExpression.length - 1]) &&
-            (this.currentExpression[this.currentExpression.length - 1].value === "AND" || 
-             this.currentExpression[this.currentExpression.length - 1].value === "OR")
-        ) {
-            this.currentExpression.pop();
-            changed = true;
-        }
+      while (
+        this.currentExpression.length > 0 &&
+        this.isOperator(this.currentExpression[this.currentExpression.length - 1]) &&
+        (this.currentExpression[this.currentExpression.length - 1].value === "AND" ||
+          this.currentExpression[this.currentExpression.length - 1].value === "OR")
+      ) {
+        this.currentExpression.pop();
+        changed = true;
+      }
 
-        for (let i = 0; i < this.currentExpression.length - 1; i++) {
-            const current = this.currentExpression[i];
-            const next = this.currentExpression[i + 1];
-
-            if (
-                this.isOperator(current) &&
-                this.isOperator(next) &&
-                (current.value === "AND" || current.value === "OR") &&
-                (next.value === "AND" || next.value === "OR")
-            ) {
-                this.currentExpression.splice(i + 1, 1);
-                changed = true;
-                break; 
-            }
-        }
-    }
-
-    for (let i = 0; i < this.currentExpression.length - 1; i++) {
+      for (let i = 0; i < this.currentExpression.length - 1; i++) {
         const current = this.currentExpression[i];
         const next = this.currentExpression[i + 1];
 
         if (
-            (!this.isOperator(current) && !this.isOperator(next)) ||
-            (current.type === "andBlock" && next.type === "andBlock")
+          this.isOperator(current) &&
+          this.isOperator(next) &&
+          (current.value === "AND" || current.value === "OR") &&
+          (next.value === "AND" || next.value === "OR")
         ) {
-            this.currentExpression.splice(i + 1, 0, {
-                type: "operator",
-                value: "AND",
-                displayValue: "AND",
-                flippable: true
-            });
-            i++; // Skip inserted operator
+          this.currentExpression.splice(i + 1, 1);
+          changed = true;
+          break;
         }
+      }
     }
-}
+
+    for (let i = 0; i < this.currentExpression.length - 1; i++) {
+      const current = this.currentExpression[i];
+      const next = this.currentExpression[i + 1];
+
+      if (
+        (!this.isOperator(current) && !this.isOperator(next)) ||
+        (current.type === "andBlock" && next.type === "andBlock")
+      ) {
+        this.currentExpression.splice(i + 1, 0, {
+          type: "operator",
+          value: "AND",
+          displayValue: "AND",
+          flippable: true
+        });
+        i++; // Skip inserted operator
+      }
+    }
+  }
 
   updateExpressionDisplay() {
     const display = document.getElementById("currentExpression");
