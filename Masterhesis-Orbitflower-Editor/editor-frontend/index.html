@@ -554,7 +554,6 @@
             }
           });
 
-        // find g with class node and which has child text with content equal to targetSkillId
         $("#testing-svg")
           .find("g.node")
           .each(function () {
@@ -590,14 +589,12 @@
         $(
           `#details-skills .skill-item[data-skill-id="${targetSkillId}"]`
         ).addClass("selected");
-        // adding active class to related skills
         allRelatedSkills.forEach((skillId) => {
           $(
             `#details-skills .skill-item[data-skill-id="${skillId}"]`
           ).addClass("active");
         });
 
-        // Remove subjects that don't have any of the related skills
         $(clonedModel)
           .find("subject")
           .each(function () {
@@ -650,6 +647,10 @@
 
       });
 
+      // listened for dispatched event doubleclick
+      document.addEventListener("nodedoubleclick", function (event) {
+        expressionBuilder.highlightGraph();
+      });
           let lastClickedSkill = null;
     let isFiltered = false;
      $(document).on("click", "#detailed-graph-skills", function (e) {
