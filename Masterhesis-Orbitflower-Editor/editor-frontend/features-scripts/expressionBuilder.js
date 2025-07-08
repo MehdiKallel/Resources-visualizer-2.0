@@ -1,4 +1,3 @@
-
 class ExpressionBuilder {
   constructor(containerId) {
     this.containerId = containerId;
@@ -993,14 +992,17 @@ class ExpressionBuilder {
       alert("The expression is invalid. Please check your expression structure.");
       return;
     }
-    // Build a structured array: blocks as sub-arrays, include operators, only displayValue
+    // Build a structured array: blocks as sub-arrays, include operators, and include negated property
     const serializeExpr = (exprArr) => {
       return exprArr.map(item => {
         if (item.type === "andBlock" && Array.isArray(item.items)) {
           // Block: array of displayValues and operators
           const blockArr = [];
           item.items.forEach((subItem, idx) => {
-            blockArr.push({ displayValue: subItem.displayValue });
+            // Include negated property if present
+            const obj = { displayValue: subItem.displayValue };
+            if (subItem.negated) obj.negated = true;
+            blockArr.push(obj);
             if (item.operators && idx < item.operators.length) {
               blockArr.push({ operator: item.operators[idx] });
             }
@@ -1009,7 +1011,10 @@ class ExpressionBuilder {
         } else if (item.type === "operator") {
           return { operator: item.value };
         } else {
-          return { displayValue: item.displayValue };
+          // Include negated property if present
+          const obj = { displayValue: item.displayValue };
+          if (item.negated) obj.negated = true;
+          return obj;
         }
       });
     };
@@ -1629,12 +1634,7 @@ class ExpressionBuilder {
   }
 
   createExpressionElement(item, index) {
-    if (!item) {
-      console.warn(
-        `Attempted to create expression element with undefined item at index ${index}`
-      );
-      return document.createElement("div"); // Return empty div to avoid errors
-    }
+    if (!item) return;
 
     const wrapper = document.createElement("div");
     wrapper.className = `expr-item ${item.type}`;
@@ -1668,7 +1668,6 @@ class ExpressionBuilder {
       wrapper.title = "Double-click to toggle AND/OR";
       wrapper.addEventListener("dblclick", () => {
         this.flipOperator(index);
-
         // Add animation class with operator-specific animation
         wrapper.classList.add("flipping");
         setTimeout(() => wrapper.classList.remove("flipping"), 600);
@@ -1678,15 +1677,10 @@ class ExpressionBuilder {
       wrapper.title = "Double-click to toggle NOT";
       wrapper.addEventListener("dblclick", () => {
         this.saveExpressionState();
-
-        // Toggle negation
-        this.currentExpression[index].negated =
-          !this.currentExpression[index].negated;
-
+        this.currentExpression[index].negated = !this.currentExpression[index].negated;
         // Add animation class with 3D flip effect
         textSpan.classList.add("flipping");
         setTimeout(() => textSpan.classList.remove("flipping"), 600);
-
         this.updateExpressionDisplay();
       });
     }
@@ -1712,7 +1706,6 @@ class ExpressionBuilder {
 
     wrapper.addEventListener("dragend", (e) => {
       wrapper.classList.remove("dragging");
-
       // Remove drop indicator if exists
       const dropIndicator = document.getElementById("drop-indicator");
       if (dropIndicator) {

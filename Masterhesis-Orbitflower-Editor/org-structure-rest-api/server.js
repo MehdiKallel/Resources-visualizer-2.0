@@ -1860,6 +1860,13 @@ app.get('/search', (req, res) => {
             matchSet = new Set(matches.map(s => s.getAttribute('uid')));
             console.log(`[Subject] SubjectId=${parsed.subjectId} =>`, Array.from(matchSet));
           }
+          // --- NEGATION SUPPORT ---
+          if (item.negated) {
+            // Invert the matchSet: all subjects except those in matchSet
+            const allUids = new Set(allSubjects.map(s => s.getAttribute('uid')));
+            matchSet = new Set([...allUids].filter(uid => !matchSet.has(uid)));
+            console.log(`[Negation] Negated result for item:`, Array.from(matchSet));
+          }
           if (resultSet === null) {
             resultSet = matchSet;
           } else if (currentOp) {
