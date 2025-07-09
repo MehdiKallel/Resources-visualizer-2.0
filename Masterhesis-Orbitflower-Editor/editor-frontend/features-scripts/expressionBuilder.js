@@ -166,14 +166,14 @@ class ExpressionBuilder {
           const displayValueParts = it.displayValue.split(" ");
           console.error("displayValueParts", displayValueParts);
           let displayValue = displayValueParts[1];
-                     for (let i = 2; i < displayValueParts.length; i++) {
-              if (displayValueParts[i] === "(Org" ) {
-                break;
-              }
-            if ((displayValueParts[i] !== "(Org") && (displayValueParts[i+1] !== "All)")) {
+          for (let i = 2; i < displayValueParts.length; i++) {
+            if (displayValueParts[i] === "(Org") {
+              break;
+            }
+            if ((displayValueParts[i] !== "(Org") && (displayValueParts[i + 1] !== "All)")) {
               displayValue += ` ${displayValueParts[i]}`;
             }
-            }
+          }
           console.error("displayValue", displayValue);
           const textElements = document.querySelectorAll("text");
           textElements.forEach((textElement) => {
@@ -865,7 +865,7 @@ class ExpressionBuilder {
 
     searchUrlContainer.appendChild(searchUrlLabel);
     searchUrlContainer.appendChild(searchUrlField);
-    searchUrlContainer.appendChild(openUrlBtn);
+    // searchUrlContainer.appendChild(openUrlBtn);
 
     // Append the content elements into the content container.
     contentContainer.appendChild(expressionDisplay);
