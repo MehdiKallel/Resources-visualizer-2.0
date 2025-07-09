@@ -52,6 +52,41 @@
     var relatedText;
     let activeSkillSegments = {};
 
+    function getAllRelatedSkills(skillId) {
+      const skills = new Set();
+      const visited = new Set();
+
+      function traverse(currentSkillId) {
+        if (visited.has(currentSkillId)) return;
+        visited.add(currentSkillId);
+        skills.add(currentSkillId);
+
+        $(
+          `skill[id="${currentSkillId}"] relation[type="Parent"]`,
+          currentorgmodel
+        ).each(function () {
+          const parentId = $(this).attr("id");
+          if (parentId && !visited.has(parentId)) {
+            traverse(parentId);
+          }
+        });
+
+        $(
+          `skill relation[type="Child"][id="${currentSkillId}"]`,
+          currentorgmodel
+        ).each(function () {
+          const parentSkillId = $(this).closest("skill").attr("id");
+          if (parentSkillId && !visited.has(parentSkillId)) {
+            traverse(parentSkillId);
+          }
+        });
+      }
+
+      traverse(skillId);
+
+      return Array.from(skills);
+    }
+
     function getSkills(who) {
       let skills = $(
         "subject[uid=" + who + "] subjectSkills ref",
@@ -72,15 +107,29 @@
       let skillsContainer = $("#details-skills");
       skillsContainer.empty();
 
+      // Calculate total subjects count
+      const totalSubjects = $("subject", currentorgmodel).length;
+
       const allSkillsBtn = $(`
           <div id="all-skills-btn" class="skill-item" style="
             margin-left: 0px;
             border-left: 3px solid #4CAF50;
             padding: 5px;
+            padding-right: 50px;
             cursor: pointer;
             font-weight: bold;
             background-color: #f5f5f5;">
-            All Skills
+            <span>All Skills</span>
+            <span class="subject-count" style="
+              font-size: 11px;
+              color: #666;
+              background: #e0e0e0;
+              padding: 2px 6px;
+              border-radius: 10px;
+              min-width: 20px;
+              text-align: center;
+              font-weight: 500;
+            ">${totalSubjects}</span>
           </div>
         `);
 
@@ -122,14 +171,41 @@
       function renderSkill(skillId, level = 0) {
         const skillData = skillMap.get(skillId);
         const color = window.getSkillIdColor(skillId);
+        
+        // Count subjects with this skill and all related skills
+        const relatedSkills = getAllRelatedSkills(skillId);
+        let subjectCount = 0;
+        
+        // Count unique subjects who have any of the related skills
+        const uniqueSubjects = new Set();
+        relatedSkills.forEach(relatedSkillId => {
+          $(`subject subjectSkills ref[id="${relatedSkillId}"]`, currentorgmodel).each(function() {
+            const subjectUid = $(this).closest('subject').attr('uid');
+            if (subjectUid) {
+              uniqueSubjects.add(subjectUid);
+            }
+          });
+        });
+        subjectCount = uniqueSubjects.size;
 
         const skillElem = $(`
          <div class="skill-item" data-skill-id="${skillId}" 
                style="margin-left: ${level * 20}px; 
                      border-left: 3px solid ${color};
-                     padding: 5px;"
+                     padding: 5px;
+                     padding-right: 50px;"
                      draggable="false">
-           ${skillId}
+           <span>${skillId}</span>
+           <span class="subject-count" style="
+             font-size: 11px;
+             color: #666;
+             background: #f0f0f0;
+             padding: 2px 6px;
+             border-radius: 10px;
+             min-width: 20px;
+             text-align: center;
+             font-weight: 500;
+           ">${subjectCount}</span>
          </div>
          `);
 
@@ -500,40 +576,6 @@
 
 
 
-      function getAllRelatedSkills(skillId) {
-        const skills = new Set();
-        const visited = new Set();
-
-        function traverse(currentSkillId) {
-          if (visited.has(currentSkillId)) return;
-          visited.add(currentSkillId);
-          skills.add(currentSkillId);
-
-          $(
-            `skill[id="${currentSkillId}"] relation[type="Parent"]`,
-            currentorgmodel
-          ).each(function () {
-            const parentId = $(this).attr("id");
-            if (parentId && !visited.has(parentId)) {
-              traverse(parentId);
-            }
-          });
-
-          $(
-            `skill relation[type="Child"][id="${currentSkillId}"]`,
-            currentorgmodel
-          ).each(function () {
-            const parentSkillId = $(this).closest("skill").attr("id");
-            if (parentSkillId && !visited.has(parentSkillId)) {
-              traverse(parentSkillId);
-            }
-          });
-        }
-
-        traverse(skillId);
-
-        return Array.from(skills);
-      }
       var control = true;
       var currentActiveSkill = null; // Track currently active skill
 

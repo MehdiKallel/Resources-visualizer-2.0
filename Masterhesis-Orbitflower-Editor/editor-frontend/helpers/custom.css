@@ -30,10 +30,13 @@
 .skill-item {
   cursor: pointer;
   transition: all 0.3s ease;
-  padding: 3px;
+  padding: 3px !important;
+  padding-right: 50px !important;
   border-radius: 3px;
-  position: relative;
+  position: relative !important;
   overflow: hidden;
+  /* Remove flexbox to use absolute positioning */
+  display: block !important;
 }
 
 .skill-item:hover {
@@ -73,6 +76,16 @@
 
 .skill-item.selected {
   background-color: #dabfd2;
+}
+
+.skill-item .subject-count {
+  /* Position the count absolutely to the right */
+  position: absolute !important;
+  right: 8px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  margin: 0 !important;
+  flex-shrink: 0 !important;
 }
 
 #details-skills {
