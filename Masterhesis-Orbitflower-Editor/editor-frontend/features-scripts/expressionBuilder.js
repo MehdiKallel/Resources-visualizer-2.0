@@ -164,7 +164,17 @@ class ExpressionBuilder {
           }
         } else if (it.type === "Unit" || it.type === "Role") {
           const displayValueParts = it.displayValue.split(" ");
-          const displayValue = displayValueParts[1];
+          console.error("displayValueParts", displayValueParts);
+          let displayValue = displayValueParts[1];
+                     for (let i = 2; i < displayValueParts.length; i++) {
+              if (displayValueParts[i] === "(Org" ) {
+                break;
+              }
+            if ((displayValueParts[i] !== "(Org") && (displayValueParts[i+1] !== "All)")) {
+              displayValue += ` ${displayValueParts[i]}`;
+            }
+            }
+          console.error("displayValue", displayValue);
           const textElements = document.querySelectorAll("text");
           textElements.forEach((textElement) => {
             if (textElement.id && textElement.textContent === displayValue) {
