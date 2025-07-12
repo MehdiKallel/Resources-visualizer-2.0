@@ -12,6 +12,7 @@ class OrbitFlower {
     this.svgElement = svgElement;
     this.doc = null;
     this.initialized = false;
+    this.reference = null;
     console.log("OrbitFlower instance created with SVG element:", svgElement);
 
     if (this.svgElement && this.svgElement.length) {
@@ -978,7 +979,7 @@ class OrbitFlower {
 
           const $orig = $(this.doc);
 
-          const $filtered = $($orig.find("organisation")[0].cloneNode(true));
+          const $filtered = $($orig.find("organisation")[0]);
 
           const $subjects = $filtered.children("subjects");
 
@@ -1009,7 +1010,8 @@ class OrbitFlower {
 
           // Update the filtered XML as current model for isolated view
           const filteredDoc = $filtered[0];
-          
+          // clone of filtered doc
+          this.reference = new DOMParser().parseFromString(new XMLSerializer().serializeToString(filteredDoc), "application/xml");
           splitGraphContainer(true);
           this.createBackButton(svgRoot);
           const container = document.getElementById("detailed-graph-skills");
@@ -1493,7 +1495,23 @@ class OrbitFlower {
       </div>
     `);
 
+        // Add click handler for filtered "All Skills" button
+    allSkillsBtn.on("click", () => {
+      console.error("Clicked All Skills button in filtered view");
+      $(".skill-segment").css("fill", "");
+      $("#users table").removeClass("hidden highlight-skill");
+      $("#details-skills .skill-item").removeClass("active");
+      
+      this.show(this.reference);
+      if (skillsFeature) {
+        skillsFeature = new SkillsFeature($("svg"), this.reference);
+        skillsFeature.initialize();
+      }
+      $(".skill-gauge").addClass("hidden");
+    });
+
     skillsContainer.append(allSkillsBtn);
+
 
     // Render filtered skills with hierarchy maintained
     function renderFilteredSkill(skillId, level = 0) {
@@ -1629,7 +1647,7 @@ const renderOrganisationGraph = (doc) => {
 };
 
 const resetGraph = () => {
-  const graphSvg = $("svg");
+  const graphSvg = $("main-svg");
   if (graphSvg) {
     graphSvg.empty();
   }
