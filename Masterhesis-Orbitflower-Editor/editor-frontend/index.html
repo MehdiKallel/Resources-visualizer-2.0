@@ -692,7 +692,14 @@
       // listened for dispatched event doubleclick
       window.addEventListener("nodedoubleclick", function (event) {
         console.error("I heard that there was a double click event");
+        // Update expression builder to work with current filtered view
         expressionBuilder.highlightGraph();
+        
+        // Update gauges for filtered view if needed
+        const filteredUsers = $("#users table:visible");
+        if (filteredUsers.length > 0) {
+          console.log("Updated view with", filteredUsers.length, "filtered users");
+        }
       });
           let lastClickedSkill = null;
     let isFiltered = false;
@@ -743,6 +750,10 @@
       $("svg").on("click", function (e) {
         var clickedElement = e.target;
         if (clickedElement.tagName === "circle") {
+          if ( _isolationState.isIsolated) {
+            // If isolation is active, do not toggle visibility
+            return;
+          }
           if (!clickedElement.hasAttribute("data-is-active")) {
             $("#users")
               .find("table")

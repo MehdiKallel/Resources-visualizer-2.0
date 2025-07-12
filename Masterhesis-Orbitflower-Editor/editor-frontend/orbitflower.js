@@ -2,9 +2,9 @@ var doc = null;
 
 function getSkillColor(level) {
   level = level || Math.random();
-  if (level < 0.3) return '#ef4444';
-  if (level < 0.7) return '#f59e0b';
-  return '#22c55e';
+  if (level < 0.3) return "#ef4444";
+  if (level < 0.7) return "#f59e0b";
+  return "#22c55e";
 }
 
 class OrbitFlower {
@@ -89,7 +89,7 @@ class OrbitFlower {
     mainSVG.appendChild(container);
   }
   createBackButton(svg) {
-    console.error("yeeees")
+    console.error("yeeees");
     // Remove any existing back button
     const existingButton = document.getElementById("skills-back-button");
     if (existingButton) {
@@ -411,7 +411,8 @@ class OrbitFlower {
           },
           () => {
             s.add_path(
-              `M ${sx - 5} ${sy} L ${sx} ${sy - 5} L ${sx + 5} ${sy} L ${sx} ${sy + 5
+              `M ${sx - 5} ${sy} L ${sx} ${sy - 5} L ${sx + 5} ${sy} L ${sx} ${
+                sy + 5
               } Z`,
               {
                 class: "skill-shape",
@@ -443,7 +444,8 @@ class OrbitFlower {
         if (a.shortid < b.shortid) return -1;
         if (a.shortid > b.shortid) return 1;
         return 0;
-      }).forEach((u) => {
+      })
+      .forEach((u) => {
         const subjectheadradius = 2.0;
         const si = new SVG();
         si.add_subject_icon(4, 1, "subjecticon", subjectheadradius);
@@ -451,7 +453,7 @@ class OrbitFlower {
         // Compute the level once with proper fallback
         // Use only real data: u.skillLevel if present, otherwise 0
         let level = 0;
-        if (typeof u.skillLevel === 'number' && !isNaN(u.skillLevel)) {
+        if (typeof u.skillLevel === "number" && !isNaN(u.skillLevel)) {
           level = u.skillLevel;
         }
         const pct = Math.round(level * 100);
@@ -695,14 +697,12 @@ class OrbitFlower {
       });
 
       svgRoot.querySelectorAll("circle").forEach((circle) => {
-
         let isPointerDown = false;
 
         circle.style.cursor = "pointer";
         const group = circle.parentNode;
 
-
-        circle.addEventListener('pointermove', e => {
+        circle.addEventListener("pointermove", (e) => {
           if (!isPointerDown) return;
           const dx = e.clientX - startPoint.x;
           const dy = e.clientY - startPoint.y;
@@ -710,45 +710,51 @@ class OrbitFlower {
 
           if (!isDragging && dist > DRAG_THRESH) {
             isDragging = true;
-            if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; }
+            if (clickTimer) {
+              clearTimeout(clickTimer);
+              clickTimer = null;
+            }
 
-            ghostBox = document.createElement('div');
-            ghostBox.id = 'circle-drag-ghost';
-            const labelText = document.querySelector(`#${group.id}_text`)?.textContent ||
+            ghostBox = document.createElement("div");
+            ghostBox.id = "circle-drag-ghost";
+            const labelText =
+              document.querySelector(`#${group.id}_text`)?.textContent ||
               "Unknown";
-            const nodeType = group.classList.contains('unit') ? 'Unit' : 'Role';
+            const nodeType = group.classList.contains("unit") ? "Unit" : "Role";
             ghostBox.textContent = `${nodeType}: ${labelText}`;
             Object.assign(ghostBox.style, {
-              position: 'fixed',
-              padding: '8px 12px',
-              backgroundColor: '#4a90e2',
-              color: '#fff',
-              borderRadius: '4px',
-              pointerEvents: 'none',
-              zIndex: '9999',
-              transform: 'translate(-50%, -50%)',
-              animation: 'pulse 1s infinite'
+              position: "fixed",
+              padding: "8px 12px",
+              backgroundColor: "#4a90e2",
+              color: "#fff",
+              borderRadius: "4px",
+              pointerEvents: "none",
+              zIndex: "9999",
+              transform: "translate(-50%, -50%)",
+              animation: "pulse 1s infinite",
             });
             document.body.appendChild(ghostBox);
-            circle.classList.add('dragging');
+            circle.classList.add("dragging");
           }
 
           if (isDragging && ghostBox) {
-            ghostBox.style.transition = 'none';
+            ghostBox.style.transition = "none";
             ghostBox.style.left = `${e.clientX}px`;
             ghostBox.style.top = `${e.clientY}px`;
 
-            document.querySelectorAll('.expr-block').forEach(block => {
+            document.querySelectorAll(".expr-block").forEach((block) => {
               const r = block.getBoundingClientRect();
               if (
-                e.clientX >= r.left && e.clientX <= r.right &&
-                e.clientY >= r.top && e.clientY <= r.bottom
+                e.clientX >= r.left &&
+                e.clientX <= r.right &&
+                e.clientY >= r.top &&
+                e.clientY <= r.bottom
               ) {
-                block.classList.add('block-drop-target');
-                ghostBox.classList.add('over-expression');
+                block.classList.add("block-drop-target");
+                ghostBox.classList.add("over-expression");
               } else {
-                block.classList.remove('block-drop-target');
-                ghostBox.classList.remove('over-expression');
+                block.classList.remove("block-drop-target");
+                ghostBox.classList.remove("over-expression");
               }
             });
           }
@@ -795,13 +801,14 @@ class OrbitFlower {
         let isDragging = false;
         let ghostBox = null;
         let startPoint = { x: 0, y: 0 };
-        const DRAG_THRESH = 10; let clickTimeout;
+        const DRAG_THRESH = 10;
+        let clickTimeout;
         let clickTimer = null;
         const CLICK_DELAY = 10; // ms to wait before firing single-click event
         let lastClickTime = 0;
         const doubleClickDelay = 1000; // ms between clicks to count as double-click
 
-        circle.addEventListener('pointerup', e => {
+        circle.addEventListener("pointerup", (e) => {
           if (!isPointerDown) return;
           isPointerDown = false;
           e.target.releasePointerCapture(e.pointerId);
@@ -811,21 +818,33 @@ class OrbitFlower {
               document.body.removeChild(ghostBox);
               ghostBox = null;
             }
-            circle.classList.remove('dragging');
+            circle.classList.remove("dragging");
             isDragging = false; // <-- Ensure dragging state is reset
             // Remove lingering tooltip after drag
-            const tooltip = document.getElementById('circle-tooltip');
+            const tooltip = document.getElementById("circle-tooltip");
             if (tooltip) tooltip.remove();
             const group = circle.parentNode;
-            const nodeType = group.classList.contains('unit') ? 'Unit' : 'Role';
-            console.error(`Dispatching nodedragend for ${nodeType}: ${group.id}`);
-            const nodeText = document.querySelector(`#${group.id}_text`)?.textContent;
-            window.dispatchEvent(new CustomEvent('nodedragend', {
-              detail: { nodeId: group.id, nodeType, nodeText, x: e.clientX, y: e.clientY }
-            }));
+            const nodeType = group.classList.contains("unit") ? "Unit" : "Role";
+            console.error(
+              `Dispatching nodedragend for ${nodeType}: ${group.id}`
+            );
+            const nodeText = document.querySelector(
+              `#${group.id}_text`
+            )?.textContent;
+            window.dispatchEvent(
+              new CustomEvent("nodedragend", {
+                detail: {
+                  nodeId: group.id,
+                  nodeType,
+                  nodeText,
+                  x: e.clientX,
+                  y: e.clientY,
+                },
+              })
+            );
           }
         });
-        circle.addEventListener('pointerdown', e => {
+        circle.addEventListener("pointerdown", (e) => {
           isPointerDown = true;
           startPoint = { x: e.clientX, y: e.clientY };
           isDragging = false;
@@ -834,17 +853,17 @@ class OrbitFlower {
           // schedule a single-click unless dblclick arrives first
           if (clickTimer) clearTimeout(clickTimer);
           clickTimer = setTimeout(() => {
-            console.log('Circle clicked');
+            console.log("Circle clicked");
             // ◉ SINGLE-CLICK LOGIC HERE
             clickTimer = null;
           }, CLICK_DELAY);
         });
 
-
         function drag(e) {
           const dx = e.clientX - startPoint.x;
           const dy = e.clientY - startPoint.y;
-          const distance = Math.sqrt(dx * dx + dy * dy); if (!isDragging && distance > DRAG_THRESH) {
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          if (!isDragging && distance > DRAG_THRESH) {
             isDragging = true;
 
             // Remove any existing ghost boxes first
@@ -858,9 +877,14 @@ class OrbitFlower {
             ghostBox.id = "circle-drag-ghost";
             const nodeType = group.classList.contains("unit") ? "Unit" : "Role";
 
-            console.error("Creating ghost box for dragging", nodeType, group.id);
+            console.error(
+              "Creating ghost box for dragging",
+              nodeType,
+              group.id
+            );
             // Fix text extraction by looking for text in the correct place
-            const labelText = group.querySelector(".labeltext")?.textContent ||
+            const labelText =
+              group.querySelector(".labeltext")?.textContent ||
               document.querySelector(`#${group.id}_text`)?.textContent ||
               "Unknown";
 
@@ -878,7 +902,7 @@ class OrbitFlower {
               transform: "translate(-50%, -50%)",
               whiteSpace: "nowrap",
               boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-              animation: "pulse 1s infinite"
+              animation: "pulse 1s infinite",
             });
 
             ghostBox.textContent = `${nodeType}: ${labelText}`;
@@ -890,41 +914,42 @@ class OrbitFlower {
 
           if (isDragging && ghostBox) {
             // Remove animation, make positioning instant
-            ghostBox.style.transition = 'none';
+            ghostBox.style.transition = "none";
             ghostBox.style.left = `${e.clientX}px`;
             ghostBox.style.top = `${e.clientY}px`;
 
             // Check if we're over any expression block
-            const expressionBlocks = document.querySelectorAll('.expr-block');
+            const expressionBlocks = document.querySelectorAll(".expr-block");
             let isOverBlock = false;
 
-            expressionBlocks.forEach(block => {
+            expressionBlocks.forEach((block) => {
               const rect = block.getBoundingClientRect();
-              const isOver = e.clientX >= rect.left &&
+              const isOver =
+                e.clientX >= rect.left &&
                 e.clientX <= rect.right &&
                 e.clientY >= rect.top &&
                 e.clientY <= rect.bottom;
 
               if (isOver) {
                 isOverBlock = true;
-                block.classList.add('block-drop-target');
-                ghostBox.classList.add('over-expression');
+                block.classList.add("block-drop-target");
+                ghostBox.classList.add("over-expression");
               } else {
-                block.classList.remove('block-drop-target');
+                block.classList.remove("block-drop-target");
+                ghostBox.classList.remove("over-expression");
               }
             });
 
             if (!isOverBlock) {
-              ghostBox.classList.remove('over-expression');
+              ghostBox.classList.remove("over-expression");
             }
           }
         }
 
-
         circle.addEventListener("click", (e) => {
           console.error("Circle clicked, but no action defined.");
         });
-        circle.addEventListener('dblclick', e => {
+        circle.addEventListener("dblclick", (e) => {
           if (clickTimer) {
             clearTimeout(clickTimer);
             clickTimer = null;
@@ -934,20 +959,62 @@ class OrbitFlower {
 
           const group = circle.parentNode;
           const nodeId = group.id;
-          const nodeType = group.classList.contains('unit') ? 'unit' : 'role';
-          const nodeText = document.querySelector(`#${nodeId}_text`).textContent;
+          const nodeType = group.classList.contains("unit") ? "unit" : "role";
+          const nodeText = document.querySelector(
+            `#${nodeId}_text`
+          ).textContent;
 
+          const $orig = $(this.doc);
+
+          const $filtered = $($orig.find("organisation")[0].cloneNode(true));
+
+          const $subjects = $filtered.children("subjects");
+
+          $subjects.children("subject").each(function () {
+            const $subj = $(this);
+            let keep = false;
+
+            $subj.children("relation").each(function () {
+              const u = $(this).attr("unit");
+              const r = $(this).attr("role");
+              if (
+                (nodeType === "unit" && u === nodeText) ||
+                (nodeType === "role" && r === nodeText)
+              ) {
+                keep = true;
+                return false; // break out of .each
+              }
+            });
+
+            if (!keep) {
+              $subj.remove();
+            }
+          });
+          console.log(
+            "Filtered subjects count:",
+            $filtered.find("subject").length
+          );
+
+          // Update the filtered XML as current model for isolated view
+          const filteredDoc = $filtered[0];
+          
           splitGraphContainer(true);
           this.createBackButton(svgRoot);
-          const container = document.getElementById('detailed-graph-skills');
-          container.innerHTML = '';
+          const container = document.getElementById("detailed-graph-skills");
+          container.innerHTML = "";
           const workerGraph = new SkillTreeComponent({ container });
-          workerGraph.reset('#detailed-graph-skills');
-          workerGraph.show(currentorgmodel, nodeType, nodeText, null);
-          isolateTargetGraphNode(nodeId, 'main-svg', 'main-svg');
+          workerGraph.reset("#detailed-graph-skills");
+          workerGraph.show(filteredDoc, nodeType, nodeText, null);
+          
+          // Update users list with filtered data
+          this.updateUsersListForFiltered(filteredDoc);
+          
+          // Update skills list with filtered data
+          this.updateSkillsListForFiltered(filteredDoc);
+          
+          isolateTargetGraphNode(nodeId, "main-svg", "main-svg");
           window.dispatchEvent(new CustomEvent("nodedoubleclick"));
         });
-
       });
 
       console.log("Added centered container at", maxwidth / 2, maxheight / 2);
@@ -980,7 +1047,9 @@ class OrbitFlower {
 
             if (!isDragging && distance > DRAG_THRESH) {
               isDragging = true;
-              document.querySelectorAll("#subject-drag-ghost").forEach(ghost => ghost.remove());
+              document
+                .querySelectorAll("#subject-drag-ghost")
+                .forEach((ghost) => ghost.remove());
 
               currentGhostBox = document.createElement("div");
               currentGhostBox.id = "subject-drag-ghost";
@@ -1002,7 +1071,7 @@ class OrbitFlower {
                 animation: "pulse 1s infinite",
                 transform: "translate(-50%, -50%)",
                 left: `${e.clientX}px`,
-                top: `${e.clientY}px`
+                top: `${e.clientY}px`,
               });
 
               currentGhostBox.textContent = `Subject: ${labelText}`;
@@ -1014,30 +1083,31 @@ class OrbitFlower {
               currentGhostBox.style.top = `${e.clientY}px`;
 
               // Check if over expression blocks
-              const expressionBlocks = document.querySelectorAll('.expr-block');
+              const expressionBlocks = document.querySelectorAll(".expr-block");
               let isOverBlock = false;
 
-              expressionBlocks.forEach(block => {
+              expressionBlocks.forEach((block) => {
                 const rect = block.getBoundingClientRect();
-                const isOver = e.clientX >= rect.left &&
+                const isOver =
+                  e.clientX >= rect.left &&
                   e.clientX <= rect.right &&
                   e.clientY >= rect.top &&
                   e.clientY <= rect.bottom;
 
                 if (isOver) {
                   isOverBlock = true;
-                  block.classList.add('block-drop-target');
-                  currentGhostBox.classList.add('over-expression');
+                  block.classList.add("block-drop-target");
+                  currentGhostBox.classList.add("over-expression");
                 } else {
-                  block.classList.remove('block-drop-target');
+                  block.classList.remove("block-drop-target");
                 }
               });
 
               if (!isOverBlock) {
-                currentGhostBox.classList.remove('over-expression');
-                document.querySelectorAll('.block-drop-target').forEach(el =>
-                  el.classList.remove('block-drop-target')
-                );
+                currentGhostBox.classList.remove("over-expression");
+                document
+                  .querySelectorAll(".block-drop-target")
+                  .forEach((el) => el.classList.remove("block-drop-target"));
               }
             }
           };
@@ -1046,9 +1116,9 @@ class OrbitFlower {
             if (currentGhostBox && isDragging) {
               currentGhostBox.remove();
             }
-            document.querySelectorAll('.block-drop-target').forEach(el =>
-              el.classList.remove('block-drop-target')
-            );
+            document
+              .querySelectorAll(".block-drop-target")
+              .forEach((el) => el.classList.remove("block-drop-target"));
             document.removeEventListener("pointermove", moveGhost);
             document.removeEventListener("pointerup", stopDrag);
             document.removeEventListener("pointercancel", stopDrag);
@@ -1057,15 +1127,17 @@ class OrbitFlower {
           const stopDrag = (e) => {
             if (isDragging) {
               // Dispatch drop event only if we were actually dragging
-              window.dispatchEvent(new CustomEvent("subjectdragend", {
-                detail: {
-                  subjectId,
-                  uid,
-                  nodeText: subject.querySelector(".labeltext").textContent,
-                  x: e.clientX,
-                  y: e.clientY
-                }
-              }));
+              window.dispatchEvent(
+                new CustomEvent("subjectdragend", {
+                  detail: {
+                    subjectId,
+                    uid,
+                    nodeText: subject.querySelector(".labeltext").textContent,
+                    x: e.clientX,
+                    y: e.clientY,
+                  },
+                })
+              );
             }
             cleanupDrag();
           };
@@ -1077,14 +1149,238 @@ class OrbitFlower {
       });
     }
 
-
-
     const renderedEvent = new Event("graphRendered");
     document.dispatchEvent(renderedEvent);
     this.addCenteredContainer(maxwidth, maxheight);
     return { graphSvg, usersSvg };
   }
 
+  updateUsersListForFiltered(filteredDoc) {
+    const usersSvg = document.querySelector("#users");
+    if (!usersSvg) return;
+
+    let subjects = [];
+    
+    // Process only subjects from filtered document
+    $(filteredDoc).find("subject").each((index, subjectElement) => {
+      const $subject = $(subjectElement);
+      const uid = $subject.attr("uid");
+      const id = $subject.attr("id") || `subject_${index + 1}`;
+      
+      // Calculate skill level for this subject
+      let level = 0;
+      const skillRefs = $subject.find("subjectSkills ref");
+      if (skillRefs.length > 0) {
+        let totalStrength = 0;
+        let validSkills = 0;
+        skillRefs.each(function() {
+          const strength = parseFloat($(this).attr("strength") || "0");
+          if (!isNaN(strength)) {
+            totalStrength += strength > 1 ? strength / 100 : strength;
+            validSkills++;
+          }
+        });
+        if (validSkills > 0) {
+          level = totalStrength / validSkills;
+        }
+      }
+
+      const pct = Math.round(level * 100);
+      const color = getSkillColor(level);
+
+      const si = new SVG();
+      si.add_subject_icon(4, 1, "subjecticon", 2.0);
+      const svgMarkup = si.dumpIcon(12, 12);
+
+      subjects.push(`          <table class="subject" id="${id}" data-uid="${uid}" data-subject-id="${id}" onmouseover="s_relationstoggle(this)" onmouseout="s_relationstoggle(this)" style="margin-bottom: 5px; width: 100%; border-collapse: separate; border-spacing: 0;">
+    <tbody>
+    <tr>
+        <td style="width: 24px; text-align: center; vertical-align: middle; padding: 4px 8px 4px 4px;">${svgMarkup}</td>
+        <td class="labeltext" onclick="openSubjectEditor('${uid}')" style="text-align: left; padding: 4px 12px; vertical-align: middle; cursor: pointer">${id}</td>
+        <td style="width: 80px; text-align: right; vertical-align: middle; padding: 4px 4px;">
+          <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+            <div class="skill-gauge hidden" 
+                style="position: relative; width: 60px; height: 4px; flex-shrink: 0; background: #f3f4f6; border-radius: 2px; overflow: hidden;" 
+                title="${pct}%">
+              <div class="gauge-bar" data-level="${level}" style="position: absolute; top: 0; left: 0; height: 100%; width: ${pct}%; 
+                        background: ${color}; 
+                        transition: width 0.3s, background-color 0.3s;"></div>
+            </div>
+            <button class="explore-skills-btn"
+              onclick="
+                event.stopPropagation();
+                splitGraphContainer(true);
+                (()=>{
+                  const container = document.getElementById('detailed-graph-skills');
+                  const graphSvg = document.querySelector('#graph svg');
+                  const orbitFlower = new OrbitFlower(graphSvg);
+                  orbitFlower.createBackButton(graphSvg);
+                  const g = new SkillTreeComponent({ container });
+                  g.reset('#detailed-graph-skills');
+                  g.show(currentorgmodel, 'subject', '${uid}', null);
+                  window.dispatchEvent(new CustomEvent('nodedoubleclick'));
+                })();
+              "
+              title="Explore skills"
+              style="width: 20px; height: 20px; min-width: 20px; padding: 3px; margin: 0; background: white; border: 1px solid #e4e6e8; border-radius: 4px; cursor: pointer; transition: all 0.15s ease; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg width="14" height="14" viewBox="0 0 24 24">
+                <g fill="none" stroke-width="2">
+                  <rect x="4" y="14" width="4" height="6" fill="#60a5fa" stroke="#60a5fa" rx="1"/>
+                  <rect x="10" y="10" width="4" height="10" fill="#34d399" stroke="#34d399" rx="1"/>
+                  <rect x="16" y="6" width="4" height="14" fill="#f472b6" stroke="#f472b6" rx="1"/>
+                </g>
+              </svg>
+            </button>
+          </div>
+        </td>
+    </tr>
+    </tbody>
+    </table>`);
+    });
+
+    usersSvg.innerHTML = subjects.join("\n");
+    console.log("Updated users list for filtered view with", subjects.length, "subjects");
+  }
+
+  updateSkillsListForFiltered(filteredDoc) {
+    const skillsContainer = $("#details-skills");
+    if (!skillsContainer.length) return;
+
+    skillsContainer.empty();
+
+    // Get all skills referenced by subjects in filtered document
+    const referencedSkillIds = new Set();
+    $(filteredDoc).find("subject subjectSkills ref").each(function() {
+      const skillId = $(this).attr("id");
+      if (skillId) {
+        referencedSkillIds.add(skillId);
+      }
+    });
+
+    // Build complete skill map from current org model (including all skills for hierarchy)
+    const skillMap = new Map();
+    $(currentorgmodel).find("skill").each(function() {
+      const skill = $(this);
+      const skillId = skill.attr("id");
+      skillMap.set(skillId, {
+        element: skill,
+        children: [],
+        parents: [],
+        hasSubjects: referencedSkillIds.has(skillId) // Track which skills have subjects
+      });
+    });
+
+    // Build parent-child relationships for all skills
+    skillMap.forEach((skillData, id) => {
+      const relations = skillData.element.find('relation[type="Child"]');
+      relations.each(function() {
+        const parentId = $(this).attr("id");
+        if (skillMap.has(parentId)) {
+          skillMap.get(parentId).children.push(id);
+          skillData.parents.push(parentId);
+        }
+      });
+    });
+
+    // Function to check if a skill or any of its descendants have subjects
+    function hasSubjectsInHierarchy(skillId) {
+      const skillData = skillMap.get(skillId);
+      if (!skillData) return false;
+      
+      // Check if this skill has subjects
+      if (skillData.hasSubjects) return true;
+      
+      // Check if any children have subjects
+      return skillData.children.some(childId => hasSubjectsInHierarchy(childId));
+    }
+
+    // Count total subjects in filtered view
+    const totalSubjects = $(filteredDoc).find("subject").length;
+
+    // Add "All Skills" button
+    const allSkillsBtn = $(`
+      <div id="all-skills-btn" class="skill-item" style="
+        margin-left: 0px;
+        border-left: 3px solid #4CAF50;
+        padding: 5px;
+        padding-right: 50px;
+        cursor: pointer;
+        font-weight: bold;
+        background-color: #f5f5f5;">
+        <span>All Skills (Filtered)</span>
+        <span class="subject-count" style="
+          font-size: 11px;
+          color: #666;
+          background: #e0e0e0;
+          padding: 2px 6px;
+          border-radius: 10px;
+          min-width: 20px;
+          text-align: center;
+          font-weight: 500;
+        ">${totalSubjects}</span>
+      </div>
+    `);
+
+    skillsContainer.append(allSkillsBtn);
+
+    // Render filtered skills with hierarchy maintained
+    function renderFilteredSkill(skillId, level = 0) {
+      const skillData = skillMap.get(skillId);
+      if (!skillData) return;
+      
+      // Only render if this skill or its descendants have subjects
+      if (!hasSubjectsInHierarchy(skillId)) return;
+      
+      const color = window.getSkillIdColor(skillId);
+      
+      // Count subjects with this skill in filtered view
+      const subjectCount = $(filteredDoc).find(`subject subjectSkills ref[id="${skillId}"]`).length;
+      
+      // Determine styling based on whether skill has subjects
+      const hasSubjects = skillData.hasSubjects;
+      const opacity = hasSubjects ? 1 : 0.5;
+      const fontWeight = hasSubjects ? "500" : "400";
+      const backgroundColor = hasSubjects ? "#f0f0f0" : "#f8f8f8";
+
+      const skillElem = $(`
+        <div class="skill-item" data-skill-id="${skillId}" 
+              style="margin-left: ${level * 20}px; 
+                    border-left: 3px solid ${color};
+                    padding: 5px;
+                    padding-right: 50px;
+                    opacity: ${opacity};"
+                    draggable="false">
+          <span style="font-weight: ${fontWeight};">${skillId}</span>
+          <span class="subject-count" style="
+            font-size: 11px;
+            color: ${hasSubjects ? '#666' : '#999'};
+            background: ${backgroundColor};
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 20px;
+            text-align: center;
+            font-weight: 500;
+          ">${subjectCount}</span>
+        </div>
+      `);
+
+      skillsContainer.append(skillElem);
+
+      // Render children recursively
+      skillData.children.forEach((childId) => {
+        renderFilteredSkill(childId, level + 1);
+      });
+    }
+
+    // Render root skills (those without parents)
+    skillMap.forEach((skillData, id) => {
+      if (skillData.parents.length === 0) {
+        renderFilteredSkill(id);
+      }
+    });
+
+    console.log("Updated skills list for filtered view with hierarchy maintained");
+  }
 }
 
 const renderOrganisationGraph = (doc) => {
