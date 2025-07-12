@@ -1289,6 +1289,129 @@ class OrbitFlower {
 
     usersSvg.innerHTML = subjects.join("\n");
     console.log("Updated users list for filtered view with", subjects.length, "subjects");
+
+    // Add drag functionality to the filtered subjects
+    usersSvg.querySelectorAll("table.subject").forEach((subject) => {
+      subject.style.cursor = "grab";
+
+      const subjectId = subject.getAttribute("data-subject-id");
+      const uid = subject.getAttribute("data-uid");
+
+      subject.addEventListener("pointerdown", startDrag);
+
+      function startDrag(e) {
+        const startPoint = { x: e.clientX, y: e.clientY };
+        let isDragging = false;
+        let currentGhostBox = null;
+        const DRAG_THRESH = 10;
+
+        const moveGhost = (e) => {
+          const dx = e.clientX - startPoint.x;
+          const dy = e.clientY - startPoint.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (!isDragging && distance > DRAG_THRESH) {
+            isDragging = true;
+            document
+              .querySelectorAll("#subject-drag-ghost")
+              .forEach((ghost) => ghost.remove());
+
+            currentGhostBox = document.createElement("div");
+            currentGhostBox.id = "subject-drag-ghost";
+            const labelText = subject.querySelector(".labeltext").textContent;
+
+            Object.assign(currentGhostBox.style, {
+              position: "fixed",
+              padding: "8px 12px",
+              backgroundColor: "#e66465",
+              color: "#fff",
+              borderRadius: "4px",
+              fontFamily: "Arial, sans-serif",
+              fontSize: "14px",
+              fontWeight: "normal",
+              pointerEvents: "none",
+              zIndex: "9999",
+              whiteSpace: "nowrap",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+              animation: "pulse 1s infinite",
+              transform: "translate(-50%, -50%)",
+              left: `${e.clientX}px`,
+              top: `${e.clientY}px`,
+            });
+
+            currentGhostBox.textContent = `Subject: ${labelText}`;
+            document.body.appendChild(currentGhostBox);
+          }
+
+          if (isDragging && currentGhostBox) {
+            currentGhostBox.style.left = `${e.clientX}px`;
+            currentGhostBox.style.top = `${e.clientY}px`;
+
+            // Check if over expression blocks
+            const expressionBlocks = document.querySelectorAll(".expr-block");
+            let isOverBlock = false;
+
+            expressionBlocks.forEach((block) => {
+              const rect = block.getBoundingClientRect();
+              const isOver =
+                e.clientX >= rect.left &&
+                e.clientX <= rect.right &&
+                e.clientY >= rect.top &&
+                e.clientY <= rect.bottom;
+
+              if (isOver) {
+                isOverBlock = true;
+                block.classList.add("block-drop-target");
+                currentGhostBox.classList.add("over-expression");
+              } else {
+                block.classList.remove("block-drop-target");
+              }
+            });
+
+            if (!isOverBlock) {
+              currentGhostBox.classList.remove("over-expression");
+              document
+                .querySelectorAll(".block-drop-target")
+                .forEach((el) => el.classList.remove("block-drop-target"));
+            }
+          }
+        };
+
+        const cleanupDrag = () => {
+          if (currentGhostBox && isDragging) {
+            currentGhostBox.remove();
+          }
+          document
+            .querySelectorAll(".block-drop-target")
+            .forEach((el) => el.classList.remove("block-drop-target"));
+          document.removeEventListener("pointermove", moveGhost);
+          document.removeEventListener("pointerup", stopDrag);
+          document.removeEventListener("pointercancel", stopDrag);
+        };
+
+        const stopDrag = (e) => {
+          if (isDragging) {
+            // Dispatch drop event only if we were actually dragging
+            window.dispatchEvent(
+              new CustomEvent("subjectdragend", {
+                detail: {
+                  subjectId,
+                  uid,
+                  nodeText: subject.querySelector(".labeltext").textContent,
+                  x: e.clientX,
+                  y: e.clientY,
+                },
+              })
+            );
+          }
+          cleanupDrag();
+        };
+
+        document.addEventListener("pointermove", moveGhost);
+        document.addEventListener("pointerup", stopDrag);
+        document.addEventListener("pointercancel", stopDrag);
+      }
+    });
   }
 
   updateSkillsListForFiltered(filteredDoc) {
@@ -1429,6 +1552,74 @@ class OrbitFlower {
     });
 
     console.log("Updated skills list for filtered view with hierarchy maintained");
+    
+    // Add drag functionality to filtered skills
+    this.addSkillDragFunctionality();
+  }
+
+  addSkillDragFunctionality() {
+    $("#details-skills .skill-item").each(function() {
+      const $skillElem = $(this);
+      const skillId = $skillElem.attr("data-skill-id");
+      if (!skillId || $skillElem.data('drag-attached')) return;
+      
+      $skillElem.data('drag-attached', true);
+      $skillElem.on("pointerdown", function (e) {
+        if (e.button !== 0) return;
+        e.preventDefault();
+        let isDragging = false;
+        let ghostBox = null;
+        let startX = e.clientX;
+        let startY = e.clientY;
+        const DRAG_THRESH = 5;
+
+        function moveHandler(ev) {
+          const dx = ev.clientX - startX;
+          const dy = ev.clientY - startY;
+          if (!isDragging && Math.sqrt(dx * dx + dy * dy) > DRAG_THRESH) {
+            isDragging = true;
+            ghostBox = document.createElement("div");
+            ghostBox.id = "skill-drag-ghost";
+            ghostBox.textContent = `Skill: ${skillId}`;
+            Object.assign(ghostBox.style, {
+              position: "fixed",
+              left: `${ev.clientX}px`,
+              top: `${ev.clientY}px`,
+              padding: "8px 12px",
+              backgroundColor: window.getSkillIdColor(skillId),
+              color: "#fff",
+              borderRadius: "4px",
+              fontFamily: "Arial, sans-serif",
+              fontSize: "14px",
+              pointerEvents: "none",
+              zIndex: "9999",
+              whiteSpace: "nowrap",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+              transform: "translate(-50%, -50%)"
+            });
+            document.body.appendChild(ghostBox);
+          }
+          if (isDragging && ghostBox) {
+            ghostBox.style.left = `${ev.clientX}px`;
+            ghostBox.style.top = `${ev.clientY}px`;
+          }
+        }
+
+        function upHandler(ev) {
+          document.removeEventListener("pointermove", moveHandler);
+          document.removeEventListener("pointerup", upHandler);
+          if (ghostBox) ghostBox.remove();
+          if (isDragging) {
+            window.dispatchEvent(new CustomEvent("skilldragend", {
+              detail: { skillId, entityType: "Skill", x: ev.clientX, y: ev.clientY }
+            }));
+          }
+        }
+
+        document.addEventListener("pointermove", moveHandler);
+        document.addEventListener("pointerup", upHandler);
+      });
+    });
   }
 }
 
