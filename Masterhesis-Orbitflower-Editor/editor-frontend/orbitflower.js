@@ -702,6 +702,15 @@ class OrbitFlower {
         circle.style.cursor = "pointer";
         const group = circle.parentNode;
 
+        // Make all text elements inside the group non-interactive
+        group.querySelectorAll("text, tspan").forEach((textElement) => {
+          textElement.style.pointerEvents = "none";
+          textElement.style.userSelect = "none";
+        });
+
+        // Ensure the circle captures all pointer events in its area
+        circle.style.pointerEvents = "all";
+
         circle.addEventListener("pointermove", (e) => {
           if (!isPointerDown) return;
           const dx = e.clientX - startPoint.x;
@@ -956,6 +965,9 @@ class OrbitFlower {
           }
           isPointerDown = false;
           e.preventDefault();
+          
+          // Stop event from bubbling up
+          e.stopPropagation();
 
           const group = circle.parentNode;
           const nodeId = group.id;
@@ -1014,6 +1026,43 @@ class OrbitFlower {
           
           isolateTargetGraphNode(nodeId, "main-svg", "main-svg");
           window.dispatchEvent(new CustomEvent("nodedoubleclick"));
+        });
+      });
+
+      // Also handle clicks on group elements to catch any missed events
+      svgRoot.querySelectorAll("g.unit, g.role").forEach((group) => {
+        group.style.cursor = "pointer";
+        
+        group.addEventListener("click", (e) => {
+          // Only handle if the click wasn't on a circle (fallback)
+          if (e.target.tagName !== "circle") {
+            const circle = group.querySelector("circle");
+            if (circle) {
+              // Trigger the circle's click event
+              circle.dispatchEvent(new MouseEvent("click", {
+                bubbles: true,
+                cancelable: true,
+                clientX: e.clientX,
+                clientY: e.clientY
+              }));
+            }
+          }
+        });
+        
+        group.addEventListener("dblclick", (e) => {
+          // Only handle if the double-click wasn't on a circle (fallback)
+          if (e.target.tagName !== "circle") {
+            const circle = group.querySelector("circle");
+            if (circle) {
+              // Trigger the circle's double-click event
+              circle.dispatchEvent(new MouseEvent("dblclick", {
+                bubbles: true,
+                cancelable: true,
+                clientX: e.clientX,
+                clientY: e.clientY
+              }));
+            }
+          }
         });
       });
 
