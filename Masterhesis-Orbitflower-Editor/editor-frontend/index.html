@@ -582,13 +582,13 @@
       $("#details-skills").on("mouseover", ".skill-item", function () {
         var targetSkillId = $(this).attr("data-skill-id");
         if (!targetSkillId) return;
-        $("#svg")
+        var relatedSkills = getAllRelatedSkills(targetSkillId);
+        $("#main-svg")
           .find(".skill-segment")
           .each(function () {
             var skillSegment = $(this);
             var segmentSkillId = skillSegment.attr("data-skill-id");
-            var relatedSkills = getAllRelatedSkills(targetSkillId);
-
+            console.log("Related skills for", targetSkillId, ":", relatedSkills);
             if (relatedSkills.includes(segmentSkillId)) {
               $(this).addClass("hover-highlight");
             } else {
@@ -601,7 +601,7 @@
           .each(function () {
             var node = $(this);
             var nodeId = node.attr("data-skill-id");
-            if (nodeId === targetSkillId) {
+            if (relatedSkills.includes(nodeId)) {
               node.addClass("hover-highlight");
             } else {
               node.removeClass("hover-highlight");
