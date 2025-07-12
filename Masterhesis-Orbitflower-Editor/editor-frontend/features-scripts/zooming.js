@@ -1,3 +1,18 @@
+function resetZoomingViewBox(newWidth, newHeight) {
+  if (window.zoomingViewBox) {
+    Object.assign(window.zoomingViewBox, {
+      x: 0,
+      y: 0,
+      w: newWidth,
+      h: newHeight
+    });
+    console.log('Zooming viewBox reset to:', window.zoomingViewBox);
+  }
+}
+
+// Make function globally available
+window.resetZoomingViewBox = resetZoomingViewBox;
+
 function initializeZooming() {
   console.log("Initializing zooming functionality...");
     const svgElement = document.getElementById('main-svg');
@@ -67,6 +82,17 @@ function initializeZooming() {
   function handleWheel(e) {
     e.preventDefault();
 
+    // Sync viewBox with SVG if they're out of sync (fixes jump issue)
+    const currentSvgViewBox = svgElement.getAttribute('viewBox');
+    if (currentSvgViewBox) {
+      const [svgX, svgY, svgW, svgH] = currentSvgViewBox.split(' ').map(Number);
+      if (Math.abs(viewBox.x - svgX) > 0.1 || Math.abs(viewBox.y - svgY) > 0.1 || 
+          Math.abs(viewBox.w - svgW) > 0.1 || Math.abs(viewBox.h - svgH) > 0.1) {
+        console.log('Syncing viewBox with SVG before zooming');
+        Object.assign(viewBox, { x: svgX, y: svgY, w: svgW, h: svgH });
+      }
+    }
+
     const zoomIntensity = 0.1;
     const delta = e.deltaY;
     
@@ -112,6 +138,17 @@ function initializeZooming() {
     // Don't pan if clicking on interactive elements or control elements
     if (e.target.closest('.joystick-base, .zoom-controls, .unit, .role, .subject')) {
       return;
+    }
+    
+    // Sync viewBox with SVG if they're out of sync (fixes jump issue)
+    const currentSvgViewBox = svgElement.getAttribute('viewBox');
+    if (currentSvgViewBox) {
+      const [svgX, svgY, svgW, svgH] = currentSvgViewBox.split(' ').map(Number);
+      if (Math.abs(viewBox.x - svgX) > 0.1 || Math.abs(viewBox.y - svgY) > 0.1 || 
+          Math.abs(viewBox.w - svgW) > 0.1 || Math.abs(viewBox.h - svgH) > 0.1) {
+        console.log('Syncing viewBox with SVG before panning');
+        Object.assign(viewBox, { x: svgX, y: svgY, w: svgW, h: svgH });
+      }
     }
     
     isPanning = true;
@@ -161,29 +198,6 @@ function initializeZooming() {
     
     // Remove the mousemove event listener when panning ends
     document.removeEventListener('mousemove', pan);
-  }
-  
-  function resetView() {
-    // Update both SVG attribute and internal state
-    viewBox.x = initialViewBox.x;
-    viewBox.y = initialViewBox.y;
-    viewBox.w = initialViewBox.w;
-    viewBox.h = initialViewBox.h;
-    svgElement.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
-    
-    // remove all hidden classes from children
-    const targetSvg = document.querySelector(`svg[id="svg"]`);
-    const children = targetSvg.children;
-    for (let i = 0; i < children.length; i++) {
-      const child = children[i];
-      if (child.classList.contains('hidden')) {
-        child.classList.remove('hidden');
-      }
-    }
-    // Clear isolation state if needed
-    if (window._isolationState) {
-      window._isolationState.isIsolated = false;
-    }
   }
   
   // Add keyboard navigation support

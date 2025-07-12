@@ -657,6 +657,18 @@ class OrbitFlower {
         preserveAspectRatio: "xMidYMid meet",
       });
 
+      // Update zooming system's viewBox state to match the new SVG viewBox
+      if (window.resetZoomingViewBox) {
+        window.resetZoomingViewBox(maxwidth, maxheight);
+      } else if (window.zoomingViewBox) {
+        Object.assign(window.zoomingViewBox, {
+          x: 0,
+          y: 0,
+          w: maxwidth,
+          h: maxheight
+        });
+      }
+
       // Insert the content
       graphSvg.html(svgContent);
       // Add centered container directly to the SVG

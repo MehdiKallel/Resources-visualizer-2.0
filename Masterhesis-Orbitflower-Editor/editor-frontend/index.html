@@ -382,26 +382,8 @@
       });
     }
     // Add near the top of your script
-    let isSplitView = false; function splitGraphContainer(show) {
-      const mainSvg = $("#main-svg");
-      const container = $("#graph");
-
-      if (show) {
-        if ($("#detailed-graph-skills").length === 0) {
-          container.append(
-            '<div id="detailed-graph-skills" style="width: 100%; height: 50%; position: relative;"></div>'
-          );
-        }
-        mainSvg.css("height", "50%");
-        $("#detailed-graph-skills").show();
-      } else {
-        mainSvg.css("height", "100%");
-        $("#detailed-graph-skills").hide();
-      }
-    }
-
-
-    // Add to your $(document).ready() function:
+    let isSplitView = false; 
+    
     function setupSSEEventListeners() {
       const eventSource = new EventSource(
         `${serverlocation.replace(/\/$/, "")}/events/`
@@ -641,7 +623,6 @@
           .each(function () {
             var skillSegment = $(this);
             var segmentSkillId = skillSegment.attr("data-skill-id");
-            console.log("Related skills for", targetSkillId, ":", relatedSkills);
             if (relatedSkills.includes(segmentSkillId)) {
               $(this).addClass("hover-highlight");
             } else {

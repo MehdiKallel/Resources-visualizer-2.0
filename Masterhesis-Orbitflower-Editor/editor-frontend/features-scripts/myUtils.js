@@ -88,6 +88,12 @@ function restoreGraphView(sourceContainer) {
   // Restore original viewBox
   if (_isolationState.originalViewBox) {
     svgElement.setAttribute("viewBox", _isolationState.originalViewBox);
+    
+    // Update zooming system's viewBox state to match restored viewBox
+    if (window.zoomingViewBox) {
+      const [x, y, w, h] = _isolationState.originalViewBox.split(" ").map(Number);
+      Object.assign(window.zoomingViewBox, { x, y, w, h });
+    }
   }
 
   // Reset state
