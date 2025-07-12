@@ -102,13 +102,25 @@
       );
     }
 
-    function fillSkillsContainer() {
-      let skills = $("skill", currentorgmodel);
+    function fillSkillsContainer(dataModel = null, isFiltered = false, orbitFlowerInstance = null) {
+      const sourceModel = dataModel || currentorgmodel;
+      let skills = $("skill", currentorgmodel); // Always get skills from full model for hierarchy
       let skillsContainer = $("#details-skills");
       skillsContainer.empty();
 
-      // Calculate total subjects count
-      const totalSubjects = $("subject", currentorgmodel).length;
+      // Calculate total subjects count from the source model
+      const totalSubjects = $("subject", sourceModel).length;
+
+      // Get referenced skills from the source model (for filtering logic)
+      const referencedSkillIds = new Set();
+      if (isFiltered) {
+        $(sourceModel).find("subject subjectSkills ref").each(function() {
+          const skillId = $(this).attr("id");
+          if (skillId) {
+            referencedSkillIds.add(skillId);
+          }
+        });
+      }
 
       const allSkillsBtn = $(`
           <div id="all-skills-btn" class="skill-item" style="
@@ -119,7 +131,7 @@
             cursor: pointer;
             font-weight: bold;
             background-color: #f5f5f5;">
-            <span>All</span>
+            <span>${isFiltered ? 'All Skills (Filtered)' : 'All'}</span>
             <span class="subject-count" style="
               font-size: 11px;
               color: #666;
@@ -139,10 +151,19 @@
         $(".skill-segment").css("fill", "");
         $("#users table").removeClass("hidden highlight-skill");
         $("#details-skills .skill-item").removeClass("active");
-        viz.show(currentorgmodel);
-        if (skillsFeature) {
-          skillsFeature = new SkillsFeature($("svg"), currentorgmodel);
-          skillsFeature.initialize();
+        
+        if (isFiltered && orbitFlowerInstance) {
+          orbitFlowerInstance.show(orbitFlowerInstance.reference);
+          if (skillsFeature) {
+            skillsFeature = new SkillsFeature($("svg"), orbitFlowerInstance.reference);
+            skillsFeature.initialize();
+          }
+        } else {
+          viz.show(currentorgmodel);
+          if (skillsFeature) {
+            skillsFeature = new SkillsFeature($("svg"), currentorgmodel);
+            skillsFeature.initialize();
+          }
         }
         $(".skill-gauge").addClass("hidden");
       });
@@ -150,10 +171,12 @@
       const skillMap = new Map();
       skills.each(function () {
         const skill = $(this);
-        skillMap.set(skill.attr("id"), {
+        const skillId = skill.attr("id");
+        skillMap.set(skillId, {
           element: skill,
           children: [],
           parents: [],
+          hasSubjects: isFiltered ? referencedSkillIds.has(skillId) : true
         });
       });
 
@@ -168,38 +191,68 @@
         });
       });
 
+      // Function to check if a skill or any of its descendants have subjects (for filtered view)
+      function hasSubjectsInHierarchy(skillId) {
+        if (!isFiltered) return true; // In non-filtered view, show all skills
+        
+        const skillData = skillMap.get(skillId);
+        if (!skillData) return false;
+        
+        // Check if this skill has subjects
+        if (skillData.hasSubjects) return true;
+        
+        // Check if any children have subjects
+        return skillData.children.some(childId => hasSubjectsInHierarchy(childId));
+      }
+
       function renderSkill(skillId, level = 0) {
         const skillData = skillMap.get(skillId);
+        if (!skillData) return;
+        
+        // Only render if this skill or its descendants have subjects (in filtered view)
+        if (!hasSubjectsInHierarchy(skillId)) return;
+        
         const color = window.getSkillIdColor(skillId);
         
-        // Count subjects with this skill and all related skills
-        const relatedSkills = getAllRelatedSkills(skillId);
         let subjectCount = 0;
         
-        // Count unique subjects who have any of the related skills
-        const uniqueSubjects = new Set();
-        relatedSkills.forEach(relatedSkillId => {
-          $(`subject subjectSkills ref[id="${relatedSkillId}"]`, currentorgmodel).each(function() {
-            const subjectUid = $(this).closest('subject').attr('uid');
-            if (subjectUid) {
-              uniqueSubjects.add(subjectUid);
-            }
+        if (isFiltered) {
+          // Count subjects with this skill in filtered view
+          subjectCount = $(sourceModel).find(`subject subjectSkills ref[id="${skillId}"]`).length;
+        } else {
+          // Count subjects with this skill and all related skills (original behavior)
+          const relatedSkills = getAllRelatedSkills(skillId);
+          const uniqueSubjects = new Set();
+          relatedSkills.forEach(relatedSkillId => {
+            $(`subject subjectSkills ref[id="${relatedSkillId}"]`, sourceModel).each(function() {
+              const subjectUid = $(this).closest('subject').attr('uid');
+              if (subjectUid) {
+                uniqueSubjects.add(subjectUid);
+              }
+            });
           });
-        });
-        subjectCount = uniqueSubjects.size;
+          subjectCount = uniqueSubjects.size;
+        }
+
+        // Determine styling based on whether skill has subjects (for filtered view)
+        const hasSubjects = isFiltered ? skillData.hasSubjects : true;
+        const opacity = hasSubjects ? 1 : 0.5;
+        const fontWeight = hasSubjects ? "500" : "400";
+        const backgroundColor = hasSubjects ? "#f0f0f0" : "#f8f8f8";
 
         const skillElem = $(`
          <div class="skill-item" data-skill-id="${skillId}" 
                style="margin-left: ${level * 20}px; 
                      border-left: 3px solid ${color};
                      padding: 5px;
-                     padding-right: 50px;"
+                     padding-right: 50px;
+                     opacity: ${opacity};"
                      draggable="false">
-           <span>${skillId}</span>
+           <span style="font-weight: ${fontWeight};">${skillId}</span>
            <span class="subject-count" style="
              font-size: 11px;
-             color: #666;
-             background: #f0f0f0;
+             color: ${isFiltered ? (hasSubjects ? '#666' : '#999') : '#666'};
+             background: ${isFiltered ? backgroundColor : '#f0f0f0'};
              padding: 2px 6px;
              border-radius: 10px;
              min-width: 20px;
@@ -211,7 +264,7 @@
 
         skillsContainer.append(skillElem);
 
-        // --- Custom drag logic to match orbit/circle drag ---
+        // Add drag functionality - use the same detailed implementation for both filtered and non-filtered views
         skillElem.on("pointerdown", function (e) {
           if (e.button !== 0) return; // Only left click
           e.preventDefault();
@@ -611,7 +664,7 @@
       });
 
       $("#details-skills").on("mouseout", ".skill-item", function () {
-        $("#svg").find(".skill-segment").removeClass("hover-highlight");
+        $("#main-svg").find(".skill-segment").removeClass("hover-highlight");
         $("#testing-svg").find("g.node").removeClass("hover-highlight");
       });
 

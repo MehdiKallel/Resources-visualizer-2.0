@@ -1023,8 +1023,10 @@ class OrbitFlower {
           // Update users list with filtered data
           this.updateUsersListForFiltered(filteredDoc);
           
-          // Update skills list with filtered data
-          this.updateSkillsListForFiltered(filteredDoc);
+          // Update skills list with filtered data using the centralized function
+          if (typeof fillSkillsContainer === 'function') {
+            fillSkillsContainer(filteredDoc, true, this);
+          }
           
           isolateTargetGraphNode(nodeId, "main-svg", "main-svg");
           window.dispatchEvent(new CustomEvent("nodedoubleclick"));
@@ -1414,165 +1416,6 @@ class OrbitFlower {
         document.addEventListener("pointercancel", stopDrag);
       }
     });
-  }
-
-  updateSkillsListForFiltered(filteredDoc) {
-    const skillsContainer = $("#details-skills");
-    if (!skillsContainer.length) return;
-
-    skillsContainer.empty();
-
-    // Get all skills referenced by subjects in filtered document
-    const referencedSkillIds = new Set();
-    $(filteredDoc).find("subject subjectSkills ref").each(function() {
-      const skillId = $(this).attr("id");
-      if (skillId) {
-        referencedSkillIds.add(skillId);
-      }
-    });
-
-    // Build complete skill map from current org model (including all skills for hierarchy)
-    const skillMap = new Map();
-    $(currentorgmodel).find("skill").each(function() {
-      const skill = $(this);
-      const skillId = skill.attr("id");
-      skillMap.set(skillId, {
-        element: skill,
-        children: [],
-        parents: [],
-        hasSubjects: referencedSkillIds.has(skillId) // Track which skills have subjects
-      });
-    });
-
-    // Build parent-child relationships for all skills
-    skillMap.forEach((skillData, id) => {
-      const relations = skillData.element.find('relation[type="Child"]');
-      relations.each(function() {
-        const parentId = $(this).attr("id");
-        if (skillMap.has(parentId)) {
-          skillMap.get(parentId).children.push(id);
-          skillData.parents.push(parentId);
-        }
-      });
-    });
-
-    // Function to check if a skill or any of its descendants have subjects
-    function hasSubjectsInHierarchy(skillId) {
-      const skillData = skillMap.get(skillId);
-      if (!skillData) return false;
-      
-      // Check if this skill has subjects
-      if (skillData.hasSubjects) return true;
-      
-      // Check if any children have subjects
-      return skillData.children.some(childId => hasSubjectsInHierarchy(childId));
-    }
-
-    // Count total subjects in filtered view
-    const totalSubjects = $(filteredDoc).find("subject").length;
-
-    // Add "All Skills" button
-    const allSkillsBtn = $(`
-      <div id="all-skills-btn" class="skill-item" style="
-        margin-left: 0px;
-        border-left: 3px solid #4CAF50;
-        padding: 5px;
-        padding-right: 50px;
-        cursor: pointer;
-        font-weight: bold;
-        background-color: #f5f5f5;">
-        <span>All Skills (Filtered)</span>
-        <span class="subject-count" style="
-          font-size: 11px;
-          color: #666;
-          background: #e0e0e0;
-          padding: 2px 6px;
-          border-radius: 10px;
-          min-width: 20px;
-          text-align: center;
-          font-weight: 500;
-        ">${totalSubjects}</span>
-      </div>
-    `);
-
-        // Add click handler for filtered "All Skills" button
-    allSkillsBtn.on("click", () => {
-      console.error("Clicked All Skills button in filtered view");
-      $(".skill-segment").css("fill", "");
-      $("#users table").removeClass("hidden highlight-skill");
-      $("#details-skills .skill-item").removeClass("active");
-      
-      this.show(this.reference);
-      if (skillsFeature) {
-        skillsFeature = new SkillsFeature($("svg"), this.reference);
-        skillsFeature.initialize();
-      }
-      $(".skill-gauge").addClass("hidden");
-    });
-
-    skillsContainer.append(allSkillsBtn);
-
-
-    // Render filtered skills with hierarchy maintained
-    function renderFilteredSkill(skillId, level = 0) {
-      const skillData = skillMap.get(skillId);
-      if (!skillData) return;
-      
-      // Only render if this skill or its descendants have subjects
-      if (!hasSubjectsInHierarchy(skillId)) return;
-      
-      const color = window.getSkillIdColor(skillId);
-      
-      // Count subjects with this skill in filtered view
-      const subjectCount = $(filteredDoc).find(`subject subjectSkills ref[id="${skillId}"]`).length;
-      
-      // Determine styling based on whether skill has subjects
-      const hasSubjects = skillData.hasSubjects;
-      const opacity = hasSubjects ? 1 : 0.5;
-      const fontWeight = hasSubjects ? "500" : "400";
-      const backgroundColor = hasSubjects ? "#f0f0f0" : "#f8f8f8";
-
-      const skillElem = $(`
-        <div class="skill-item" data-skill-id="${skillId}" 
-              style="margin-left: ${level * 20}px; 
-                    border-left: 3px solid ${color};
-                    padding: 5px;
-                    padding-right: 50px;
-                    opacity: ${opacity};"
-                    draggable="false">
-          <span style="font-weight: ${fontWeight};">${skillId}</span>
-          <span class="subject-count" style="
-            font-size: 11px;
-            color: ${hasSubjects ? '#666' : '#999'};
-            background: ${backgroundColor};
-            padding: 2px 6px;
-            border-radius: 10px;
-            min-width: 20px;
-            text-align: center;
-            font-weight: 500;
-          ">${subjectCount}</span>
-        </div>
-      `);
-
-      skillsContainer.append(skillElem);
-
-      // Render children recursively
-      skillData.children.forEach((childId) => {
-        renderFilteredSkill(childId, level + 1);
-      });
-    }
-
-    // Render root skills (those without parents)
-    skillMap.forEach((skillData, id) => {
-      if (skillData.parents.length === 0) {
-        renderFilteredSkill(id);
-      }
-    });
-
-    console.log("Updated skills list for filtered view with hierarchy maintained");
-    
-    // Add drag functionality to filtered skills
-    this.addSkillDragFunctionality();
   }
 
   addSkillDragFunctionality() {
