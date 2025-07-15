@@ -213,26 +213,21 @@
         if (!hasSubjectsInHierarchy(skillId)) return;
         
         const color = window.getSkillIdColor(skillId);
+          let subjectCount = 0;
         
-        let subjectCount = 0;
-        
-        if (isFiltered) {
-          // Count subjects with this skill in filtered view
-          subjectCount = $(sourceModel).find(`subject subjectSkills ref[id="${skillId}"]`).length;
-        } else {
-          // Count subjects with this skill and all related skills (original behavior)
-          const relatedSkills = getAllRelatedSkills(skillId);
-          const uniqueSubjects = new Set();
-          relatedSkills.forEach(relatedSkillId => {
-            $(`subject subjectSkills ref[id="${relatedSkillId}"]`, sourceModel).each(function() {
-              const subjectUid = $(this).closest('subject').attr('uid');
-              if (subjectUid) {
-                uniqueSubjects.add(subjectUid);
-              }
-            });
+        // Always use hierarchical skill counting (both filtered and non-filtered)
+        // This ensures that if someone has AWS (child of Cloud), they are also counted as having Cloud
+        const relatedSkills = getAllRelatedSkills(skillId);
+        const uniqueSubjects = new Set();
+        relatedSkills.forEach(relatedSkillId => {
+          $(`subject subjectSkills ref[id="${relatedSkillId}"]`, sourceModel).each(function() {
+            const subjectUid = $(this).closest('subject').attr('uid');
+            if (subjectUid) {
+              uniqueSubjects.add(subjectUid);
+            }
           });
-          subjectCount = uniqueSubjects.size;
-        }
+        });
+        subjectCount = uniqueSubjects.size;
 
         // Determine styling based on whether skill has subjects (for filtered view)
         const hasSubjects = isFiltered ? skillData.hasSubjects : true;
