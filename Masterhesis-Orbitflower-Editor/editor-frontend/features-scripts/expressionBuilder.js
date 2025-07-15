@@ -109,6 +109,7 @@ class ExpressionBuilder {
     }
 
     this.updateExpressionDisplay();
+    this.highlightGraph();
   }
 
   highlightGraph() {
@@ -264,6 +265,7 @@ class ExpressionBuilder {
     }
 
     this.updateExpressionDisplay();
+    this.highlightGraph();
   }
 
   findTargetBlock(x, y) {
@@ -324,8 +326,9 @@ class ExpressionBuilder {
         operators: [],
       });
     }
-
     this.updateExpressionDisplay();
+        this.highlightGraph();
+
   }
 
   handleSubjectDrop({ detail }) {
@@ -366,8 +369,9 @@ class ExpressionBuilder {
         operators: [],
       });
     }
-
     this.updateExpressionDisplay();
+        this.highlightGraph();
+
   }
 
   createExpressionBuilderUI() {
