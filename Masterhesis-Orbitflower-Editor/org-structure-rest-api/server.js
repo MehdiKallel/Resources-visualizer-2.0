@@ -254,7 +254,19 @@ app.get("/units", (req, res) => {
     const units = select(
       `//${NS_PREFIX}:organisation/${NS_PREFIX}:units/${NS_PREFIX}:unit`,
       doc
-    ).map((unitNode) => unitNode.getAttribute("id"));
+    ).map((unitNode) => {
+      const id = unitNode.getAttribute("id");
+      const parentNode = select(`${NS_PREFIX}:parent`, unitNode)[0];
+      const permissions = select(`${NS_PREFIX}:permissions/*`, unitNode).map(
+        (perm) => perm.nodeName
+      );
+      
+      return {
+        id,
+        parent: parentNode ? parentNode.textContent : null,
+        permissions: permissions,
+      };
+    });
     console.log(units);
     res.send(units);
   } catch (error) {
@@ -384,10 +396,55 @@ app.post("/units", (req, res) => {
 app.put("/units/:id", (req, res) => {
   try {
     const { id } = req.params;
-    const docBody = new DOMParser().parseFromString(
-      req.body,
-      "application/xml"
-    );
+    console.log(`PUT /units/${id} - Content-Type:`, req.headers['content-type']);
+    console.log(`PUT /units/${id} - Request body:`, req.body);
+    console.log(`PUT /units/${id} - Raw body:`, req.rawBody);
+    console.log(`PUT /units/${id} - Raw body type:`, typeof req.rawBody);
+    
+    // Use rawBody for XML parsing, with fallback to req.body
+    let xmlBody = req.rawBody || req.body;
+    
+    // Validate that we have a body to work with
+    if (!xmlBody) {
+      console.log("No request body provided");
+      return res.status(400).send("Request body is required");
+    }
+    
+    // Ensure it's a string
+    if (typeof xmlBody !== 'string') {
+      try {
+        xmlBody = JSON.stringify(xmlBody);
+      } catch (e) {
+        xmlBody = String(xmlBody);
+      }
+    }
+    
+    console.log(`PUT /units/${id} - XML body to parse:`, xmlBody);
+    
+    let docBody;
+    try {
+      docBody = new DOMParser().parseFromString(
+        xmlBody,
+        "application/xml"
+      );
+    } catch (parseError) {
+      console.log("DOMParser error:", parseError);
+      return res.status(400).send("Failed to parse XML: " + parseError.message);
+    }
+    
+    // Check if docBody was created successfully
+    if (!docBody) {
+      console.log("Failed to create XML document from body");
+      return res.status(400).send("Failed to parse XML");
+    }
+    
+    // Check for XML parsing errors
+    const parseError = docBody.getElementsByTagName("parsererror");
+    if (parseError.length > 0) {
+      console.log("XML parsing error:", parseError[0].textContent);
+      return res.status(400).send("Invalid XML format: " + parseError[0].textContent);
+    }
+    
     const parentVal = select("//unit/parent/text()", docBody)[0]?.nodeValue;
 
     const doc = readXML();
@@ -578,7 +635,16 @@ app.get("/roles", (req, res) => {
     const roles = select(
       `//${NS_PREFIX}:organisation/${NS_PREFIX}:roles/${NS_PREFIX}:role`,
       doc
-    ).map((role) => role.getAttribute("id"));
+    ).map((roleNode) => {
+      const id = roleNode.getAttribute("id");
+      const permissions = select(`${NS_PREFIX}:permissions/*`, roleNode).map(
+        (p) => p.nodeName
+      );
+      const parentNodes = select(`${NS_PREFIX}:parent`, roleNode);
+      const parents = parentNodes.map(node => node.textContent);
+      
+      return { id, parents, permissions };
+    });
     res.send(roles);
   } catch (error) {
     res.status(500).send(error.message);
@@ -599,10 +665,10 @@ app.get("/roles/:id", (req, res) => {
       (p) => p.nodeName
     );
 
-    const parentNode = select(`${NS_PREFIX}:parent`, roleNode)[0];
-    const parent = parentNode ? parentNode.textContent : null;
+    const parentNodes = select(`${NS_PREFIX}:parent`, roleNode);
+    const parents = parentNodes.map(node => node.textContent);
 
-    res.send({ id, parent, permissions });
+    res.send({ id, parents, permissions });
   } catch (error) {
     res.status(500).send(error.message);
   }
@@ -688,44 +754,98 @@ app.post("/roles", (req, res) => {
 app.put("/roles/:id", (req, res) => {
   try {
     const { id } = req.params;
-    const docBody = new DOMParser().parseFromString(
-      req.body,
-      "application/xml"
-    );
-    const permissions = select("//permissions/permission/text()", docBody).map(
-      (p) => p.nodeValue
-    );
+    console.log(`PUT /roles/${id} - Content-Type:`, req.headers['content-type']);
+    console.log(`PUT /roles/${id} - Request body:`, req.body);
+    console.log(`PUT /roles/${id} - Raw body:`, req.rawBody);
+    console.log(`PUT /roles/${id} - Raw body type:`, typeof req.rawBody);
+    
+    // Use rawBody for XML parsing, with fallback to req.body
+    let xmlBody = req.rawBody || req.body;
+    
+    // Validate that we have a body to work with
+    if (!xmlBody) {
+      console.log("No request body provided");
+      return res.status(400).send("Request body is required");
+    }
+    
+    // Ensure it's a string
+    if (typeof xmlBody !== 'string') {
+      try {
+        xmlBody = JSON.stringify(xmlBody);
+      } catch (e) {
+        xmlBody = String(xmlBody);
+      }
+    }
+    
+    console.log(`PUT /roles/${id} - XML body to parse:`, xmlBody);
+    
+    let docBody;
+    try {
+      docBody = new DOMParser().parseFromString(
+        xmlBody,
+        "application/xml"
+      );
+    } catch (parseError) {
+      console.log("DOMParser error:", parseError);
+      return res.status(400).send("Failed to parse XML: " + parseError.message);
+    }
+    
+    // Check if docBody was created successfully
+    if (!docBody) {
+      console.log("Failed to create XML document from body");
+      return res.status(400).send("Failed to parse XML");
+    }
+    
+    // Check for XML parsing errors
+    const parseError = docBody.getElementsByTagName("parsererror");
+    if (parseError.length > 0) {
+      console.log("XML parsing error:", parseError[0].textContent);
+      return res.status(400).send("Invalid XML format: " + parseError[0].textContent);
+    }
+    
+    // Safely extract permissions - check if permissions node exists first
+    let permissions = [];
+    const permissionsNodes = select("//permissions/permission/text()", docBody);
+    if (permissionsNodes && permissionsNodes.length > 0) {
+      permissions = permissionsNodes.map((p) => p.nodeValue);
+    }
+    
+    // Extract parent IDs
     const parentIds = select("//role/parent/text()", docBody).map(
       (p) => p.nodeValue
     );
+
+    console.log(`Found ${parentIds.length} parent IDs:`, parentIds);
 
     const doc = readXML();
     const roleNode = select(
       `//${NS_PREFIX}:organisation/${NS_PREFIX}:roles/${NS_PREFIX}:role[@id='${id}']`,
       doc
     )[0];
-    if (!roleNode) return res.status(404).send("Role not found");
+    if (!roleNode) {
+      console.log(`Role '${id}' not found for update`);
+      return res.status(404).send("Role not found");
+    }
 
-    // Update permissions
+    // Update permissions only if permissions node exists in role
     const permissionsNode = select(`${NS_PREFIX}:permissions`, roleNode)[0];
-    if (!permissionsNode)
-      return res.status(500).send("Permissions node not found for role.");
+    if (permissionsNode) {
+      const existingPerms = select("*", permissionsNode);
+      existingPerms.forEach((p) => permissionsNode.removeChild(p));
 
-    const existingPerms = select("*", permissionsNode);
-    existingPerms.forEach((p) => permissionsNode.removeChild(p));
-
-    if (Array.isArray(permissions)) {
-      permissions.forEach((p) => {
-        const permNode = doc.createElement(p);
-        permissionsNode.appendChild(permNode);
-      });
+      if (Array.isArray(permissions) && permissions.length > 0) {
+        permissions.forEach((p) => {
+          const permNode = doc.createElement(p);
+          permissionsNode.appendChild(permNode);
+        });
+      }
     }
 
     // Update parents
     const existingParents = select(`${NS_PREFIX}:parent`, roleNode);
     existingParents.forEach((p) => p.parentNode.removeChild(p));
 
-    if (Array.isArray(parentIds)) {
+    if (Array.isArray(parentIds) && parentIds.length > 0) {
       for (const parentId of parentIds) {
         const parentRole = select(
           `//${NS_PREFIX}:organisation/${NS_PREFIX}:roles/${NS_PREFIX}:role[@id='${parentId}']`,
@@ -741,8 +861,10 @@ app.put("/roles/:id", (req, res) => {
     }
 
     writeXML(doc, "role-updated");
+    console.log(`Role '${id}' updated successfully`);
     res.send("Role updated successfully");
   } catch (error) {
+    console.error("Error updating role:", error);
     res.status(500).send(error.message);
   }
 });
@@ -921,11 +1043,29 @@ app.get("/skills", (req, res) => {
     );
     const skills = skillNodes.map((node) => {
       const id = node.getAttribute("id");
+      
+      // Use getElementsByTagName to get relation elements (they're not namespaced)
+      const relationElements = Array.from(node.getElementsByTagName("relation"));
+      const relations = relationElements.map((rel) => ({
+        id: rel.getAttribute("id"),
+        type: rel.getAttribute("type") || "Similar",
+        strength: rel.getAttribute("strength") || rel.getAttribute("score") || "5"
+      }));
+      
+      // Keep backward compatibility with old format
       const related = select(`${NS_PREFIX}:relatedSkill`, node).map(
         (n) => n.textContent
       );
-      console.log(related);
-      return { id, relatedSkills: related };
+      
+      // Return both formats for compatibility
+      const relatedSkills = related.length > 0 ? related : relations.map(r => r.id);
+      
+      console.log(`Skill ${id}: ${relations.length} relations, ${relatedSkills.length} related skills`);
+      return { 
+        id, 
+        relatedSkills: relatedSkills,
+        relations: relations
+      };
     });
     res.send(skills);
   } catch (error) {
@@ -943,10 +1083,24 @@ app.get("/skills/:id", (req, res) => {
     )[0];
     if (!skillNode) return res.status(404).send("Skill not found.");
 
+    // Use getElementsByTagName to get relation elements (they're not namespaced)
+    const relationElements = Array.from(skillNode.getElementsByTagName("relation"));
+    const relations = relationElements.map((rel) => ({
+      id: rel.getAttribute("id"),
+      type: rel.getAttribute("type") || "Similar",
+      strength: rel.getAttribute("strength") || rel.getAttribute("score") || "5"
+    }));
+    
+    // Keep backward compatibility
     const related = select(`${NS_PREFIX}:relatedSkill`, skillNode).map(
       (n) => n.textContent
     );
-    res.send({ id, relatedSkills: related });
+    
+    res.send({ 
+      id, 
+      relatedSkills: related.length > 0 ? related : relations.map(r => r.id),
+      relations: relations
+    });
   } catch (error) {
     res.status(500).send(error.message);
   }
@@ -1009,13 +1163,20 @@ app.post("/skills", (req, res) => {
       if (!relatedSkillExists) {
         return res.status(404).send(`Related skill '${relationId}' not found.`);
       }
-      // Create and append the relation element using any free-text content
+      // Create and append the relation element with all attributes
       const relationNode = doc.createElement("relation");
       relationNode.setAttribute("id", relationId);
-      const relValue = rel.getAttribute("type");
-      if (relValue) {
-        relationNode.setAttribute("type", relValue);
+      
+      const relType = rel.getAttribute("type");
+      if (relType) {
+        relationNode.setAttribute("type", relType);
       }
+      
+      const strength = rel.getAttribute("strength");
+      if (strength) {
+        relationNode.setAttribute("strength", strength);
+      }
+      
       skillNode.appendChild(relationNode);
     }
     skillsNode.appendChild(skillNode);
@@ -1032,38 +1193,72 @@ app.post("/skills", (req, res) => {
 app.put("/skills/:id", (req, res) => {
   try {
     const { id } = req.params;
-    const docBody = new DOMParser().parseFromString(
-      req.body,
-      "application/xml"
-    );
-    // Get new relation elements from the incoming XML (without "type")
+    
+    // Use rawBody if available, otherwise stringify the parsed body
+    let xmlString;
+    if (req.rawBody) {
+      xmlString = req.rawBody;
+    } else {
+      xmlString = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+    }
+    
+    console.log("PUT /skills - Raw XML:", xmlString);
+    
+    const docBody = new DOMParser().parseFromString(xmlString, "application/xml");
+    
+    // Check for parsing errors
+    const parseError = docBody.getElementsByTagName("parsererror");
+    if (parseError.length > 0) {
+      console.error("XML parsing error:", parseError[0].textContent);
+      return res.status(400).send("Invalid XML format");
+    }
+    
+    // Get new relation elements from the incoming XML
     const newRelations = Array.from(docBody.getElementsByTagName("relation"));
+    console.log("Found relations:", newRelations.length);
+    
     const doc = readXML();
     const skillNode = select(
       `//${NS_PREFIX}:organisation/${NS_PREFIX}:skills/${NS_PREFIX}:skill[@id='${id}']`,
       doc
     )[0];
-    if (!skillNode) return res.status(404).send("Skill not found.");
+    
+    if (!skillNode) {
+      console.log("Skill not found:", id);
+      return res.status(404).send("Skill not found.");
+    }
+    
     // Remove existing <relation> children
     const existingRelations = Array.from(
       skillNode.getElementsByTagName("relation")
     );
     existingRelations.forEach((r) => skillNode.removeChild(r));
-    // Append each new relation (using only the id attribute and text content)
+    
+    // Append each new relation with all attributes
     newRelations.forEach((rel) => {
       const relationId = rel.getAttribute("id");
       if (!relationId) return; // Skip invalid relation
+      
       const relationNode = doc.createElement("relation");
       relationNode.setAttribute("id", relationId);
-      const relValue = rel.getAttribute("type");
-      if (relValue) {
-        relationNode.setAttribute("type", relValue);
+      
+      const relType = rel.getAttribute("type");
+      if (relType) {
+        relationNode.setAttribute("type", relType);
       }
+      
+      const strength = rel.getAttribute("strength");
+      if (strength) {
+        relationNode.setAttribute("strength", strength);
+      }
+      
       skillNode.appendChild(relationNode);
     });
+    
     writeXML(doc);
     res.send("Skill updated successfully");
   } catch (error) {
+    console.error("PUT /skills error:", error);
     res.status(500).send(error.message);
   }
 });
@@ -1287,9 +1482,15 @@ app.put("/subjects/:id", (req, res) => {
     const existingRelations = select(`${NS_PREFIX}:relation`, subjectNode);
     existingRelations.forEach((rel) => rel.parentNode.removeChild(rel));
 
+    // Remove both potential skill containers to prevent duplication
     const existingSkills = select(`${NS_PREFIX}:skills`, subjectNode)[0];
     if (existingSkills) {
       existingSkills.parentNode.removeChild(existingSkills);
+    }
+    
+    const existingSubjectSkills = select(`${NS_PREFIX}:subjectSkills`, subjectNode)[0];
+    if (existingSubjectSkills) {
+      existingSubjectSkills.parentNode.removeChild(existingSubjectSkills);
     }
 
     // Add new relations
@@ -1589,24 +1790,49 @@ app.get("/subjects/byuid/:uid", (req, res) => {
   try {
     const { uid } = req.params;
     const doc = readXML();
-    const subjectNode = select(
+    
+    console.log(`Looking for subject with uid: ${uid}`);
+    
+    // Try both namespaced and non-namespaced selectors for subject lookup
+    let subjectNode = select(
       `//${NS_PREFIX}:organisation/${NS_PREFIX}:subjects/${NS_PREFIX}:subject[@uid='${uid}']`,
       doc
     )[0];
+    
+    if (!subjectNode) {
+      // Try without namespace
+      subjectNode = select(`//subject[@uid='${uid}']`, doc)[0];
+    }
+    
     if (!subjectNode) return res.status(404).send("Subject not found");
 
     const id = subjectNode.getAttribute("id");
-    const relations = select(`${NS_PREFIX}:relation`, subjectNode).map((r) => ({
+    console.log(`Found subject: ${id} (uid: ${uid})`);
+    
+    // Try both namespaced and non-namespaced selectors for relations
+    let relations = select(`${NS_PREFIX}:relation`, subjectNode);
+    if (relations.length === 0) {
+      relations = select(`relation`, subjectNode);
+    }
+    
+    const relationsData = relations.map((r) => ({
       unit: r.getAttribute("unit"),
       role: r.getAttribute("role"),
     }));
-    const skillRefs = select(
-      `${NS_PREFIX}:subjectSkills/${NS_PREFIX}:ref`,
-      subjectNode
-    ).map((sr) => sr.getAttribute("id"));
+    
+    // Try both namespaced and non-namespaced selectors for skills
+    let skillRefs = select(`${NS_PREFIX}:subjectSkills/${NS_PREFIX}:ref`, subjectNode);
+    if (skillRefs.length === 0) {
+      skillRefs = select(`subjectSkills/ref`, subjectNode);
+    }
+    
+    const skillRefsData = skillRefs.map((sr) => sr.getAttribute("id"));
 
-    res.send({ id, uid, relations, skillRefs });
+    console.log(`Subject ${uid} - Found ${relationsData.length} relations and ${skillRefsData.length} skills`);
+    console.log(`Relations:`, relationsData);
+    res.send({ id, uid, relations: relationsData, skillRefs: skillRefsData });
   } catch (error) {
+    console.error("Error in /subjects/byuid:", error);
     res.status(500).send(error.message);
   }
 });

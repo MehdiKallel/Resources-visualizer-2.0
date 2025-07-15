@@ -912,103 +912,164 @@
         <div id="expressionBuilder" style="flex: 1; min-height: 200px; overflow: auto"></div>
       </ui-area>
       <ui-area data-belongs-to-tab="manage-subjects" class="inactive">
-        <div id="manage-subjects">
-          <form id="manage-subjects-form" class="manage-form">
-            <div class="form-group">
-              <label for="subject-id">Subject ID:</label>
-              <input type="text" id="subject-id" placeholder="Subject ID" />
+        <div class="subjects-management-container">
+          <div class="subjects-list-section">
+            <h3>Current Subjects</h3>
+            <div class="subjects-filter">
+              <input type="text" id="subjects-search" placeholder="Search subjects..." />
             </div>
-            <div id="unit-role-pairs" class="form-group">
-              <div class="unit-role-pair">
-                <input type="text" class="unit-id" placeholder="Unit ID" required="" />
-                <input type="text" class="role-id" placeholder="Role ID" required="" />
-                <button type="button" class="remove-btn" onclick="this.parentElement.remove()">
-                  ×
-                </button>
+            <div id="subjects-list" class="subjects-list">
+              <!-- Subjects will be loaded here -->
+            </div>
+          </div>
+          
+          <div class="subject-editor-section">
+            <h3 id="subject-editor-title">Add New Subject</h3>
+            <form id="manage-subjects-form" class="manage-form">
+              <div class="form-group">
+                <label for="subject-id">Subject ID:</label>
+                <input type="text" id="subject-id" placeholder="Subject ID" required />
               </div>
-            </div>
-            <div class="form-group">
-              <button type="button" id="add-unit-role-pair" onclick="window.addUnitRolePairToForm()">
-                Add Another Unit-Role Pair
-              </button>
-            </div>
-            <div class="form-group">
-              <button type="submit">Add Subject</button>
-            </div>
-            <div id="messages-subjects"></div>
-          </form>
+              
+              <div class="relations-section">
+                <h4>Unit-Role Relations</h4>
+                <div id="unit-role-pairs">
+                  <!-- Unit-role pairs will be added here -->
+                </div>
+                <div class="add-relation-controls">
+                  <input type="text" id="unit-id-input" placeholder="Unit ID" />
+                  <input type="text" id="role-id-input" placeholder="Role ID" />
+                  <button type="button" id="add-unit-role-btn" onclick="window.addUnitRolePair()">Add Pair</button>
+                </div>
+              </div>
+              
+              <div class="form-actions">
+                <button type="submit" id="subject-submit-btn">Add Subject</button>
+                <button type="button" id="cancel-subject-btn" style="display: none;">Cancel</button>
+              </div>
+              <div id="messages-subjects"></div>
+            </form>
+          </div>
         </div>
       </ui-area>
       <ui-area data-belongs-to-tab="manage-units" class="inactive">
-        <div class="tab-content" id="manage-units">
-          <form id="manage-units-form" class="manage-form">
-            <div class="form-group">
-              <label for="unit-id">Unit ID:</label>
-              <input type="text" id="unit-id" placeholder="Unit ID" />
+        <div class="units-management-container">
+          <div class="units-list-section">
+            <h3>Current Units</h3>
+            <div class="units-filter">
+              <input type="text" id="units-search" placeholder="Search units..." />
             </div>
-            <div class="form-group">
-              <label for="unit-parent-id">Parent ID:</label>
-              <input type="text" id="unit-parent-id" placeholder="Parent ID" />
+            <div id="units-list" class="units-list">
+              <!-- Units will be loaded here -->
             </div>
-            <div class="form-group">
-              <button type="submit">Add Unit</button>
-            </div>
-            <div id="messages-units"></div>
-          </form>
+          </div>
+          
+          <div class="unit-editor-section">
+            <h3 id="unit-editor-title">Add New Unit</h3>
+            <form id="manage-units-form" class="manage-form">
+              <div class="form-group">
+                <label for="unit-id">Unit ID:</label>
+                <input type="text" id="unit-id" placeholder="Unit ID" required />
+              </div>
+              <div class="form-group">
+                <label for="unit-parent-id">Parent ID:</label>
+                <input type="text" id="unit-parent-id" placeholder="Parent ID (optional)" />
+              </div>
+              
+              <div class="form-actions">
+                <button type="submit" id="unit-submit-btn">Add Unit</button>
+                <button type="button" id="cancel-unit-btn" style="display: none;">Cancel</button>
+              </div>
+              <div id="messages-units"></div>
+            </form>
+          </div>
         </div>
       </ui-area>
       <ui-area data-belongs-to-tab="manage-roles" class="inactive">
-        <div class="tab-content" id="manage-roles">
-          <form id="manage-roles-form" class="manage-form">
-            <div class="form-group">
-              <label for="role-id">Role ID:</label>
-              <input type="text" id="role-id" placeholder="Role ID" />
+        <div class="roles-management-container">
+          <div class="roles-list-section">
+            <h3>Current Roles</h3>
+            <div class="roles-filter">
+              <input type="text" id="roles-search" placeholder="Search roles..." />
             </div>
-            <div id="role-parents" class="form-group">
-              <div class="role-parent-pair">
-                <input type="text" class="role-parent-id" placeholder="Parent ID" />
-                <button type="button" class="remove-btn" onclick="this.parentElement.remove()">
-                  ×
-                </button>
+            <div id="roles-list" class="roles-list">
+              <!-- Roles will be loaded here -->
+            </div>
+          </div>
+          
+          <div class="role-editor-section">
+            <h3 id="role-editor-title">Add New Role</h3>
+            <form id="manage-roles-form" class="manage-form">
+              <div class="form-group">
+                <label for="role-id">Role ID:</label>
+                <input type="text" id="role-id" placeholder="Role ID" required />
               </div>
-            </div>
-            <div class="form-group">
-              <button type="button" id="add-role-parent" onclick="window.addRoleParentToForm()">
-                Add Another Parent
-              </button>
-            </div>
-            <div class="form-group">
-              <button type="submit">Add Role</button>
-            </div>
-            <div id="messages-roles"></div>
-          </form>
+              
+              <div class="relations-section">
+                <h4>Parent Roles</h4>
+                <div id="role-parents">
+                  <!-- Role parents will be added here -->
+                </div>
+                <div class="add-relation-controls">
+                  <input type="text" id="parent-role-input" placeholder="Parent Role ID" />
+                  <button type="button" id="add-role-parent-btn">Add Parent</button>
+                </div>
+              </div>
+              
+              <div class="form-actions">
+                <button type="submit" id="role-submit-btn">Add Role</button>
+                <button type="button" id="cancel-role-btn" style="display: none;">Cancel</button>
+              </div>
+              <div id="messages-roles"></div>
+            </form>
+          </div>
         </div>
       </ui-area>
       <ui-area data-belongs-to-tab="manage-skills" class="inactive">
         <div class="tab-content" id="manage-skills">
-          <form id="manage-skills-form" class="manage-form">
-            <div class="form-group">
-              <label for="skill-id">Skill ID:</label>
-              <input type="text" id="skill-id" placeholder="Skill ID" required="" />
-            </div>
-            <div id="relations-container">
-              <h4>Relations</h4>
-              <div class="relation-item">
-                <input type="text" class="relation-id" placeholder="Related Skill ID" />
-                <input type="text" class="relation-value" placeholder="Relation Value" />
-                <button type="button" class="remove-relation-btn">
-                  Remove
-                </button>
+          <!-- Skills List Section -->
+          <div class="skills-management-container">
+            <div class="skills-list-section">
+              <h3>Current Skills</h3>
+              <div class="skills-filter">
+                <input type="text" id="skills-search" placeholder="Search skills..." />
+              </div>
+              <div id="skills-list" class="skills-list">
+                <!-- Skills will be loaded here -->
               </div>
             </div>
-            <button type="button" id="add-relation-btn" onclick="window.addRelationItem()">
-              Add Relation
-            </button>
-            <div class="form-group">
-              <button type="submit">Add Skill</button>
+            
+            <!-- Skill Editor Section -->
+            <div class="skill-editor-section">
+              <h3 id="skill-editor-title">Add New Skill</h3>
+              <form id="manage-skills-form" class="manage-form">
+                <div class="form-group">
+                  <label for="skill-id">Skill ID:</label>
+                  <input type="text" id="skill-id" placeholder="Skill ID" required="" />
+                </div>
+                
+                <div class="relations-section">
+                  <h4>Skill Relations</h4>
+                  <div id="relations-container">
+                    <!-- Relations will be added here -->
+                  </div>
+                  <div class="add-relation-controls">
+                    <select id="available-skills-dropdown" class="skill-dropdown">
+                      <option value="">Select a skill to relate...</option>
+                    </select>
+                    <button type="button" id="add-relation-btn">Add Relation</button>
+                    <button type="button" id="add-manual-relation-btn">Add Manual</button>
+                  </div>
+                </div>
+                
+                <div class="form-actions">
+                  <button type="submit" id="skill-submit-btn">Add Skill</button>
+                  <button type="button" id="cancel-edit-btn" style="display: none;">Cancel</button>
+                </div>
+                <div id="messages-skills"></div>
+              </form>
             </div>
-            <div id="messages-skills"></div>
-          </form>
+          </div>
         </div>
       </ui-area>
     </ui-content>

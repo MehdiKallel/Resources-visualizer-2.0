@@ -1,62 +1,111 @@
 var apiBaseUrl = null;
 
-
 // Form submission handlers for the management forms
 async function handleSubjectFormSubmit(e) {
   e.preventDefault();
-  console.log("Subject form submitted");
-  const subjectId = document.getElementById("subject-id").value.trim();
-  const unitRolePairs = Array.from(
-    document.querySelectorAll(".unit-role-pair")
-  ).map((pair) => ({
-    unitId: pair.querySelector(".unit-id").value.trim(),
-    roleId: pair.querySelector(".role-id").value.trim(),
-  }));
 
-  if (
-    !subjectId ||
-    unitRolePairs.some((pair) => !pair.unitId || !pair.roleId)
-  ) {
-    displayMessage("All fields are required.", "error", "messages-subjects");
+  // Prevent double submission
+  const submitButton = document.getElementById("subject-submit-btn");
+  if (submitButton.disabled) {
+    console.log("Subject form submission already in progress, ignoring");
     return;
   }
 
-  const xmlPayload = `
-          <subject id="${subjectId}">
-            ${unitRolePairs
-              .map(
-                (pair) => `
-              <relation unit="${pair.unitId}" role="${pair.roleId}"/>
-            `
-              )
-              .join("")}
-          </subject>
-        `;
+  console.log("Subject form submitted");
+  console.log("editingSubjectId:", editingSubjectId);
+
+  // Disable submit button to prevent double submission
+  submitButton.disabled = true;
+  submitButton.textContent = editingSubjectId ? "Updating..." : "Adding...";
 
   try {
-    const response = await fetch(`${apiBaseUrl}/subjects`, {
-      method: "POST",
+    const subjectId = document.getElementById("subject-id").value.trim();
+    const unitRolePairs = Array.from(
+      document.querySelectorAll(".unit-role-item, .unit-role-pair")
+    ).map((pair) => ({
+      unitId: pair.querySelector(".unit-id-input, .unit-id").value.trim(),
+      roleId: pair.querySelector(".role-id-input, .role-id").value.trim(),
+    }));
+
+    if (!subjectId) {
+      displayMessage("Subject ID is required.", "error", "messages-subjects");
+      return;
+    }
+
+    // Create different XML payload formats for POST vs PUT
+    let xmlPayload;
+    if (editingSubjectId) {
+      // PUT request - send only the relations in the expected format
+      xmlPayload = `
+        <subject>
+          ${unitRolePairs
+            .map(
+              (pair) =>
+                `<relation unit="${pair.unitId}" role="${pair.roleId}"/>`
+            )
+            .join("")}
+        </subject>
+      `;
+    } else {
+      // POST request - send the subject with id attribute and relations
+      xmlPayload = `
+        <subject id="${subjectId}">
+          ${unitRolePairs
+            .map(
+              (pair) =>
+                `<relation unit="${pair.unitId}" role="${pair.roleId}"/>`
+            )
+            .join("")}
+        </subject>
+      `;
+    }
+
+    console.log("XML Payload:", xmlPayload);
+
+    const method = editingSubjectId ? "PUT" : "POST";
+    const url = editingSubjectId
+      ? `${apiBaseUrl}/subjects/${subjectId}`
+      : `${apiBaseUrl}/subjects`;
+
+    console.log(`Making ${method} request to:`, url);
+
+    const response = await fetch(url, {
+      method: method,
       headers: { "Content-Type": "application/xml" },
       body: xmlPayload,
     });
 
     if (response.ok) {
+      const action = editingSubjectId ? "updated" : "added";
       displayMessage(
-        "Subject added successfully.",
+        `Subject ${action} successfully.`,
         "success",
         "messages-subjects"
       );
       document.getElementById("manage-subjects-form").reset();
+      document.getElementById("unit-role-pairs").innerHTML = "";
+      loadSubjectsList();
+      if (editingSubjectId) {
+        cancelSubjectEdit();
+      }
     } else {
       const errorText = await response.text();
+      console.error("Server error response:", errorText);
       displayMessage(`Error: ${errorText}`, "error", "messages-subjects");
     }
   } catch (error) {
+    console.error("Request error:", error);
     displayMessage(
-      "An error occurred while adding the subject.",
+      "An error occurred while saving the subject.",
       "error",
       "messages-subjects"
     );
+  } finally {
+    // Re-enable submit button
+    submitButton.disabled = false;
+    submitButton.textContent = editingSubjectId
+      ? "Update Subject"
+      : "Add Subject";
   }
 }
 
@@ -64,6 +113,8 @@ async function handleUnitFormSubmit(e) {
   console.error("Unit form submitted");
   e.preventDefault();
   console.log("Unit form submitted");
+  console.log("editingUnitId:", editingUnitId);
+
   const unitId = document.getElementById("unit-id").value.trim();
   const unitParentId = document.getElementById("unit-parent-id").value.trim();
 
@@ -72,27 +123,57 @@ async function handleUnitFormSubmit(e) {
     return;
   }
 
-  const xmlPayload = `
-          <unit id="${unitId}" parent="${unitParentId}" />
-        `;
+  // Create different XML payload formats for POST vs PUT
+  let xmlPayload;
+  if (editingUnitId) {
+    // PUT request - send only the parent value in the expected format
+    xmlPayload = `
+      <unit>
+        ${unitParentId ? `<parent>${unitParentId}</parent>` : ""}
+      </unit>
+    `;
+  } else {
+    // POST request - send the unit with id and parent attributes
+    xmlPayload = `<unit id="${unitId}" parent="${unitParentId}" />`;
+  }
+
+  console.log("XML Payload:", xmlPayload);
 
   try {
-    const response = await fetch(`${apiBaseUrl}/units`, {
-      method: "POST",
+    const method = editingUnitId ? "PUT" : "POST";
+    const url = editingUnitId
+      ? `${apiBaseUrl}/units/${unitId}`
+      : `${apiBaseUrl}/units`;
+
+    console.log(`Making ${method} request to:`, url);
+
+    const response = await fetch(url, {
+      method: method,
       headers: { "Content-Type": "application/xml" },
       body: xmlPayload,
     });
 
     if (response.ok) {
-      displayMessage("Unit added successfully.", "success", "messages-units");
+      const action = editingUnitId ? "updated" : "added";
+      displayMessage(
+        `Unit ${action} successfully.`,
+        "success",
+        "messages-units"
+      );
       document.getElementById("manage-units-form").reset();
+      loadUnitsList();
+      if (editingUnitId) {
+        cancelUnitEdit();
+      }
     } else {
       const errorText = await response.text();
+      console.error("Server error response:", errorText);
       displayMessage(`Error: ${errorText}`, "error", "messages-units");
     }
   } catch (error) {
+    console.error("Request error:", error);
     displayMessage(
-      "An error occurred while adding the unit.",
+      "An error occurred while saving the unit.",
       "error",
       "messages-units"
     );
@@ -102,8 +183,14 @@ async function handleUnitFormSubmit(e) {
 async function handleRoleFormSubmit(e) {
   e.preventDefault();
   console.log("Role form submitted");
+  console.log("editingRoleId:", editingRoleId);
+  console.log(
+    "Button text:",
+    document.getElementById("role-submit-btn").textContent
+  );
+
   const roleId = document.getElementById("role-id").value.trim();
-  const parentIds = Array.from(document.querySelectorAll(".role-parent-id"))
+  const parentIds = Array.from(document.querySelectorAll(".role-parent-input"))
     .map((input) => input.value.trim())
     .filter((p) => p !== "");
 
@@ -112,32 +199,422 @@ async function handleRoleFormSubmit(e) {
     return;
   }
 
-  const xmlPayload = `
-          <role id="${roleId}">
-            ${parentIds.map((p) => `<parent>${p}</parent>`).join("")}
-          </role>
-        `;
+  // Create different XML payload formats for POST vs PUT
+  let xmlPayload;
+  if (editingRoleId) {
+    // PUT request - send only the parent values in the expected format
+    xmlPayload = `
+      <role>
+        ${parentIds.map((p) => `<parent>${p}</parent>`).join("")}
+      </role>
+    `;
+  } else {
+    // POST request - send the role with id attribute and parent elements
+    xmlPayload = `
+      <role id="${roleId}">
+        ${parentIds.map((p) => `<parent>${p}</parent>`).join("")}
+      </role>
+    `;
+  }
+
+  console.log("XML Payload:", xmlPayload);
 
   try {
-    const response = await fetch(`${apiBaseUrl}/roles`, {
-      method: "POST",
+    const method = editingRoleId ? "PUT" : "POST";
+    const url = editingRoleId
+      ? `${apiBaseUrl}/roles/${roleId}`
+      : `${apiBaseUrl}/roles`;
+
+    console.log(`Making ${method} request to:`, url);
+
+    const response = await fetch(url, {
+      method: method,
       headers: { "Content-Type": "application/xml" },
       body: xmlPayload,
     });
 
     if (response.ok) {
-      displayMessage("Role added successfully.", "success", "messages-roles");
+      const action = editingRoleId ? "updated" : "added";
+      displayMessage(
+        `Role ${action} successfully.`,
+        "success",
+        "messages-roles"
+      );
       document.getElementById("manage-roles-form").reset();
+      document.getElementById("role-parents").innerHTML = "";
+      loadRolesList();
+      if (editingRoleId) {
+        cancelRoleEdit();
+      }
     } else {
       const errorText = await response.text();
+      console.error("Server error response:", errorText);
       displayMessage(`Error: ${errorText}`, "error", "messages-roles");
     }
   } catch (error) {
+    console.error("Network error:", error);
     displayMessage(
-      "An error occurred while adding the role.",
+      "An error occurred while saving the role.",
       "error",
       "messages-roles"
     );
+  }
+}
+
+// Global variables for skills management
+let currentSkills = [];
+let editingSkillId = null;
+let availableRelationTypes = [
+  "Parent",
+  "Child",
+  "Similar",
+  "Prerequisite",
+  "Builds-on",
+];
+
+async function loadSkillsList() {
+  try {
+    const skills = await fetchAllSkills();
+    currentSkills = skills;
+    displaySkillsList(skills);
+    updateAvailableSkillsDropdown();
+  } catch (error) {
+    console.error("Error loading skills:", error);
+    displayMessage("Failed to load skills list.", "error", "messages-skills");
+  }
+}
+
+function displaySkillsList(skills) {
+  const skillsList = document.getElementById("skills-list");
+  if (!skillsList) return;
+
+  if (skills.length === 0) {
+    skillsList.innerHTML =
+      '<div class="skills-empty">No skills found. Add your first skill!</div>';
+    return;
+  }
+
+  skillsList.innerHTML = skills
+    .map((skill) => {
+      const relationCount = skill.relations
+        ? skill.relations.length
+        : skill.relatedSkills
+        ? skill.relatedSkills.length
+        : 0;
+      return `
+      <div class="skill-list-item" data-skill-id="${skill.id}">
+        <div class="skill-info">
+          <div class="skill-name">${skill.id}</div>
+          <div class="skill-relations-count">
+            ${relationCount} relation(s)
+          </div>
+        </div>
+        <div class="skill-actions">
+          <button class="skill-edit-btn" onclick="editSkill('${skill.id}')">Edit</button>
+          <button class="skill-delete-btn" onclick="deleteSkill('${skill.id}')">Delete</button>
+        </div>
+      </div>
+    `;
+    })
+    .join("");
+}
+
+function updateAvailableSkillsDropdown() {
+  const dropdown = document.getElementById("available-skills-dropdown");
+  if (!dropdown) return;
+
+  const currentSkillId = document.getElementById("skill-id").value.trim();
+  const existingRelationIds = Array.from(
+    document.querySelectorAll(".relation-item")
+  )
+    .map((item) => {
+      // Get confirmed relations
+      if (item.dataset.relationId) {
+        return item.dataset.relationId;
+      }
+      // Skip unconfirmed manual inputs
+      return null;
+    })
+    .filter((id) => id);
+
+  dropdown.innerHTML = '<option value="">Select a skill to relate...</option>';
+
+  currentSkills
+    .filter(
+      (skill) =>
+        skill.id !== currentSkillId && !existingRelationIds.includes(skill.id)
+    )
+    .forEach((skill) => {
+      const option = document.createElement("option");
+      option.value = skill.id;
+      option.textContent = skill.id;
+      dropdown.appendChild(option);
+    });
+}
+
+async function editSkill(skillId) {
+  try {
+    const response = await fetch(`${apiBaseUrl}/skills/${skillId}`);
+    if (!response.ok) throw new Error("Failed to fetch skill details");
+
+    const skill = await response.json();
+    editingSkillId = skillId;
+
+    // Update form title and button
+    document.getElementById(
+      "skill-editor-title"
+    ).textContent = `Edit Skill: ${skillId}`;
+    document.getElementById("skill-submit-btn").textContent = "Update Skill";
+    document.getElementById("cancel-edit-btn").style.display = "inline-block";
+
+    // Populate form
+    document.getElementById("skill-id").value = skillId;
+    document.getElementById("skill-id").readOnly = true;
+
+    // Clear existing relations
+    document.getElementById("relations-container").innerHTML = "";
+
+    // Add existing relations - handle both new and old format
+    if (skill.relations && skill.relations.length > 0) {
+      skill.relations.forEach((relation) => {
+        addRelationItem(
+          relation.id,
+          relation.type || "Similar",
+          relation.strength || 5
+        );
+      });
+    } else if (skill.relatedSkills && skill.relatedSkills.length > 0) {
+      // Fallback for old format
+      skill.relatedSkills.forEach((relatedSkillId) => {
+        addRelationItem(relatedSkillId, "Similar", 5);
+      });
+    }
+
+    updateAvailableSkillsDropdown();
+
+    // Highlight selected skill in list
+    document.querySelectorAll(".skill-list-item").forEach((item) => {
+      item.classList.remove("selected");
+    });
+    document
+      .querySelector(`[data-skill-id="${skillId}"]`)
+      ?.classList.add("selected");
+  } catch (error) {
+    console.error("Error editing skill:", error);
+    displayMessage(
+      "Failed to load skill for editing.",
+      "error",
+      "messages-skills"
+    );
+  }
+}
+
+async function deleteSkill(skillId) {
+  if (
+    !confirm(
+      `Are you sure you want to delete the skill "${skillId}"? This action cannot be undone.`
+    )
+  ) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/skills/${skillId}`, {
+      method: "DELETE",
+    });
+
+    if (response.ok) {
+      displayMessage(
+        "Skill deleted successfully.",
+        "success",
+        "messages-skills"
+      );
+      loadSkillsList(); // Refresh the list
+      if (editingSkillId === skillId) {
+        cancelEdit();
+      }
+    } else {
+      const errorText = await response.text();
+      displayMessage(
+        `Error deleting skill: ${errorText}`,
+        "error",
+        "messages-skills"
+      );
+    }
+  } catch (error) {
+    console.error("Error deleting skill:", error);
+    displayMessage(
+      "An error occurred while deleting the skill.",
+      "error",
+      "messages-skills"
+    );
+  }
+}
+
+function cancelEdit() {
+  editingSkillId = null;
+  document.getElementById("skill-editor-title").textContent = "Add New Skill";
+  document.getElementById("skill-submit-btn").textContent = "Add Skill";
+  document.getElementById("cancel-edit-btn").style.display = "none";
+  document.getElementById("skill-id").readOnly = false;
+  document.getElementById("manage-skills-form").reset();
+  document.getElementById("relations-container").innerHTML = "";
+  updateAvailableSkillsDropdown();
+
+  // Remove selection highlight
+  document.querySelectorAll(".skill-list-item").forEach((item) => {
+    item.classList.remove("selected");
+  });
+}
+
+function addRelationItem(
+  relationId = "",
+  relationType = "Similar",
+  strength = 5
+) {
+  const container = document.getElementById("relations-container");
+  const div = document.createElement("div");
+  div.className = "relation-item";
+
+  // If no relationId provided, allow manual input
+  if (relationId) {
+    div.dataset.relationId = relationId;
+  }
+
+  if (relationId) {
+    // For existing skills
+    div.innerHTML = `
+      <div class="relation-skill-name">${relationId}</div>
+      <input type="text" class="relation-type-input" value="${relationType}" placeholder="Type">
+      <div class="strength-controls">
+        <input type="range" class="strength-slider" min="1" max="10" value="${strength}">
+        <input type="number" class="strength-input" min="1" max="999" value="${strength}" placeholder="Value">
+        <button type="button" class="toggle-custom-btn">⚙</button>
+      </div>
+      <button type="button" class="remove-relation-btn">×</button>
+    `;
+  } else {
+    // For manual input
+    div.innerHTML = `
+      <div class="relation-manual-input">
+        <input type="text" class="relation-id-input" placeholder="Skill ID">
+        <button type="button" class="confirm-relation-btn">✓</button>
+      </div>
+      <input type="text" class="relation-type-input" value="${relationType}" placeholder="Type">
+      <div class="strength-controls">
+        <input type="range" class="strength-slider" min="1" max="10" value="${strength}">
+        <input type="number" class="strength-input" min="1" max="999" value="${strength}" placeholder="Value">
+        <button type="button" class="toggle-custom-btn">⚙</button>
+      </div>
+      <button type="button" class="remove-relation-btn">×</button>
+    `;
+
+    // Handle manual skill ID confirmation
+    const confirmBtn = div.querySelector(".confirm-relation-btn");
+    const skillInput = div.querySelector(".relation-id-input");
+
+    confirmBtn.addEventListener("click", function () {
+      const skillId = skillInput.value.trim();
+      if (skillId) {
+        // Check if skill exists in our list
+        const skillExists = currentSkills.some((skill) => skill.id === skillId);
+        if (!skillExists) {
+          displayMessage(
+            `Skill "${skillId}" not found. You can still add it as a relation.`,
+            "warning",
+            "messages-skills"
+          );
+        }
+
+        // Replace manual input with skill name display
+        div.dataset.relationId = skillId;
+        div.querySelector(
+          ".relation-manual-input"
+        ).innerHTML = `<div class="relation-skill-name">${skillId}</div>`;
+        updateAvailableSkillsDropdown();
+      } else {
+        displayMessage("Please enter a skill ID.", "error", "messages-skills");
+      }
+    });
+
+    // Allow Enter key to confirm
+    skillInput.addEventListener("keypress", function (e) {
+      if (e.key === "Enter") {
+        confirmBtn.click();
+      }
+    });
+  }
+
+  // Set up strength controls
+  const slider = div.querySelector(".strength-slider");
+  const numberInput = div.querySelector(".strength-input");
+  const toggleBtn = div.querySelector(".toggle-custom-btn");
+
+  // Initialize display mode (slider mode by default)
+  let isCustomMode = strength > 10;
+  updateStrengthDisplay();
+
+  function updateStrengthDisplay() {
+    if (isCustomMode) {
+      slider.style.display = "none";
+      numberInput.style.display = "inline-block";
+      toggleBtn.textContent = "📊";
+      toggleBtn.title = "Switch to slider";
+    } else {
+      slider.style.display = "inline-block";
+      numberInput.style.display = "none";
+      toggleBtn.textContent = "⚙";
+      toggleBtn.title = "Switch to custom value";
+    }
+  }
+
+  // Sync values between slider and number input
+  slider.addEventListener("input", function () {
+    if (!isCustomMode) {
+      numberInput.value = this.value;
+    }
+  });
+
+  numberInput.addEventListener("input", function () {
+    if (isCustomMode && this.value >= 1 && this.value <= 10) {
+      slider.value = this.value;
+    }
+  });
+
+  // Toggle between slider and custom input
+  toggleBtn.addEventListener("click", function () {
+    isCustomMode = !isCustomMode;
+    if (isCustomMode) {
+      // Switch to custom mode, keep current value if it's <= 10
+      if (numberInput.value <= 10) {
+        numberInput.value = slider.value;
+      }
+    } else {
+      // Switch to slider mode, constrain value to 1-10
+      const currentValue = parseInt(numberInput.value) || 5;
+      if (currentValue > 10) {
+        slider.value = 10;
+        numberInput.value = 10;
+      } else if (currentValue < 1) {
+        slider.value = 1;
+        numberInput.value = 1;
+      } else {
+        slider.value = currentValue;
+      }
+    }
+    updateStrengthDisplay();
+  });
+
+  div.querySelector(".remove-relation-btn").addEventListener("click", () => {
+    container.removeChild(div);
+    updateAvailableSkillsDropdown();
+  });
+
+  container.appendChild(div);
+
+  // Only update dropdown if this is a confirmed relation
+  if (relationId) {
+    updateAvailableSkillsDropdown();
   }
 }
 
@@ -153,10 +630,29 @@ async function handleSkillFormSubmit(e) {
     document.querySelectorAll(".relation-item")
   )
     .map((item) => {
-      const relId = item.querySelector(".relation-id").value.trim();
-      const relValue = item.querySelector(".relation-value").value.trim();
+      let relId = item.dataset.relationId;
+
+      // If no relationId in dataset, check for unconfirmed manual input
+      if (!relId) {
+        const manualInput = item.querySelector(".relation-id-input");
+        if (manualInput && manualInput.value.trim()) {
+          relId = manualInput.value.trim();
+        }
+      }
+
       if (relId) {
-        return `<relation id="${relId}" type="${relValue}"/>`;
+        const relType =
+          item.querySelector(".relation-type-input").value.trim() || "Similar";
+        const numberInput = item.querySelector(".strength-input");
+        const slider = item.querySelector(".strength-slider");
+
+        // Use number input value if it's visible, otherwise use slider
+        const strength =
+          numberInput.style.display !== "none"
+            ? numberInput.value
+            : slider.value;
+
+        return `<relation id="${relId}" type="${relType}" strength="${strength}"/>`;
       }
       return "";
     })
@@ -169,15 +665,33 @@ async function handleSkillFormSubmit(e) {
 `;
 
   try {
-    const response = await fetch(`${apiBaseUrl}/skills`, {
-      method: "POST",
+    const method = editingSkillId ? "PUT" : "POST";
+    const url = editingSkillId
+      ? `${apiBaseUrl}/skills/${skillId}`
+      : `${apiBaseUrl}/skills`;
+
+    const response = await fetch(url, {
+      method: method,
       headers: { "Content-Type": "application/xml" },
       body: xmlPayload,
     });
+
     const responseText = await response.text();
     if (response.ok) {
-      displayMessage("Skill added successfully.", "success", "messages-skills");
-      document.getElementById("manage-skills-form").reset();
+      const action = editingSkillId ? "updated" : "added";
+      displayMessage(
+        `Skill ${action} successfully.`,
+        "success",
+        "messages-skills"
+      );
+      loadSkillsList(); // Refresh the skills list
+      if (editingSkillId) {
+        cancelEdit();
+      } else {
+        document.getElementById("manage-skills-form").reset();
+        document.getElementById("relations-container").innerHTML = "";
+        updateAvailableSkillsDropdown();
+      }
     } else {
       if (response.status === 409 && responseText.includes("already exists")) {
         displayMessage(
@@ -190,9 +704,9 @@ async function handleSkillFormSubmit(e) {
       }
     }
   } catch (error) {
-    console.error("Skill creation error:", error);
+    console.error("Skill creation/update error:", error);
     displayMessage(
-      "An error occurred while adding the skill.",
+      "An error occurred while saving the skill.",
       "error",
       "messages-skills"
     );
@@ -224,22 +738,33 @@ async function fetchAllSkills() {
   }
 }
 
-// Function to add a new unit-role pair in the subject editor
+// Function to add a new unit-role pair in the static subject management form
 function addUnitRolePair() {
-  const container = document.getElementById("edit-unit-role-pairs");
-  if (!container) return;
+  // Try to find the container for the static form first
+  let container = document.getElementById("unit-role-pairs");
+
+  // If static form container not found, try the dynamic editor container
+  if (!container) {
+    container = document.getElementById("edit-unit-role-pairs");
+    if (!container) {
+      console.error("Container for unit-role pairs not found");
+      return;
+    }
+  }
+
+  console.error("current state:", container);
 
   const pairDiv = document.createElement("div");
-  pairDiv.className = "unit-role-pair";
+  pairDiv.className = "unit-role-item";
   pairDiv.innerHTML = `
-    <input type="text" class="unit-id" placeholder="Unit ID">
-    <input type="text" class="role-id" placeholder="Role ID">
-    <button type="button" class="remove-btn">×</button>
+    <input type="text" class="unit-id-input" placeholder="Enter Unit ID">
+    <input type="text" class="role-id-input" placeholder="Enter Role ID">
+    <button type="button" class="remove-relation-btn">×</button>
   `;
 
   container.appendChild(pairDiv);
 
-  const removeBtn = pairDiv.querySelector(".remove-btn");
+  const removeBtn = pairDiv.querySelector(".remove-relation-btn");
   if (removeBtn) {
     removeBtn.addEventListener("click", function () {
       pairDiv.remove();
@@ -248,20 +773,59 @@ function addUnitRolePair() {
 }
 
 function addRoleParent() {
+  console.log("addRoleParent function called");
+  
+  const container = document.getElementById("role-parents");
+  if (!container) {
+    console.error("role-parents container not found");
+    return;
+  }
+
+  const parentInput = document.getElementById("parent-role-input");
+  const parentId = parentInput ? parentInput.value.trim() : "";
+
+  console.log("Parent ID:", parentId);
+
+  if (!parentId) {
+    displayMessage("Parent Role ID is required.", "error", "messages-roles");
+    return;
+  }
+
+  // Check if parent already exists
+  const existingParents = Array.from(container.querySelectorAll(".role-parent-input"))
+    .map(input => input.value.trim());
+  
+  if (existingParents.includes(parentId)) {
+    displayMessage("Parent role already added.", "warning", "messages-roles");
+    return;
+  }
+
+  console.log("Creating parent div for:", parentId);
+
   const parentDiv = document.createElement("div");
   parentDiv.className = "role-parent-pair";
   parentDiv.innerHTML = `
-    <input type="text" class="role-parent-id" placeholder="Parent ID" required>
-    <button type="button" class="remove-btn">×</button>
+    <input type="text" class="role-parent-input" value="${parentId}" placeholder="Parent ID" readonly>
+    <button type="button" class="remove-btn danger-btn" title="Remove this parent">×</button>
   `;
-  document.getElementById("role-parents").appendChild(parentDiv);
 
+  container.appendChild(parentDiv);
+
+  // Add remove functionality
   const removeBtn = parentDiv.querySelector(".remove-btn");
   if (removeBtn) {
     removeBtn.addEventListener("click", function () {
+      console.log("Removing parent:", parentId);
       parentDiv.remove();
     });
   }
+
+  // Clear the input field
+  if (parentInput) {
+    parentInput.value = "";
+  }
+
+  console.log("Parent added successfully");
 }
 
 async function openSubjectEditor(uid) {
@@ -274,6 +838,11 @@ async function openSubjectEditor(uid) {
     if (!subjectResponse.ok) throw new Error("Failed to fetch subject");
     const subject = await subjectResponse.json();
 
+    // Debug logging
+    console.log("Subject data received:", subject);
+    console.log("Subject relations:", subject.relations);
+    console.log("Subject skillRefs:", subject.skillRefs);
+
     const tabbed = document.querySelector("#main");
     const tabId = `subject-${uid}`;
     if (!window.uidash_add_tab_active(tabbed, `Edit ${uid}`, tabId, true))
@@ -284,89 +853,160 @@ async function openSubjectEditor(uid) {
 
     const area = document.querySelector(`[data-belongs-to-tab="${tabId}"]`);
     area.innerHTML = `
-            <div class="edit-subject-container">
-              <h2>${subject.id}</h3>
-              <form id="subject-editor-form" onsubmit="window.handleSubjectEditorSubmit(event)">
-                <input type="hidden" id="edit-subject-id" value="${subject.id}">
-                <input type="hidden" id="edit-subject-uid" value="${
-                  subject.uid
-                }">
-      
-                <div class="section-header">
-                  <h3>Unit-Role Pairs</h4>
+            <div class="subjects-management-container">
+              <div class="subject-info-section">
+                <h3>Subject Information</h3>
+                <div class="subject-meta">
+                  <div class="meta-item"><strong>ID:</strong> ${
+                    subject.id
+                  }</div>
+                  <div class="meta-item"><strong>UID:</strong> ${
+                    subject.uid
+                  }</div>
+                  <div class="meta-item"><strong>Relations:</strong> ${
+                    subject.relations.length
+                  } Unit-Role pairs</div>
+                  <div class="meta-item"><strong>Skills:</strong> ${
+                    subject.skillRefs.length
+                  } assigned</div>
                 </div>
-                <div id="edit-unit-role-pairs">
-                  ${subject.relations
-                    .map(
-                      (rel) => `
-                    <div class="unit-role-pair">
-                      <input type="text" class="unit-id" value="${rel.unit}" placeholder="Unit ID">
-                      <input type="text" class="role-id" value="${rel.role}" placeholder="Role ID">
-                      <button type="button" class="remove-btn">×</button>
+              </div>
+              
+              <div class="subject-editor-section">
+                <h3 id="subject-editor-title-${tabId}">Edit Subject: ${
+      subject.id
+    }</h3>
+                <form id="subject-editor-form-${tabId}" class="manage-form" onsubmit="window.handleSubjectEditorSubmit(event)">
+                  <input type="hidden" id="edit-subject-id-${tabId}" value="${
+      subject.id
+    }">
+                  <input type="hidden" id="edit-subject-uid-${tabId}" value="${
+      subject.uid
+    }">
+        
+                  <div class="form-group">
+                    <label for="edit-subject-id-display-${tabId}">Subject ID:</label>
+                    <input type="text" id="edit-subject-id-display-${tabId}" value="${
+      subject.id
+    }" placeholder="Subject ID" readonly />
+                  </div>
+        
+                  <div class="relations-section">
+                    <h4>Unit-Role Relations</h4>
+                    <div id="edit-unit-role-pairs-${tabId}">
+                      ${
+                        subject.relations && subject.relations.length > 0
+                          ? subject.relations
+                              .filter((rel) => rel && rel.unit && rel.role)
+                              .map((rel) => {
+                                console.log("Processing relation:", rel);
+                                return `
+                              <div class="unit-role-item">
+                                <input type="text" class="unit-id-input" value="${
+                                  rel.unit || ""
+                                }" placeholder="Enter Unit ID">
+                                <input type="text" class="role-id-input" value="${
+                                  rel.role || ""
+                                }" placeholder="Enter Role ID">
+                                <button type="button" class="remove-relation-btn">×</button>
+                              </div>
+                            `;
+                              })
+                              .join("")
+                          : '<div class="no-relations">No unit-role relations found</div>'
+                      }
                     </div>
-                  `
-                    )
-                    .join("")}
-                </div>
-                <button type="button" onclick="window.addUnitRolePair()">Add Pair</button>
-      
-                <div class="section-header">
-                  <h3>Skills</h4>
-                </div>
-                <div class="skill-add-section">
-                  <div class="skill-dropdown-container">
-                    <select id="skill-dropdown" class="skill-dropdown">
-                      <option value="">Select a skill...</option>
-                      ${allSkills
-                        .filter((skill) => !existingSkillsMap[skill.id]) // Filter out already added skills
+                    <div class="add-relation-controls">
+                      <input type="text" id="unit-id-input-${tabId}" placeholder="Unit ID" />
+                      <input type="text" id="role-id-input-${tabId}" placeholder="Role ID" />
+                      <button type="button" id="add-unit-role-btn-${tabId}" onclick="window.addUnitRolePairForTab('${tabId}')">Add Unit-Role Pair</button>
+                    </div>
+                  </div>
+        
+                  <div class="relations-section">
+                    <h4>Skills Assignment</h4>
+                    <div id="edit-skills-${tabId}">
+                      ${subject.skillRefs
                         .map(
-                          (skill) =>
-                            `<option value="${skill.id}">${skill.id}</option>`
+                          (skill) => `
+                        <div class="skill-item-edit">
+                          <span class="skill-name">${skill}</span>
+                          <button type="button" class="remove-btn danger-btn" title="Remove this skill">×</button>
+                        </div>
+                      `
                         )
                         .join("")}
-                    </select>
-                    <button type="button" onclick="window.addSkillFromDropdown()">Add</button>
-                  </div>
-                </div>
-                <div id="edit-skills">
-                  ${subject.skillRefs
-                    .map(
-                      (skill) => `
-                    <div class="skill-item">
-                      <span>${skill}</span>
-                      <button type="button" class="remove-btn">×</button>
                     </div>
-                  `
-                    )
-                    .join("")}
-                </div>
-      
-                <div class="form-actions">
-                  <button type="submit">Save Changes</button>
-                  <button type="button" onclick="window.uidash_close_tab(this.closest('[data-belongs-to-tab]'))">Cancel</button>
-                </div>
-                <div id="messages-edit"></div>
-              </form>
+                    <div class="add-relation-controls">
+                      <input type="text" id="skill-search-${tabId}" placeholder="Search for skills...">
+                      <select id="skill-dropdown-${tabId}" class="skill-dropdown">
+                        <option value="">Select a skill...</option>
+                        ${allSkills
+                          .filter((skill) => !existingSkillsMap[skill.id])
+                          .map(
+                            (skill) =>
+                              `<option value="${skill.id}">${skill.id}</option>`
+                          )
+                          .join("")}
+                      </select>
+                      <button type="button" id="add-skill-btn-${tabId}" onclick="window.addSkillFromDropdownForTab('${tabId}')">Add Skill</button>
+                    </div>
+                  </div>
+        
+                  <div class="form-actions">
+                    <button type="submit" id="subject-submit-btn-${tabId}">Save Changes</button>
+                    <button type="button" id="cancel-subject-btn-${tabId}" onclick="window.uidash_close_tab(this.closest('[data-belongs-to-tab]'))">Cancel</button>
+                  </div>
+                  <div id="messages-edit-${tabId}"></div>
+                </form>
+              </div>
             </div>
           `;
 
-    const skillDropdown = document.getElementById("skill-dropdown");
-    if (skillDropdown) {
-      initializeSearchableDropdown(skillDropdown);
+    // Initialize skill search functionality
+    const skillSearch = document.getElementById(`skill-search-${tabId}`);
+    const skillDropdown = document.getElementById(`skill-dropdown-${tabId}`);
+
+    if (skillSearch && skillDropdown) {
+      skillSearch.addEventListener("input", function () {
+        const searchTerm = this.value.toLowerCase();
+        const options = skillDropdown.options;
+
+        for (let i = 0; i < options.length; i++) {
+          const option = options[i];
+          const text = option.textContent.toLowerCase();
+
+          if (text.includes(searchTerm) || option.value === "") {
+            option.style.display = "";
+          } else {
+            option.style.display = "none";
+          }
+        }
+
+        // Auto-select if only one option is visible (excluding the empty option)
+        const visibleOptions = Array.from(options).filter(
+          (opt) => opt.style.display !== "none" && opt.value !== ""
+        );
+        if (visibleOptions.length === 1) {
+          skillDropdown.value = visibleOptions[0].value;
+        }
+      });
     }
 
     document
       .querySelectorAll(
-        "#edit-unit-role-pairs .remove-btn, #edit-skills .remove-btn"
+        `#edit-unit-role-pairs-${tabId} .remove-relation-btn, #edit-skills-${tabId} .remove-btn`
       )
       .forEach((btn) => {
         btn.addEventListener("click", function () {
-          this.closest(".unit-role-pair, .skill-item").remove();
+          this.closest(".unit-role-item, .skill-item-edit").remove();
 
-          if (this.closest(".skill-item")) {
+          if (this.closest(".skill-item-edit")) {
             const skillId =
-              this.closest(".skill-item").querySelector("span").textContent;
-            addSkillBackToDropdown(skillId);
+              this.closest(".skill-item-edit").querySelector(
+                ".skill-name"
+              ).textContent;
+            addSkillBackToDropdownForTab(skillId, tabId);
           }
         });
       });
@@ -376,30 +1016,151 @@ async function openSubjectEditor(uid) {
   }
 }
 
-function initializeSearchableDropdown(selectElement) {
-  // Create search input
-  const searchInput = document.createElement("input");
-  searchInput.type = "text";
-  searchInput.placeholder = "Search for skills...";
-  searchInput.className = "dropdown-search";
+function showEditMessage(message, type = "info") {
+  const msgDiv = document.getElementById("messages-edit");
+  if (msgDiv) {
+    msgDiv.textContent = message;
+    msgDiv.className = type;
+    setTimeout(() => (msgDiv.textContent = ""), 5000);
+  }
+}
 
-  selectElement.parentNode.insertBefore(searchInput, selectElement);
+function showEditMessageForTab(message, type = "info", tabId) {
+  const msgDiv = document.getElementById(`messages-edit-${tabId}`);
+  if (msgDiv) {
+    msgDiv.textContent = message;
+    msgDiv.className = type;
+    setTimeout(() => (msgDiv.textContent = ""), 5000);
+  }
+}
 
-  searchInput.addEventListener("input", function () {
-    const searchTerm = this.value.toLowerCase();
-    const options = selectElement.options;
+function addUnitRolePairForTab(tabId) {
+  console.log("addUnitRolePairForTab called with tabId:", tabId);
 
-    for (let i = 0; i < options.length; i++) {
-      const option = options[i];
-      const text = option.textContent.toLowerCase();
+  // Get values from the tab-specific input fields
+  const unitInput = document.getElementById(`unit-id-input-${tabId}`);
+  const roleInput = document.getElementById(`role-id-input-${tabId}`);
 
-      if (text.includes(searchTerm) || option.value === "") {
-        option.style.display = "";
-      } else {
-        option.style.display = "none";
-      }
-    }
+  let unitId = "";
+  let roleId = "";
+
+  if (unitInput) {
+    unitId = unitInput.value.trim();
+    unitInput.value = ""; // Clear after getting value
+  }
+  if (roleInput) {
+    roleId = roleInput.value.trim();
+    roleInput.value = ""; // Clear after getting value
+  }
+
+  console.log("Got values from inputs:", unitId, roleId);
+
+  const container = document.getElementById(`edit-unit-role-pairs-${tabId}`);
+  if (!container) {
+    console.error(`Container 'edit-unit-role-pairs-${tabId}' not found`);
+    return;
+  }
+
+  const div = document.createElement("div");
+  div.className = "unit-role-item";
+
+  // Use placeholder values if inputs are empty to make them visible
+  const displayUnitId = unitId || "";
+  const displayRoleId = roleId || "";
+
+  div.innerHTML = `
+    <input type="text" class="unit-id-input" value="${displayUnitId}" placeholder="Enter Unit ID">
+    <input type="text" class="role-id-input" value="${displayRoleId}" placeholder="Enter Role ID">
+    <button type="button" class="remove-relation-btn">×</button>
+  `;
+
+  div.querySelector(".remove-relation-btn").addEventListener("click", () => {
+    console.log("Removing unit-role pair");
+    container.removeChild(div);
   });
+
+  container.appendChild(div);
+  console.log(
+    "Unit-role pair added successfully. Container now has",
+    container.children.length,
+    "children"
+  );
+
+  // Focus on the first input if both are empty
+  if (!displayUnitId && !displayRoleId) {
+    const firstInput = div.querySelector(".unit-id-input");
+    if (firstInput) {
+      firstInput.focus();
+    }
+  }
+}
+
+function addSkillFromDropdownForTab(tabId) {
+  const dropdown = document.getElementById(`skill-dropdown-${tabId}`);
+  if (!dropdown || !dropdown.value) return;
+
+  const skillId = dropdown.value;
+  const container = document.getElementById(`edit-skills-${tabId}`);
+  if (!container) return;
+
+  // Check if skill is already added
+  if (
+    Array.from(container.children).some(
+      (item) => item.querySelector(".skill-name").textContent === skillId
+    )
+  ) {
+    return;
+  }
+
+  // Create new skill item
+  const skillDiv = document.createElement("div");
+  skillDiv.className = "skill-item-edit";
+  skillDiv.innerHTML = `
+    <span class="skill-name">${skillId}</span>
+    <button type="button" class="remove-btn danger-btn" title="Remove this skill">×</button>
+  `;
+
+  container.appendChild(skillDiv);
+
+  // Add remove functionality
+  const removeBtn = skillDiv.querySelector(".remove-btn");
+  removeBtn.addEventListener("click", function () {
+    skillDiv.remove();
+    addSkillBackToDropdownForTab(skillId, tabId);
+  });
+
+  // Remove from dropdown
+  const option = Array.from(dropdown.options).find(
+    (opt) => opt.value === skillId
+  );
+  if (option) {
+    option.remove();
+  }
+
+  // Clear search and reset dropdown
+  const searchInput = document.getElementById(`skill-search-${tabId}`);
+  if (searchInput) {
+    searchInput.value = "";
+    // Show all remaining options
+    Array.from(dropdown.options).forEach((opt) => (opt.style.display = ""));
+  }
+
+  dropdown.value = "";
+}
+
+function addSkillBackToDropdownForTab(skillId, tabId) {
+  const dropdown = document.getElementById(`skill-dropdown-${tabId}`);
+  if (!dropdown) return;
+
+  for (let i = 0; i < dropdown.options.length; i++) {
+    if (dropdown.options[i].value === skillId) {
+      return;
+    }
+  }
+  const option = document.createElement("option");
+  option.value = skillId;
+  option.textContent = skillId;
+  dropdown.appendChild(option);
 }
 
 function addSkillBackToDropdown(skillId) {
@@ -428,37 +1189,46 @@ function addSkillFromDropdown() {
   // Check if skill is already added
   if (
     Array.from(container.children).some(
-      (item) => item.querySelector("span").textContent === skillId
+      (item) => item.querySelector(".skill-name").textContent === skillId
     )
   ) {
     return;
   }
 
-  // Add skill to the list
-  const div = document.createElement("div");
-  div.className = "skill-item";
-  div.innerHTML = `
-    <span>${skillId}</span>
-    <button type="button" class="remove-btn">×</button>
+  // Create new skill item
+  const skillDiv = document.createElement("div");
+  skillDiv.className = "skill-item-edit";
+  skillDiv.innerHTML = `
+    <span class="skill-name">${skillId}</span>
+    <button type="button" class="remove-btn danger-btn" title="Remove this skill">×</button>
   `;
 
-  // Add removal event handler
-  div.querySelector(".remove-btn").addEventListener("click", function () {
-    div.remove();
+  container.appendChild(skillDiv);
+
+  // Add remove functionality
+  const removeBtn = skillDiv.querySelector(".remove-btn");
+  removeBtn.addEventListener("click", function () {
+    skillDiv.remove();
     addSkillBackToDropdown(skillId);
   });
 
-  container.appendChild(div);
-
-  // Remove selected skill from dropdown
-  for (let i = 0; i < dropdown.options.length; i++) {
-    if (dropdown.options[i].value === skillId) {
-      dropdown.remove(i);
-      break;
-    }
+  // Remove from dropdown
+  const option = Array.from(dropdown.options).find(
+    (opt) => opt.value === skillId
+  );
+  if (option) {
+    option.remove();
   }
 
-  dropdown.selectedIndex = 0;
+  // Clear search and reset dropdown
+  const searchInput = document.getElementById("skill-search");
+  if (searchInput) {
+    searchInput.value = "";
+    // Show all remaining options
+    Array.from(dropdown.options).forEach((opt) => (opt.style.display = ""));
+  }
+
+  dropdown.value = "";
 }
 
 function addSkillAssignment() {
@@ -470,19 +1240,23 @@ async function handleSubjectEditorSubmit(event) {
   event.preventDefault();
   const form = event.target;
 
-  const subjectId = form.querySelector("#edit-subject-id").value;
-  const subjectUid = form.querySelector("#edit-subject-uid").value;
+  // Extract tabId from the form ID
+  const formId = form.id;
+  const tabId = formId.replace("subject-editor-form-", "");
 
-  const pairs = Array.from(form.querySelectorAll(".unit-role-pair"))
+  const subjectId = form.querySelector(`#edit-subject-id-${tabId}`).value;
+  const subjectUid = form.querySelector(`#edit-subject-uid-${tabId}`).value;
+
+  const pairs = Array.from(form.querySelectorAll(".unit-role-item"))
     .map((pair) => ({
-      unit: pair.querySelector(".unit-id").value,
-      role: pair.querySelector(".role-id").value,
+      unit: pair.querySelector(".unit-id-input").value,
+      role: pair.querySelector(".role-id-input").value,
     }))
     .filter((p) => p.unit && p.role);
 
-  const skills = Array.from(form.querySelectorAll(".skill-item span")).map(
-    (span) => span.textContent
-  );
+  const skills = Array.from(
+    form.querySelectorAll(".skill-item-edit .skill-name")
+  ).map((span) => span.textContent);
 
   try {
     const response = await fetch(`${apiBaseUrl}/subjects/${subjectId}`, {
@@ -503,7 +1277,7 @@ async function handleSubjectEditorSubmit(event) {
     });
 
     if (response.ok) {
-      showEditMessage("✅ Changes saved successfully!", "success");
+      showEditMessageForTab("✅ Changes saved successfully!", "success", tabId);
       setTimeout(() => {
         window.uidash_close_tab(form.closest("[data-belongs-to-tab]"));
       }, 1500);
@@ -512,16 +1286,7 @@ async function handleSubjectEditorSubmit(event) {
     }
   } catch (error) {
     console.error("Save failed:", error);
-    showEditMessage(`🚨 Save failed: ${error.message}`, "error");
-  }
-}
-
-function showEditMessage(message, type = "info") {
-  const msgDiv = document.getElementById("messages-edit");
-  if (msgDiv) {
-    msgDiv.textContent = message;
-    msgDiv.className = type;
-    setTimeout(() => (msgDiv.textContent = ""), 5000);
+    showEditMessageForTab(`🚨 Save failed: ${error.message}`, "error", tabId);
   }
 }
 
@@ -543,204 +1308,775 @@ function closeTabAndReturnToGraph(element) {
   }
 }
 
-(async function init() {
+// Global variables for management interfaces
+let currentSubjects = [];
+let currentUnits = [];
+let currentRoles = [];
+let editingSubjectId = null;
+let editingUnitId = null;
+let editingRoleId = null;
+
+// Subject Management Functions
+async function loadSubjectsList() {
   try {
-    const resp = await fetch("index.conf");
-    if (!resp.ok) throw new Error(resp.statusText);
-    const cfg = await resp.json();
-apiBaseUrl = cfg.server;
+    const response = await fetch(`${apiBaseUrl}/subjects`);
+    if (!response.ok) throw new Error("Failed to fetch subjects");
+    const subjectsBasicInfo = await response.json();
 
+    // Store basic subject info without making additional requests
+    currentSubjects = subjectsBasicInfo.map(subjectInfo => ({
+      ...subjectInfo,
+      relations: [], // Will be populated when editing
+      skills: []
+    }));
+    
+    displaySubjectsList(currentSubjects);
+  } catch (error) {
+    console.error("Error loading subjects:", error);
+    displayMessage(
+      "Failed to load subjects list.",
+      "error",
+      "messages-subjects"
+    );
+  }
+}
 
-  } catch (e) {
-    console.error("Could not load index.conf:", e);
+function displaySubjectsList(subjects) {
+  const subjectsList = document.getElementById("subjects-list");
+  if (!subjectsList) return;
+
+  if (subjects.length === 0) {
+    subjectsList.innerHTML =
+      '<div class="subjects-empty">No subjects found. Add your first subject!</div>';
     return;
   }
-  
 
-  // Ensure handlers are attached even if DOM is already loaded
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initializeFormHandlers);
-  } else {
-    // DOM already loaded, initialize right away
-    initializeFormHandlers();
+  subjectsList.innerHTML = subjects
+    .map((subject) => `
+      <div class="subject-list-item" data-subject-id="${subject.id}">
+        <div class="subject-info">
+          <div class="subject-name">${subject.id}</div>
+          <div class="subject-uid">${subject.uid || subject.id}</div>
+        </div>
+        <div class="subject-actions">
+          <button class="subject-edit-btn" onclick="editSubject('${subject.id}')">Edit</button>
+          <button class="subject-delete-btn" onclick="deleteSubject('${subject.id}')">Delete</button>
+        </div>
+      </div>
+    `)
+    .join("");
+}
+
+function addUnitRolePair(unitId = "", roleId = "") {
+  console.log("addUnitRolePair called with:", unitId, roleId);
+
+  // If no parameters provided, get values from input fields
+  if (!unitId && !roleId) {
+    const unitInput = document.getElementById("unit-id-input");
+    const roleInput = document.getElementById("role-id-input");
+
+    if (unitInput) unitId = unitInput.value.trim();
+    if (roleInput) roleId = roleInput.value.trim();
+
+    console.log("Got values from inputs:", unitId, roleId);
+
+    // Clear the input fields after getting values
+    if (unitInput) unitInput.value = "";
+    if (roleInput) roleInput.value = "";
   }
-  
-  function initializeFormHandlers() {
-    console.error("DOM fully loaded, initializing form handlers" + apiBaseUrl);
-    
-    const subjectForm = document.getElementById("manage-subjects-form");
-    if (subjectForm) {
-      // Remove any existing handlers to prevent duplicates
-      subjectForm.removeEventListener("submit", handleSubjectFormSubmit);
-      subjectForm.addEventListener("submit", handleSubjectFormSubmit);
 
-      const addUnitRolePairBtn = document.getElementById("add-unit-role-pair");
-      if (addUnitRolePairBtn) {
-        addUnitRolePairBtn.removeEventListener("click", addUnitRolePair);
-        addUnitRolePairBtn.addEventListener("click", addUnitRolePair);
-      }
+  // Try to find the appropriate container - static form first, then dynamic editor
+  let container = document.getElementById("unit-role-pairs");
+  if (!container) {
+    container = document.getElementById("edit-unit-role-pairs");
+  }
+
+  if (!container) {
+    console.error("No suitable container found for unit-role pairs");
+    return;
+  }
+
+  console.log("Using container:", container.id);
+
+  const div = document.createElement("div");
+  div.className = "unit-role-item";
+
+  // Use placeholder values if inputs are empty to make them visible
+  const displayUnitId = unitId || "";
+  const displayRoleId = roleId || "";
+
+  div.innerHTML = `
+    <input type="text" class="unit-id-input" value="${displayUnitId}" placeholder="Enter Unit ID">
+    <input type="text" class="role-id-input" value="${displayRoleId}" placeholder="Enter Role ID">
+    <button type="button" class="remove-relation-btn">×</button>
+  `;
+
+  div.querySelector(".remove-relation-btn").addEventListener("click", () => {
+    console.log("Removing unit-role pair");
+    container.removeChild(div);
+  });
+
+  container.appendChild(div);
+  console.log(
+    "Unit-role pair added successfully. Container now has",
+    container.children.length,
+    "children"
+  );
+
+  // Focus on the first input if both are empty
+  if (!displayUnitId && !displayRoleId) {
+    const firstInput = div.querySelector(".unit-id-input");
+    if (firstInput) {
+      firstInput.focus();
     }
+  }
+}
 
-    const unitForm = document.getElementById("manage-units-form");
-    if (unitForm) {
-      unitForm.addEventListener("submit", handleUnitFormSubmit);
-    }
+async function editSubject(subjectId) {
+  try {
+    const response = await fetch(`${apiBaseUrl}/subjects/${subjectId}`);
+    if (!response.ok) throw new Error("Failed to fetch subject");
 
-    const roleForm = document.getElementById("manage-roles-form");
-    if (roleForm) {
-      roleForm.addEventListener("submit", handleRoleFormSubmit);
+    const subject = await response.json();
+    console.log("Edit subject - received subject data:", subject);
 
-      const addRoleParentBtn = document.getElementById("add-role-parent");
-      if (addRoleParentBtn) {
-        addRoleParentBtn.addEventListener("click", function () {
-          const parentDiv = document.createElement("div");
-          parentDiv.className = "role-parent-pair";
-          parentDiv.innerHTML = `
-                <input type="text" class="role-parent-id" placeholder="Parent ID" required>
-                <button type="button" class="remove-btn">×</button>
-              `;
-          document.getElementById("role-parents").appendChild(parentDiv);
+    // Check if we're in the static management form or need to open the dynamic editor
+    const staticForm = document.getElementById("subject-editor-title");
+    const unitRolePairsContainer = document.getElementById("unit-role-pairs");
 
-          const removeBtn = parentDiv.querySelector(".remove-btn");
-          if (removeBtn) {
-            removeBtn.addEventListener("click", function () {
-              parentDiv.remove();
-            });
-          }
+    if (staticForm && unitRolePairsContainer) {
+      // We're in the static management form
+      editingSubjectId = subjectId;
+
+      // Update form title and button
+      staticForm.textContent = `Edit Subject: ${subjectId}`;
+      document.getElementById("subject-submit-btn").textContent =
+        "Update Subject";
+      document.getElementById("cancel-subject-btn").style.display =
+        "inline-block";
+
+      // Populate form
+      document.getElementById("subject-id").value = subjectId;
+      document.getElementById("subject-id").readOnly = true;
+
+      // Clear existing unit-role pairs
+      unitRolePairsContainer.innerHTML = "";
+
+      // Add existing unit-role pairs
+      if (subject.relations && subject.relations.length > 0) {
+        subject.relations.forEach((relation) => {
+          addUnitRolePair(relation.unit, relation.role);
         });
       }
-    }
 
-    const skillForm = document.getElementById("manage-skills-form");
-    if (skillForm) {
-      skillForm.addEventListener("submit", handleSkillFormSubmit);
-      enhanceSkillForm();
+      // Highlight selected subject in list
+      document.querySelectorAll(".subject-list-item").forEach((item) => {
+        item.classList.remove("selected");
+      });
+      document
+        .querySelector(`[data-subject-id="${subjectId}"]`)
+        ?.classList.add("selected");
+    } else {
+      // We're not in the static form, open the dynamic editor instead
+      // Use the uid if available, otherwise use the id
+      const subjectUid = subject.uid || subjectId;
+      console.log("Opening dynamic editor for uid:", subjectUid);
+      openSubjectEditor(subjectUid);
     }
+  } catch (error) {
+    console.error("Error editing subject:", error);
+    displayMessage(
+      "Failed to load subject for editing.",
+      "error",
+      "messages-subjects"
+    );
+  }
+}
+
+async function deleteSubject(subjectId) {
+  if (
+    !confirm(
+      `Are you sure you want to delete the subject "${subjectId}"? This action cannot be undone.`
+    )
+  ) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/subjects/${subjectId}`, {
+      method: "DELETE",
+    });
+
+    if (response.ok) {
+      displayMessage(
+        "Subject deleted successfully.",
+        "success",
+        "messages-subjects"
+      );
+      loadSubjectsList(); // Refresh the list
+      if (editingSubjectId === subjectId) {
+        cancelSubjectEdit();
+      }
+    } else {
+      const errorText = await response.text();
+      displayMessage(
+        `Error deleting subject: ${errorText}`,
+        "error",
+        "messages-subjects"
+      );
+    }
+  } catch (error) {
+    console.error("Error deleting subject:", error);
+    displayMessage(
+      "An error occurred while deleting the subject.",
+      "error",
+      "messages-subjects"
+    );
+  }
+}
+
+function cancelSubjectEdit() {
+  editingSubjectId = null;
+  document.getElementById("subject-editor-title").textContent =
+    "Add New Subject";
+  document.getElementById("subject-submit-btn").textContent = "Add Subject";
+  document.getElementById("cancel-subject-btn").style.display = "none";
+  document.getElementById("subject-id").readOnly = false;
+  document.getElementById("manage-subjects-form").reset();
+  document.getElementById("unit-role-pairs").innerHTML = "";
+
+  // Remove selection highlight
+  document.querySelectorAll(".subject-list-item").forEach((item) => {
+    item.classList.remove("selected");
+  });
+}
+
+// Unit Management Functions
+async function loadUnitsList() {
+  try {
+    const response = await fetch(`${apiBaseUrl}/units`);
+    if (!response.ok) throw new Error("Failed to fetch units");
+    const units = await response.json();
+    currentUnits = units;
+    displayUnitsList(units);
+  } catch (error) {
+    console.error("Error loading units:", error);
+    displayMessage("Failed to load units list.", "error", "messages-units");
+  }
+}
+
+function displayUnitsList(units) {
+  const unitsList = document.getElementById("units-list");
+  if (!unitsList) return;
+
+  if (units.length === 0) {
+    unitsList.innerHTML =
+      '<div class="units-empty">No units found. Add your first unit!</div>';
+    return;
+  }
+
+  unitsList.innerHTML = units
+    .map(
+      (unit) => `
+    <div class="unit-list-item" data-unit-id="${unit.id}">
+      <div class="unit-info">
+        <div class="unit-name">${unit.id}</div>
+        <div class="unit-parent">${
+          unit.parent ? `Parent: ${unit.parent}` : "No parent"
+        }</div>
+      </div>
+      <div class="unit-actions">
+        <button class="unit-edit-btn" onclick="editUnit('${
+          unit.id
+        }')">Edit</button>
+        <button class="unit-delete-btn" onclick="deleteUnit('${
+          unit.id
+        }')">Delete</button>
+      </div>
+    </div>
+  `
+    )
+    .join("");
+}
+
+async function editUnit(unitId) {
+  try {
+    const response = await fetch(`${apiBaseUrl}/units/${unitId}`);
+    if (!response.ok) throw new Error("Failed to fetch unit");
+
+    const unit = await response.json();
+    editingUnitId = unitId;
+
+    // Update form title and button
+    document.getElementById(
+      "unit-editor-title"
+    ).textContent = `Edit Unit: ${unitId}`;
+    document.getElementById("unit-submit-btn").textContent = "Update Unit";
+    document.getElementById("cancel-unit-btn").style.display = "inline-block";
+
+    // Populate form
+    document.getElementById("unit-id").value = unitId;
+    document.getElementById("unit-id").readOnly = true;
+    document.getElementById("unit-parent-id").value = unit.parent || "";
+
+    // Highlight selected unit in list
+    document.querySelectorAll(".unit-list-item").forEach((item) => {
+      item.classList.remove("selected");
+    });
     document
-      .getElementById("add-relation-btn")
-      ?.addEventListener("click", addRelationItem);
+      .querySelector(`[data-unit-id="${unitId}"]`)
+      ?.classList.add("selected");
+  } catch (error) {
+    console.error("Error editing unit:", error);
+    displayMessage(
+      "Failed to load unit for editing.",
+      "error",
+      "messages-units"
+    );
+  }
+}
 
-    document.addEventListener("click", function (e) {
-      if (e.target && e.target.matches("[data-tab]")) {
+async function deleteUnit(unitId) {
+  if (
+    !confirm(
+      `Are you sure you want to delete the unit "${unitId}"? This action cannot be undone.`
+    )
+  ) {
+    return;
+  }
 
-        setTimeout(function () {
-          const tabId = e.target.getAttribute("data-tab");
-          setupTabFormHandlers(tabId);
-        }, 100);
+  try {
+    const response = await fetch(`${apiBaseUrl}/units/${unitId}`, {
+      method: "DELETE",
+    });
+
+    if (response.ok) {
+      displayMessage("Unit deleted successfully.", "success", "messages-units");
+      loadUnitsList(); // Refresh the list
+      if (editingUnitId === unitId) {
+        cancelUnitEdit();
+      }
+    } else {
+      const errorText = await response.text();
+      displayMessage(
+        `Error deleting unit: ${errorText}`,
+        "error",
+        "messages-units"
+      );
+    }
+  } catch (error) {
+    console.error("Error deleting unit:", error);
+    displayMessage(
+      "An error occurred while deleting the unit.",
+      "error",
+      "messages-units"
+    );
+  }
+}
+
+function cancelUnitEdit() {
+  editingUnitId = null;
+  document.getElementById("unit-editor-title").textContent = "Add New Unit";
+  document.getElementById("unit-submit-btn").textContent = "Add Unit";
+  document.getElementById("cancel-unit-btn").style.display = "none";
+  document.getElementById("unit-id").readOnly = false;
+  document.getElementById("manage-units-form").reset();
+
+  // Remove selection highlight
+  document.querySelectorAll(".unit-list-item").forEach((item) => {
+    item.classList.remove("selected");
+  });
+}
+
+// Role Management Functions
+async function loadRolesList() {
+  try {
+    const response = await fetch(`${apiBaseUrl}/roles`);
+    if (!response.ok) throw new Error("Failed to fetch roles");
+    const roles = await response.json();
+    currentRoles = roles;
+    displayRolesList(roles);
+  } catch (error) {
+    console.error("Error loading roles:", error);
+    displayMessage("Failed to load roles list.", "error", "messages-roles");
+  }
+}
+
+function displayRolesList(roles) {
+  const rolesList = document.getElementById("roles-list");
+  if (!rolesList) return;
+
+  if (roles.length === 0) {
+    rolesList.innerHTML =
+      '<div class="roles-empty">No roles found. Add your first role!</div>';
+    return;
+  }
+
+  rolesList.innerHTML = roles
+    .map((role) => {
+      const parentCount = role.parents ? role.parents.length : 0;
+      const parentText =
+        parentCount > 0 ? `${parentCount} parent(s)` : "No parents";
+
+      return `
+      <div class="role-list-item" data-role-id="${role.id}">
+        <div class="role-info">
+          <div class="role-name">${role.id}</div>
+          <div class="role-parents-count">${parentText}</div>
+        </div>
+        <div class="role-actions">
+          <button class="role-edit-btn" onclick="editRole('${role.id}')">Edit</button>
+          <button class="role-delete-btn" onclick="deleteRole('${role.id}')">Delete</button>
+        </div>
+      </div>
+    `;
+    })
+    .join("");
+}
+
+async function editRole(roleId) {
+  try {
+    const response = await fetch(`${apiBaseUrl}/roles/${roleId}`);
+    if (!response.ok) throw new Error("Failed to fetch role");
+
+    const role = await response.json();
+    editingRoleId = roleId;
+
+    // Update form title and button
+    document.getElementById(
+      "role-editor-title"
+    ).textContent = `Edit Role: ${roleId}`;
+    document.getElementById("role-submit-btn").textContent = "Update Role";
+    document.getElementById("cancel-role-btn").style.display = "inline-block";
+
+    // Populate form
+    document.getElementById("role-id").value = roleId;
+    document.getElementById("role-id").readOnly = true;
+
+    // Clear existing parent roles
+    document.getElementById("role-parents").innerHTML = "";
+
+    // Add existing parent roles
+    if (role.parents && role.parents.length > 0) {
+      role.parents.forEach((parentId) => {
+        addRoleParentItem(parentId);
+      });
+    }
+
+    // Highlight selected role in list
+    document.querySelectorAll(".role-list-item").forEach((item) => {
+      item.classList.remove("selected");
+    });
+    document
+      .querySelector(`[data-role-id="${roleId}"]`)
+      ?.classList.add("selected");
+  } catch (error) {
+    console.error("Error editing role:", error);
+    displayMessage(
+      "Failed to load role for editing.",
+      "error",
+      "messages-roles"
+    );
+  }
+}
+
+async function deleteRole(roleId) {
+  if (
+    !confirm(
+      `Are you sure you want to delete the role "${roleId}"? This action cannot be undone.`
+    )
+  ) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/roles/${roleId}`, {
+      method: "DELETE",
+    });
+
+    if (response.ok) {
+      displayMessage("Role deleted successfully.", "success", "messages-roles");
+      loadRolesList(); // Refresh the list
+      if (editingRoleId === roleId) {
+        cancelRoleEdit();
+      }
+    } else {
+      const errorText = await response.text();
+      displayMessage(
+        `Error deleting role: ${errorText}`,
+        "error",
+        "messages-roles"
+      );
+    }
+  } catch (error) {
+    console.error("Error deleting role:", error);
+    displayMessage(
+      "An error occurred while deleting the role.",
+      "error",
+      "messages-roles"
+    );
+  }
+}
+
+function cancelRoleEdit() {
+  editingRoleId = null;
+  document.getElementById("role-editor-title").textContent = "Add New Role";
+  document.getElementById("role-submit-btn").textContent = "Add Role";
+  document.getElementById("cancel-role-btn").style.display = "none";
+  document.getElementById("role-id").readOnly = false;
+  document.getElementById("manage-roles-form").reset();
+  document.getElementById("role-parents").innerHTML = "";
+
+  // Remove selection highlight
+  document.querySelectorAll(".role-list-item").forEach((item) => {
+    item.classList.remove("selected");
+  });
+}
+
+function addRoleParentItem(parentId = "") {
+  const container = document.getElementById("role-parents");
+  if (!container) return;
+
+  // If no parentId provided, get from input field
+  if (!parentId) {
+    const parentInput = document.getElementById("parent-role-input");
+    parentId = parentInput ? parentInput.value.trim() : "";
+
+    if (!parentId) {
+      displayMessage("Parent Role ID is required.", "error", "messages-roles");
+      return;
+    }
+
+    // Clear the input field
+    if (parentInput) {
+      parentInput.value = "";
+    }
+  }
+
+  const parentDiv = document.createElement("div");
+  parentDiv.className = "role-parent-pair";
+  parentDiv.innerHTML = `
+    <input type="text" class="role-parent-input" value="${parentId}" placeholder="Parent ID" readonly>
+    <button type="button" class="remove-btn danger-btn" title="Remove this parent">×</button>
+  `;
+
+  container.appendChild(parentDiv);
+
+  const removeBtn = parentDiv.querySelector(".remove-btn");
+  if (removeBtn) {
+    removeBtn.addEventListener("click", function () {
+      parentDiv.remove();
+    });
+  }
+}
+
+// Setup role form events specifically 
+function setupSkillFormEvents() {
+  console.log("Setting up skill form events...");
+  
+  // Skills - Add Relation button
+  const addRelationBtn = document.getElementById('add-relation-btn');
+  if (addRelationBtn && !addRelationBtn.hasAttribute('data-event-setup')) {
+    console.log("Setting up add relation button events");
+    addRelationBtn.addEventListener('click', function() {
+      const skillDropdown = document.getElementById('available-skills-dropdown');
+      const selectedSkillId = skillDropdown ? skillDropdown.value : '';
+      if (selectedSkillId) {
+        addRelationItem(selectedSkillId);
+        skillDropdown.value = ''; // Clear the dropdown selection
+      } else {
+        displayMessage("Please select a skill from the dropdown first.", "error", "messages-skills");
+      }
+    });
+    addRelationBtn.setAttribute('data-event-setup', 'true');
+  }
+
+  // Skills - Add Manual Relation button
+  const addManualRelationBtn = document.getElementById('add-manual-relation-btn');
+  if (addManualRelationBtn && !addManualRelationBtn.hasAttribute('data-event-setup')) {
+    console.log("Setting up add manual relation button events");
+    addManualRelationBtn.addEventListener('click', function() {
+      addRelationItem(); // Call without relationId to create manual input
+    });
+    addManualRelationBtn.setAttribute('data-event-setup', 'true');
+  }
+
+  // Skills form submission
+  const skillsForm = document.getElementById('manage-skills-form');
+  if (skillsForm && !skillsForm.hasAttribute('data-event-setup')) {
+    console.log("Setting up skills form submit events");
+    skillsForm.addEventListener('submit', handleSkillFormSubmit);
+    skillsForm.setAttribute('data-event-setup', 'true');
+  }
+}
+
+function setupRoleFormEvents() {
+  // Role form submission
+  const roleForm = document.getElementById('manage-roles-form');
+  if (roleForm && !roleForm.hasAttribute('data-event-setup')) {
+    console.log("Setting up role form events");
+    roleForm.addEventListener('submit', handleRoleFormSubmit);
+    roleForm.setAttribute('data-event-setup', 'true');
+  }
+
+  // Add role parent button
+  const addRoleParentBtn = document.getElementById('add-role-parent-btn');
+  if (addRoleParentBtn && !addRoleParentBtn.hasAttribute('data-event-setup')) {
+    console.log("Setting up add role parent button events");
+    addRoleParentBtn.addEventListener('click', addRoleParent);
+    addRoleParentBtn.setAttribute('data-event-setup', 'true');
+  }
+
+  // Allow Enter key in parent role input to add parent
+  const parentRoleInput = document.getElementById('parent-role-input');
+  if (parentRoleInput && !parentRoleInput.hasAttribute('data-event-setup')) {
+    parentRoleInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addRoleParent();
+      }
+    });
+    parentRoleInput.setAttribute('data-event-setup', 'true');
+  }
+}
+
+// Setup form event listeners
+function setupFormEventListeners() {
+  console.log("Setting up form event listeners...");
+  
+  // Role form submission
+  const roleForm = document.getElementById('manage-roles-form');
+  if (roleForm) {
+    console.log("Found role form, adding submit listener");
+    roleForm.addEventListener('submit', handleRoleFormSubmit);
+  } else {
+    console.log("Role form not found");
+  }
+
+  // Add role parent button
+  const addRoleParentBtn = document.getElementById('add-role-parent-btn');
+  if (addRoleParentBtn) {
+    console.log("Found add role parent button, adding click listener");
+    addRoleParentBtn.addEventListener('click', addRoleParent);
+  } else {
+    console.log("Add role parent button not found");
+  }
+
+  // Subject form submission
+  const subjectForm = document.getElementById('manage-subjects-form');
+  if (subjectForm) {
+    subjectForm.addEventListener('submit', handleSubjectFormSubmit);
+  }
+
+  // Unit form submission
+  const unitForm = document.getElementById('manage-units-form');
+  if (unitForm) {
+    unitForm.addEventListener('submit', handleUnitFormSubmit);
+  }
+
+  // Skills form submission
+  const skillsForm = document.getElementById('manage-skills-form');
+  if (skillsForm) {
+    skillsForm.addEventListener('submit', handleSkillFormSubmit);
+  }
+
+  // Allow Enter key in parent role input to add parent
+  const parentRoleInput = document.getElementById('parent-role-input');
+  if (parentRoleInput) {
+    parentRoleInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addRoleParent();
       }
     });
   }
+}
 
-  function addRelationItem() {
-    const container = document.getElementById("relations-container");
-    const div = document.createElement("div");
-    div.className = "relation-item";
-    div.innerHTML = `
-    <input type="text" class="relation-id" placeholder="Related Skill ID">
-    <input type="text" class="relation-value" placeholder="Relation Value">
-    <button type="button" class="remove-relation-btn">Remove</button>
-  `;
-    div.querySelector(".remove-relation-btn").addEventListener("click", () => {
-      container.removeChild(div);
-    });
-    container.appendChild(div);
-  }
+// Initialize the application
+$(document).ready(function () {
+  // Get API base URL from server configuration
+  $.ajax({
+    url: "index.conf",
+    dataType: "json",
+    success: function (res) {
+      apiBaseUrl = res.server;
+      console.log("API Base URL set to:", apiBaseUrl);
 
-  // Expose the function to the window object while it's in scope
-  window.setupTabFormHandlers = setupTabFormHandlers;
-
-  function setupTabFormHandlers(tabId) {
-
-    switch (tabId) {
-      case "manage-subjects":
-        const subjectForm = document.getElementById("manage-subjects-form");
-        if (subjectForm) {
-          console.log("Attaching subject form handler");
-          subjectForm.removeEventListener("submit", handleSubjectFormSubmit);
-          subjectForm.addEventListener("submit", handleSubjectFormSubmit);
-        }
-        break;
-
-      case "manage-units":
-        const unitForm = document.getElementById("manage-units-form");
-        if (unitForm) {
-          console.log("Attaching unit form handler");
-          unitForm.addEventListener("submit", handleUnitFormSubmit);
-        }
-        break;
-
-      case "manage-roles":
-        const roleForm = document.getElementById("manage-roles-form");
-        if (roleForm) {
-          console.log("Attaching role form handler");
-          roleForm.addEventListener("submit", handleRoleFormSubmit);
-        }
-        break;
-
-      case "manage-skills":
-        const skillForm = document.getElementById("manage-skills-form");
-        if (skillForm) {
-          console.log("Attaching skill form handler");
-          skillForm.addEventListener("submit", handleSkillFormSubmit);
-        }
-        break;
-    }
-  }
-
-  async function enhanceSkillForm() {
-    try {
-      const skills = await fetchAllSkills();
-
-      const relatedSkillInput = document.getElementById("related-skill-id");
-      if (!relatedSkillInput) return;
-
-      const container = document.createElement("div");
-      container.className = "skill-dropdown-container";
-
-      const select = document.createElement("select");
-      select.id = "related-skill-dropdown";
-      select.className = "skill-dropdown";
-
-      select.innerHTML =
-        '<option value="">Select a related skill (optional)...</option>';
-
-      skills.forEach((skill) => {
-        const option = document.createElement("option");
-        option.value = skill.id;
-        option.textContent = skill.id;
-        select.appendChild(option);
+      // Setup lazy loading for management tabs to reduce initial page load requests
+      // Use MutationObserver to detect when tabs become active
+      const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+          if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+            const target = mutation.target;
+            const belongsToTab = target.getAttribute('data-belongs-to-tab');
+            
+            // Check if this area became active (class changed from 'inactive' to active)
+            if (belongsToTab && !target.classList.contains('inactive')) {
+              switch(belongsToTab) {
+                case 'manage-subjects':
+                  if (currentSubjects.length === 0) {
+                    loadSubjectsList();
+                  }
+                  break;
+                case 'manage-units':
+                  if (currentUnits.length === 0) {
+                    loadUnitsList();
+                  }
+                  break;
+                case 'manage-roles':
+                  if (currentRoles.length === 0) {
+                    loadRolesList();
+                  }
+                  // Setup role form events when tab becomes active
+                  setupRoleFormEvents();
+                  break;
+                case 'manage-skills':
+                  if (currentSkills.length === 0) {
+                    loadSkillsList();
+                  }
+                  // Setup skill form events when tab becomes active
+                  setupSkillFormEvents();
+                  break;
+              }
+            }
+          }
+        });
       });
 
-      container.appendChild(select);
-      relatedSkillInput.parentNode.replaceChild(container, relatedSkillInput);
-
-      initializeSearchableDropdown(select);
-
-      const hiddenInput = document.createElement("input");
-      hiddenInput.type = "hidden";
-      hiddenInput.id = "related-skill-id";
-      container.appendChild(hiddenInput);
-
-      select.addEventListener("change", function () {
-        hiddenInput.value = this.value;
+      // Observe all ui-area elements for class changes
+      document.querySelectorAll('ui-area[data-belongs-to-tab]').forEach(area => {
+        observer.observe(area, { attributes: true, attributeFilter: ['class'] });
       });
-    } catch (error) {
-      console.error("Error enhancing skill form:", error);
-    }
-  }
-})();
 
+      // Setup form event listeners
+      setupFormEventListeners();
+    },
+    error: function () {
+      console.error("Failed to load server configuration");
+    },
+  });
+});
 
-
+// Export functions to global scope for HTML access
 window.handleSubjectFormSubmit = handleSubjectFormSubmit;
 window.handleUnitFormSubmit = handleUnitFormSubmit;
 window.handleRoleFormSubmit = handleRoleFormSubmit;
 window.handleSkillFormSubmit = handleSkillFormSubmit;
-window.openSubjectEditor = openSubjectEditor;
 window.addUnitRolePair = addUnitRolePair;
-window.addSkillAssignment = addSkillAssignment;
-window.addSkillFromDropdown = addSkillFromDropdown;
-window.handleSubjectEditorSubmit = handleSubjectEditorSubmit;
-window.fetchAllSkills = fetchAllSkills;
-window.initializeSearchableDropdown = initializeSearchableDropdown;
-window.addSkillBackToDropdown = addSkillBackToDropdown;
+window.addRoleParent = addRoleParent;
+window.addRoleParentItem = addRoleParentItem;
+window.editSubject = editSubject;
+window.deleteSubject = deleteSubject;
+window.cancelSubjectEdit = cancelSubjectEdit;
+window.editUnit = editUnit;
+window.deleteUnit = deleteUnit;
+window.cancelUnitEdit = cancelUnitEdit;
+window.editRole = editRole;
+window.deleteRole = deleteRole;
+window.cancelRoleEdit = cancelRoleEdit;
+window.addRoleParentItem = addRoleParentItem;
+// Tab-specific functions for subject editor
+window.addUnitRolePairForTab = addUnitRolePairForTab;
+window.addSkillFromDropdownForTab = addSkillFromDropdownForTab;
+window.addSkillBackToDropdownForTab = addSkillBackToDropdownForTab;
+window.showEditMessageForTab = showEditMessageForTab;

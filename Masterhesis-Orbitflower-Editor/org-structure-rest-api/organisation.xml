@@ -2,13 +2,14 @@
   <units>
     <unit id="Dekanat Informatik">
       <permissions/>
+      <parent>fwefwedwdwdddddwwww</parent>
     </unit>
     <unit id="Studienservicecenter Informatik">
       <permissions/>
     </unit>
     <unit id="Educational Technologies">
-      <parent>Dekanat Informatik</parent>
       <permissions/>
+      <parent>Dekanat Informatikee</parent>
     </unit>
     <unit id="Theory and Applications of Algorithms">
       <parent>Dekanat Informatik</parent>
@@ -92,19 +93,75 @@
     <unit id="fwefwefw">
       <permissions/>
     </unit>
+    <unit id="fesfesfs">
+      <permissions/>
+    </unit>
+    <unit id="fesfsef">
+      <permissions/>
+    </unit>
+    <unit id="grereg">
+      <permissions/>
+    </unit>
+    <unit id="dwqd">
+      <parent>wdwd</parent>
+      <permissions/>
+    </unit>
+    <unit id="fefefef">
+      <parent>fefe</parent>
+      <permissions/>
+    </unit>
+    <unit id="fefeeff">
+      <parent>###</parent>
+      <permissions/>
+    </unit>
+    <unit id="ergerg">
+      <parent>gregergg</parent>
+      <permissions/>
+    </unit>
+    <unit id="yesyes">
+      <parent>fefe</parent>
+      <permissions/>
+    </unit>
+    <unit id="grgr">
+      <parent>grgr</parent>
+      <permissions/>
+    </unit>
+    <unit id="fef">
+      <parent>fefe</parent>
+      <permissions/>
+    </unit>
+    <unit id="ssss">
+      <parent>sss</parent>
+      <permissions/>
+    </unit>
+    <unit id="fefe">
+      <parent>fefe</parent>
+      <permissions/>
+    </unit>
   </units>
   <roles>
     <role id="Regular">
       <permissions/>
+      <parent>Project</parent>
+      <parent>Project</parent>
+      <parent>fefe</parent>
+      <parent>fefe</parent>
+      <parent>fefe</parent>
+      <parent>fefe</parent>
     </role>
     <role id="Project">
       <permissions/>
+      <parent>Regular</parent>
+      <parent>Teaching</parent>
     </role>
     <role id="Teaching">
       <permissions/>
+      <parent>Ass.Prof.</parent>
+      <parent>Regular</parent>
     </role>
     <role id="Senior Lecturer">
       <permissions/>
+      <parent>Teaching</parent>
     </role>
     <role id="Ass.Prof.">
       <permissions/>
@@ -132,24 +189,30 @@
       <parent>Regular</parent>
       <permissions/>
     </role>
+    <role id="fefe">
+      <permissions/>
+      <parent>Staff</parent>
+      <parent>Assistant</parent>
+    </role>
+    <role id="wwwwwwGRE">
+      <parent>Regular</parent>
+      <permissions/>
+    </role>
   </roles>
   <subjects>
     <subject id="Leonhard Euler" uid="eulerl5">
       <relation unit="Knowledge Engineering" role="Teaching"/>
-      <relation unit="Knowledge Engineering" role="Project"/>
-      <relation unit="Knowledge Engineering" role="Assistant"/>
-      <subjectSkills>
-        <ref id="Supervised Learning" strength="67"/>
-      </subjectSkills>
     </subject>
     <subject id="Ada Lovelace" uid="lovela4">
-      <relation unit="Software Architectures" role="Univ.Prof."/>
       <subjectSkills>
-        <ref id="Infrastructure Security" strength="91"/>
-        <ref id="Network Security" strength="56"/>
-        <ref id="Infrastructure Security" strength="77"/>
-        <ref id="Network Security" strength="62"/>
-        <ref id="Azure" strength="85"/>
+        <ref id="Infrastructure Security"/>
+        <ref id="Azure"/>
+        <ref id="TypeScript"/>
+        <ref id="SQL"/>
+        <ref id="Web Development"/>
+        <ref id="HTML"/>
+        <ref id="MongoDB"/>
+        <ref id="Angular"/>
       </subjectSkills>
     </subject>
     <subject id="Grace Hopper" uid="hopperg3">
@@ -163,9 +226,11 @@
     <subject id="Alan Turing" uid="turina1">
       <relation unit="Theory and Applications of Algorithms" role="Univ.Prof."/>
       <relation unit="Theory and Applications of Algorithms" role="Teaching"/>
+      <relation unit="Scientific Computing" role="Regular"/>
       <subjectSkills>
-        <ref id="Machine Learning" strength="88"/>
-        <ref id="Deep Learning" strength="59"/>
+        <ref id="Machine Learning"/>
+        <ref id="Deep Learning"/>
+        <ref id="Azure"/>
       </subjectSkills>
     </subject>
     <subject id="Margaret Hamilton" uid="hamiltonm7">
@@ -416,6 +481,9 @@
       <relation unit="Visualization and Data Analysis" role="Teaching"/>
       <relation unit="Visualization and Data Analysis" role="Project"/>
       <relation unit="Visualization and Data Analysis" role="Assistant"/>
+      <subjectSkills>
+        <ref id="Database"/>
+      </subjectSkills>
     </subject>
     <subject id="Amirali Amiri" uid="amiralia57">
       <relation unit="Software Architectures" role="Teaching"/>
@@ -735,13 +803,14 @@
       <relation unit="Cooperative Systems" role="Staff"/>
     </subject>
     <subject id="Albert Rafetseder" uid="rafetsa2">
-      <subjectSkills>
-        <ref id="AWS" strength="84"/>
-        <ref id="Google Cloud" strength="49"/>
-      </subjectSkills>
       <relation unit="Cooperative Systems" role="Teaching"/>
       <relation unit="Cooperative Systems" role="Regular"/>
       <relation unit="Cooperative Systems" role="Assistant"/>
+      <subjectSkills>
+        <ref id="AWS"/>
+        <ref id="Google Cloud"/>
+        <ref id="MySQL"/>
+      </subjectSkills>
     </subject>
     <subject id="Peter Reichl" uid="reichlp6">
       <relation unit="Cooperative Systems" role="Univ.Prof."/>
@@ -868,12 +937,27 @@
         <ref id="Deep Learning" strength="90"/>
       </subjectSkills>
     </subject>
+    <subject id="mehdi" uid="uid-1752360402178">
+      <relation unit="Scientific Computing" role="Regular"/>
+      <relation unit="Scientific Computing" role="Regular"/>
+    </subject>
+    <subject id="mehdi" uid="uid-1752362088508">
+      <relation unit="Scientific Computing" role="Regular"/>
+    </subject>
+    <subject id="seli" uid="uid-1752368865980"/>
+    <subject id="seli" uid="uid-1752368866812"/>
+    <subject id="seli" uid="uid-1752368867364"/>
+    <subject id="feef" uid="uid-1752446197154">
+      <relation unit="Scientific Computing" role="Regular"/>
+    </subject>
+    <subject id="feef" uid="uid-1752446206741">
+      <relation unit="Scientific Computing" role="Regular"/>
+    </subject>
   </subjects>
   <skills>
     <skill id="Azure">
-      <relation id="AWS" type="isRelatedTo"/>
-      <relation id="GoogleCloud" type="isRelatedTo"/>
-      <relation id="Cloud" type="Child"/>
+      <relation id="AWS" type="isRelatedTo" strength="5"/>
+      <relation id="SQL" type="testing" strength="5"/>
     </skill>
     <skill id="AWS">
       <relation id="Azure" type="isRelatedTo" score="300"/>
@@ -881,8 +965,8 @@
       <relation id="Cloud" type="Child"/>
     </skill>
     <skill id="Google Cloud">
-      <relation id="Azure" type="RelatedTo"/>
-      <relation id="Cloud" type="Child"/>
+      <relation id="Azure" type="RelatedTo" score="5"/>
+      <relation id="Cloud" type="Child" score="5"/>
     </skill>
     <skill id="Cloud">
       <relation id="Azure" type="Parent"/>
@@ -901,13 +985,13 @@
       <relation id="Database" type="isRelatedTo" score="250"/>
     </skill>
     <skill id="Programming Languages">
-      <relation id="Java" type="Parent"/>
-      <relation id="Python" type="Parent"/>
-      <relation id="C#" type="Parent"/>
-      <relation id="JavaScript" type="Parent"/>
-      <relation id="TypeScript" type="Parent"/>
-      <relation id="Go" type="Parent"/>
-      <relation id="Rust" type="Parent"/>
+      <relation id="Java" type="Parent" score="20"/>
+      <relation id="Python" type="Parent" score="5"/>
+      <relation id="C#" type="Parent" score="5"/>
+      <relation id="JavaScript" type="Parent" score="5"/>
+      <relation id="TypeScript" type="Parent" score="5"/>
+      <relation id="Go" type="Parent" score="5"/>
+      <relation id="Rust" type="Parent" score="5"/>
     </skill>
     <skill id="Java">
       <relation id="Programming Languages" type="Child"/>
@@ -1106,8 +1190,8 @@
       <relation id="JIRA" type="isRelatedTo" score="300"/>
     </skill>
     <skill id="Security">
-      <relation id="DevOps" type="isRelatedTo" score="300"/>
-      <relation id="Cloud Security" type="Child"/>
+      <relation id="DevOps" type="isRelatedTo" strength="10"/>
+      <relation id="Cloud Security" type="Child" strength="5"/>
     </skill>
     <skill id="Cloud Security">
       <relation id="Security" type="Parent"/>
@@ -1125,15 +1209,17 @@
       <relation id="Regression" type="Child"/>
       <relation id="Classification" type="Child"/>
     </skill>
-    <skill id="Regression">
-      <relation id="Supervised Learning" type="Parent"/>
-    </skill>
     <skill id="Classification">
       <relation id="Supervised Learning" type="Parent"/>
     </skill>
     <skill id="Automation">
       <relation id="Workflow Systems and Technology" type="isRelatedTo" score="200"/>
       <relation id="DevOps" type="isRelatedTo" score="150"/>
+    </skill>
+    <skill id="testing">
+      <relation id="Azure" type="Similar" strength="5"/>
+      <relation id="PostgreSQL" type="Similar" strength="5"/>
+      <relation id="MongoDB" type="Similar" strength="5"/>
     </skill>
   </skills>
 </organisation>

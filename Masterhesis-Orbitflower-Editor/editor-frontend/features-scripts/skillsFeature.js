@@ -181,9 +181,7 @@ class SkillsFeature {
     return "#" + ((1 << 24) + (R << 16) + (G << 8) + B).toString(16).slice(1);
   }
 
-  // Generate a professional, attractive color palette with lighter tones
   generateColorPalette(baseColors = null, count = 12) {
-    // Updated default colors - more professional, lighter palette
     if (!baseColors) {
       baseColors = [
         "#60A5FA",

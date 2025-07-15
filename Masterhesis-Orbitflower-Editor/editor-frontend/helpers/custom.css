@@ -517,6 +517,192 @@ circle:hover {
 
 /* Keep other existing styles */
 
+/* Simple Management Forms Styles */
+.subjects-management-container,
+.units-management-container,
+.roles-management-container,
+.skills-management-container {
+  display: flex;
+  height: 100%;
+  gap: 20px;
+  padding: 20px;
+}
+
+.subjects-list-section,
+.units-list-section,
+.roles-list-section,
+.skills-list-section {
+  flex: 1;
+  padding: 15px;
+  border: 1px solid #ccc;
+}
+
+.subject-editor-section,
+.unit-editor-section,
+.role-editor-section,
+.skill-editor-section {
+  flex: 1;
+  padding: 15px;
+  border: 1px solid #ccc;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.relations-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  background: #f9f9f9;
+}
+
+.add-relation-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.add-relation-controls input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+}
+
+.add-relation-controls button {
+  padding: 8px 16px;
+  background: #007cba;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.add-relation-controls button:hover {
+  background: #005a87;
+}
+
+#unit-role-pairs,
+#edit-unit-role-pairs {
+  margin-bottom: 15px;
+  padding: 10px;
+  border: 1px dashed #ccc;
+  background: #fafafa;
+  border-radius: 4px;
+  min-height: 60px;
+}
+
+#unit-role-pairs:empty::before,
+#edit-unit-role-pairs:empty::before {
+  content: "No unit-role pairs added yet. Use the controls below to add pairs.";
+  color: #999;
+  font-style: italic;
+  display: block;
+  padding: 15px;
+  text-align: center;
+}
+
+.unit-role-item {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  background: white;
+  align-items: center;
+  border-radius: 4px;
+}
+
+.unit-role-item input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-size: 14px;
+}
+
+.unit-role-item .remove-relation-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 14px;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.unit-role-item .remove-relation-btn:hover {
+  background: #c82333;
+}
+
+/* Skills container styling */
+#edit-skills {
+  margin-bottom: 15px;
+  padding: 10px;
+  border: 1px dashed #ccc;
+  background: #fafafa;
+  border-radius: 4px;
+  min-height: 60px;
+}
+
+#edit-skills:empty::before {
+  content: "No skills assigned yet. Use the controls below to add skills.";
+  color: #999;
+  font-style: italic;
+  display: block;
+  padding: 15px;
+  text-align: center;
+}
+
+.skill-item-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px;
+  padding: 6px 10px;
+  background: #e3f2fd;
+  border: 1px solid #bbdefb;
+  border-radius: 16px;
+  font-size: 14px;
+}
+
+.skill-item-edit .skill-name {
+  font-weight: 500;
+}
+
+.skill-item-edit .remove-btn {
+  background: #f44336;
+  color: white;
+  border: none;
+  padding: 2px 6px;
+  cursor: pointer;
+  border-radius: 50%;
+  font-size: 12px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 
 
 

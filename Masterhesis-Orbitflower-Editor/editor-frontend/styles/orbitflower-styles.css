@@ -254,46 +254,45 @@ text {
 .manage-form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 10px;
+  gap: 8px;
+  padding: 5px;
+  max-width: 400px;
 }
 
 .manage-form .form-group {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  margin-bottom: 5px;
+  gap: 4px;
+  margin-bottom: 4px;
   width: 100%;
 }
 
 .manage-form label {
   font-weight: bold;
   display: block;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
+  font-size: 13px;
 }
 
 .manage-form input, 
 .manage-form select {
-  padding: 6px;
+  padding: 5px;
   border: 1px solid #ccc;
-  border-radius: 2px;
-  font-size: 14px;
-  width: 300px;
+  font-size: 13px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .manage-form button {
-  padding: 6px 12px;
+  padding: 5px 10px;
   border: 1px solid #ccc;
-  border-radius: 2px;
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
-  margin-top: 5px;
+  margin-top: 4px;
 }
 
-
-
 .manage-form button[type="button"] {
-  background-color: #f1f1f1;
+  border: 1px solid #ccc;
 }
 
 /* Form element groups - symmetric styling */
@@ -301,11 +300,28 @@ text {
 .role-parent-pair, 
 .relation-item {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
-  padding: 3px 0;
-  margin-bottom: 5px;
+  padding: 2px 0;
+  margin-bottom: 4px;
   width: 100%;
+}
+
+.unit-role-item, 
+.unit-role-pair {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 4px;
+  width: 100%;
+}
+
+.unit-role-item input,
+.unit-role-pair input {
+  flex: 1;
+  padding: 4px;
+  border: 1px solid #ccc;
+  font-size: 12px;
 }
 
 .unit-role-pair input, 
@@ -440,6 +456,412 @@ ui-area[data-belongs-to-tab="graph"] {
   0% { transform: scale(1); }
   50% { transform: scale(1.02); }
   100% { transform: scale(1); }
+}
+
+/* Skills Management Interface */
+.skills-management-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  max-height: 70vh;
+  padding: 15px;
+}
+
+.skills-list-section, .skill-editor-section {
+  border: 1px solid #ccc;
+  padding: 15px;
+}
+
+.skills-filter {
+  margin-bottom: 15px;
+}
+
+#skills-search {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.skills-list {
+  max-height: 50vh;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+}
+
+.skill-list-item {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  display: flex;
+  justify-content: between;
+  align-items: center;
+}
+
+.skill-list-item:hover {
+  background-color: #f0f0f0;
+}
+
+.skill-list-item.selected {
+  background-color: #e3f2fd;
+  border-left: 4px solid #2196f3;
+}
+
+.skill-info {
+  flex-grow: 1;
+}
+
+.skill-name {
+  font-weight: bold;
+  color: #333;
+}
+
+.skill-relations-count {
+  font-size: 0.9em;
+  color: #666;
+  margin-top: 2px;
+}
+
+.skill-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.skill-edit-btn, .skill-delete-btn {
+  padding: 3px 6px;
+  border: 1px solid;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Relations Section */
+.relations-section {
+  margin: 20px 0;
+}
+
+.relation-item {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 30px;
+  gap: 6px;
+  align-items: center;
+  padding: 6px;
+  margin-bottom: 6px;
+  border: 1px solid #ccc;
+  font-size: 13px;
+}
+
+.relation-skill-name {
+  font-weight: 500;
+  color: #333;
+  padding: 3px;
+  font-size: 13px;
+}
+
+.relation-type-input {
+  padding: 3px 4px;
+  border: 1px solid #ccc;
+  font-size: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.relation-type-input:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+.strength-controls {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  justify-content: center;
+}
+
+.strength-slider,
+.strength-input {
+  width: 40px;
+  height: 20px;
+  border: 1px solid #ccc;
+  padding: 1px 2px;
+  font-size: 11px;
+  box-sizing: border-box;
+}
+
+.strength-slider {
+  outline: none;
+}
+
+.strength-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  cursor: pointer;
+}
+
+.strength-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  cursor: pointer;
+  border: none;
+}
+
+.strength-input {
+  text-align: center;
+}
+
+.toggle-custom-btn {
+  width: 18px;
+  height: 18px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  font-size: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+}
+
+.toggle-custom-btn:hover {
+  border-color: #999;
+}
+
+.remove-relation-btn {
+  width: 24px;
+  height: 24px;
+  color: #000;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.add-relation-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 8px;
+  padding: 6px;
+  border: 1px solid #e9ecef;
+}
+
+#available-skills-dropdown {
+  flex-grow: 1;
+  padding: 4px 6px;
+  border: 1px solid #ccc;
+  font-size: 12px;
+  height: 24px;
+}
+
+#available-skills-dropdown:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+#add-relation-btn,
+#add-manual-relation-btn {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  color: #333;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.form-actions button {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  color: #333;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+/* Loading and Empty States */
+.skills-loading {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.skills-empty {
+  text-align: center;
+  padding: 20px;
+  color: #999;
+  font-style: italic;
+}
+
+/* Manual relation input styling */
+.relation-manual-input {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.relation-id-input {
+  padding: 3px 4px;
+  border: 1px solid #ccc;
+  font-size: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.relation-id-input:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+.confirm-relation-btn {
+  width: 18px;
+  height: 18px;
+  border: 1px solid #ccc;
+  color: #000;
+  cursor: pointer;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-weight: bold;
+}
+
+/* Management Interface - Common Styles for Subjects, Units, Roles */
+.subjects-management-container,
+.units-management-container,
+.roles-management-container {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 20px;
+  max-height: 70vh;
+  padding: 15px;
+}
+
+.subjects-list-section, .subject-editor-section,
+.units-list-section, .unit-editor-section,
+.roles-list-section, .role-editor-section {
+  border: 1px solid #ccc;
+  padding: 10px;
+  background: #f9f9f9;
+  max-width: 450px;
+  width: 100%;
+}
+
+.relations-section {
+  margin: 10px 0;
+}
+
+.relations-section h4 {
+  margin: 8px 0 6px 0;
+  font-size: 14px;
+}
+
+.add-relation-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 6px;
+  flex-wrap: wrap;
+  padding: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.add-relation-controls input {
+  flex: 1;
+  min-width: 120px;
+  padding: 4px;
+  font-size: 12px;
+}
+
+.add-relation-controls button {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.subjects-filter, .units-filter, .roles-filter {
+  margin-bottom: 15px;
+}
+
+#subjects-search, #units-search, #roles-search {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.subjects-list, .units-list, .roles-list {
+  max-height: 50vh;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+}
+
+.subject-list-item, .unit-list-item, .role-list-item {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.subject-list-item:hover, .unit-list-item:hover, .role-list-item:hover {
+  background-color: #f0f0f0;
+}
+
+.subject-list-item.selected, .unit-list-item.selected, .role-list-item.selected {
+  background-color: #e3f2fd;
+  border-left: 4px solid #2196f3;
+}
+
+.unit-role-item, .role-parent-item {
+  display: grid;
+  grid-template-columns: 1fr 1fr 30px;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+}
+
+.unit-role-item input, .role-parent-item input {
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  font-size: 12px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .skills-management-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .relation-item {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+  
+  .strength-slider-container {
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+  }
 }
 
 
