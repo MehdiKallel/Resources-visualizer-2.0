@@ -323,7 +323,8 @@ function updateAvailableSkillsDropdown() {
   const dropdown = document.getElementById("available-skills-dropdown");
   if (!dropdown) return;
 
-  const currentSkillId = document.getElementById("skill-id").value.trim();
+  const skillIdInput = document.getElementById("skill-id");
+  const currentSkillId = skillIdInput ? skillIdInput.value.trim() : "";
   const existingRelationIds = Array.from(
     document.querySelectorAll(".relation-item")
   )
@@ -360,19 +361,34 @@ async function editSkill(skillId) {
     const skill = await response.json();
     editingSkillId = skillId;
 
-    // Update form title and button
-    document.getElementById(
-      "skill-editor-title"
-    ).textContent = `Edit Skill: ${skillId}`;
-    document.getElementById("skill-submit-btn").textContent = "Update Skill";
-    document.getElementById("cancel-edit-btn").style.display = "inline-block";
+    // Update form title and button (check if elements exist first)
+    const titleElement = document.getElementById("skill-editor-title");
+    if (titleElement) {
+      titleElement.textContent = `Edit Skill: ${skillId}`;
+    }
+    
+    const submitBtn = document.getElementById("skill-submit-btn");
+    if (submitBtn) {
+      submitBtn.textContent = "Update Skill";
+    }
+    
+    const cancelBtn = document.getElementById("cancel-edit-btn");
+    if (cancelBtn) {
+      cancelBtn.style.display = "inline-block";
+    }
 
     // Populate form
-    document.getElementById("skill-id").value = skillId;
-    document.getElementById("skill-id").readOnly = true;
+    const skillIdInput = document.getElementById("skill-id");
+    if (skillIdInput) {
+      skillIdInput.value = skillId;
+      skillIdInput.readOnly = true;
+    }
 
     // Clear existing relations
-    document.getElementById("relations-container").innerHTML = "";
+    const relationsContainer = document.getElementById("relations-container");
+    if (relationsContainer) {
+      relationsContainer.innerHTML = "";
+    }
 
     // Add existing relations - handle both new and old format
     if (skill.relations && skill.relations.length > 0) {
@@ -453,12 +469,37 @@ async function deleteSkill(skillId) {
 
 function cancelEdit() {
   editingSkillId = null;
-  document.getElementById("skill-editor-title").textContent = "Add New Skill";
-  document.getElementById("skill-submit-btn").textContent = "Add Skill";
-  document.getElementById("cancel-edit-btn").style.display = "none";
-  document.getElementById("skill-id").readOnly = false;
-  document.getElementById("manage-skills-form").reset();
-  document.getElementById("relations-container").innerHTML = "";
+  
+  const titleElement = document.getElementById("skill-editor-title");
+  if (titleElement) {
+    titleElement.textContent = "Add New Skill";
+  }
+  
+  const submitBtn = document.getElementById("skill-submit-btn");
+  if (submitBtn) {
+    submitBtn.textContent = "Add Skill";
+  }
+  
+  const cancelBtn = document.getElementById("cancel-edit-btn");
+  if (cancelBtn) {
+    cancelBtn.style.display = "none";
+  }
+  
+  const skillIdInput = document.getElementById("skill-id");
+  if (skillIdInput) {
+    skillIdInput.readOnly = false;
+  }
+  
+  const form = document.getElementById("manage-skills-form");
+  if (form) {
+    form.reset();
+  }
+  
+  const relationsContainer = document.getElementById("relations-container");
+  if (relationsContainer) {
+    relationsContainer.innerHTML = "";
+  }
+  
   updateAvailableSkillsDropdown();
 
   // Remove selection highlight
@@ -473,6 +514,11 @@ function addRelationItem(
   strength = 5
 ) {
   const container = document.getElementById("relations-container");
+  if (!container) {
+    console.error("Relations container not found");
+    return;
+  }
+  
   const div = document.createElement("div");
   div.className = "relation-item";
 
@@ -484,28 +530,18 @@ function addRelationItem(
   if (relationId) {
     // For existing skills
     div.innerHTML = `
-      <div class="relation-skill-name">${relationId}</div>
+      <input type="text" value="${relationId}" readonly>
       <input type="text" class="relation-type-input" value="${relationType}" placeholder="Type">
-      <div class="strength-controls">
-        <input type="range" class="strength-slider" min="1" max="10" value="${strength}">
-        <input type="number" class="strength-input" min="1" max="999" value="${strength}" placeholder="Value">
-        <button type="button" class="toggle-custom-btn">⚙</button>
-      </div>
+      <input type="number" class="strength-input" min="1" max="999" value="${strength}" placeholder="Strength">
       <button type="button" class="remove-relation-btn">×</button>
     `;
   } else {
     // For manual input
     div.innerHTML = `
-      <div class="relation-manual-input">
-        <input type="text" class="relation-id-input" placeholder="Skill ID">
-        <button type="button" class="confirm-relation-btn">✓</button>
-      </div>
+      <input type="text" class="relation-id-input" placeholder="Skill ID">
+      <button type="button" class="confirm-relation-btn">✓</button>
       <input type="text" class="relation-type-input" value="${relationType}" placeholder="Type">
-      <div class="strength-controls">
-        <input type="range" class="strength-slider" min="1" max="10" value="${strength}">
-        <input type="number" class="strength-input" min="1" max="999" value="${strength}" placeholder="Value">
-        <button type="button" class="toggle-custom-btn">⚙</button>
-      </div>
+      <input type="number" class="strength-input" min="1" max="999" value="${strength}" placeholder="Strength">
       <button type="button" class="remove-relation-btn">×</button>
     `;
 
@@ -528,9 +564,20 @@ function addRelationItem(
 
         // Replace manual input with skill name display
         div.dataset.relationId = skillId;
-        div.querySelector(
-          ".relation-manual-input"
-        ).innerHTML = `<div class="relation-skill-name">${skillId}</div>`;
+        const newHTML = `
+          <input type="text" value="${skillId}" readonly>
+          <input type="text" class="relation-type-input" value="${relationType}" placeholder="Type">
+          <input type="number" class="strength-input" min="1" max="999" value="${strength}" placeholder="Strength">
+          <button type="button" class="remove-relation-btn">×</button>
+        `;
+        div.innerHTML = newHTML;
+        
+        // Re-attach remove button event
+        div.querySelector(".remove-relation-btn").addEventListener("click", () => {
+          container.removeChild(div);
+          updateAvailableSkillsDropdown();
+        });
+        
         updateAvailableSkillsDropdown();
       } else {
         displayMessage("Please enter a skill ID.", "error", "messages-skills");
@@ -544,66 +591,6 @@ function addRelationItem(
       }
     });
   }
-
-  // Set up strength controls
-  const slider = div.querySelector(".strength-slider");
-  const numberInput = div.querySelector(".strength-input");
-  const toggleBtn = div.querySelector(".toggle-custom-btn");
-
-  // Initialize display mode (slider mode by default)
-  let isCustomMode = strength > 10;
-  updateStrengthDisplay();
-
-  function updateStrengthDisplay() {
-    if (isCustomMode) {
-      slider.style.display = "none";
-      numberInput.style.display = "inline-block";
-      toggleBtn.textContent = "📊";
-      toggleBtn.title = "Switch to slider";
-    } else {
-      slider.style.display = "inline-block";
-      numberInput.style.display = "none";
-      toggleBtn.textContent = "⚙";
-      toggleBtn.title = "Switch to custom value";
-    }
-  }
-
-  // Sync values between slider and number input
-  slider.addEventListener("input", function () {
-    if (!isCustomMode) {
-      numberInput.value = this.value;
-    }
-  });
-
-  numberInput.addEventListener("input", function () {
-    if (isCustomMode && this.value >= 1 && this.value <= 10) {
-      slider.value = this.value;
-    }
-  });
-
-  // Toggle between slider and custom input
-  toggleBtn.addEventListener("click", function () {
-    isCustomMode = !isCustomMode;
-    if (isCustomMode) {
-      // Switch to custom mode, keep current value if it's <= 10
-      if (numberInput.value <= 10) {
-        numberInput.value = slider.value;
-      }
-    } else {
-      // Switch to slider mode, constrain value to 1-10
-      const currentValue = parseInt(numberInput.value) || 5;
-      if (currentValue > 10) {
-        slider.value = 10;
-        numberInput.value = 10;
-      } else if (currentValue < 1) {
-        slider.value = 1;
-        numberInput.value = 1;
-      } else {
-        slider.value = currentValue;
-      }
-    }
-    updateStrengthDisplay();
-  });
 
   div.querySelector(".remove-relation-btn").addEventListener("click", () => {
     container.removeChild(div);
@@ -620,7 +607,13 @@ function addRelationItem(
 
 async function handleSkillFormSubmit(e) {
   e.preventDefault();
-  const skillId = document.getElementById("skill-id").value.trim();
+  const skillIdInput = document.getElementById("skill-id");
+  if (!skillIdInput) {
+    displayMessage("Skill ID input not found.", "error", "messages-skills");
+    return;
+  }
+  
+  const skillId = skillIdInput.value.trim();
   if (!skillId) {
     displayMessage("Skill ID is required.", "error", "messages-skills");
     return;
@@ -643,14 +636,7 @@ async function handleSkillFormSubmit(e) {
       if (relId) {
         const relType =
           item.querySelector(".relation-type-input").value.trim() || "Similar";
-        const numberInput = item.querySelector(".strength-input");
-        const slider = item.querySelector(".strength-slider");
-
-        // Use number input value if it's visible, otherwise use slider
-        const strength =
-          numberInput.style.display !== "none"
-            ? numberInput.value
-            : slider.value;
+        const strength = item.querySelector(".strength-input").value || "5";
 
         return `<relation id="${relId}" type="${relType}" strength="${strength}"/>`;
       }
@@ -688,8 +674,14 @@ async function handleSkillFormSubmit(e) {
       if (editingSkillId) {
         cancelEdit();
       } else {
-        document.getElementById("manage-skills-form").reset();
-        document.getElementById("relations-container").innerHTML = "";
+        const form = document.getElementById("manage-skills-form");
+        if (form) {
+          form.reset();
+        }
+        const relationsContainer = document.getElementById("relations-container");
+        if (relationsContainer) {
+          relationsContainer.innerHTML = "";
+        }
         updateAvailableSkillsDropdown();
       }
     } else {
@@ -1537,13 +1529,35 @@ async function deleteSubject(subjectId) {
 
 function cancelSubjectEdit() {
   editingSubjectId = null;
-  document.getElementById("subject-editor-title").textContent =
-    "Add New Subject";
-  document.getElementById("subject-submit-btn").textContent = "Add Subject";
-  document.getElementById("cancel-subject-btn").style.display = "none";
-  document.getElementById("subject-id").readOnly = false;
-  document.getElementById("manage-subjects-form").reset();
-  document.getElementById("unit-role-pairs").innerHTML = "";
+  const titleElement = document.getElementById("subject-editor-title");
+  if (titleElement) {
+    titleElement.textContent = "Add New Subject";
+  }
+  
+  const submitBtn = document.getElementById("subject-submit-btn");
+  if (submitBtn) {
+    submitBtn.textContent = "Add Subject";
+  }
+  
+  const cancelBtn = document.getElementById("cancel-subject-btn");
+  if (cancelBtn) {
+    cancelBtn.style.display = "none";
+  }
+  
+  const subjectIdInput = document.getElementById("subject-id");
+  if (subjectIdInput) {
+    subjectIdInput.readOnly = false;
+  }
+  
+  const form = document.getElementById("manage-subjects-form");
+  if (form) {
+    form.reset();
+  }
+  
+  const unitRolePairs = document.getElementById("unit-role-pairs");
+  if (unitRolePairs) {
+    unitRolePairs.innerHTML = "";
+  }
 
   // Remove selection highlight
   document.querySelectorAll(".subject-list-item").forEach((item) => {
@@ -1608,16 +1622,32 @@ async function editUnit(unitId) {
     editingUnitId = unitId;
 
     // Update form title and button
-    document.getElementById(
-      "unit-editor-title"
-    ).textContent = `Edit Unit: ${unitId}`;
-    document.getElementById("unit-submit-btn").textContent = "Update Unit";
-    document.getElementById("cancel-unit-btn").style.display = "inline-block";
+    const titleElement = document.getElementById("unit-editor-title");
+    if (titleElement) {
+      titleElement.textContent = `Edit Unit: ${unitId}`;
+    }
+    
+    const submitBtn = document.getElementById("unit-submit-btn");
+    if (submitBtn) {
+      submitBtn.textContent = "Update Unit";
+    }
+    
+    const cancelBtn = document.getElementById("cancel-unit-btn");
+    if (cancelBtn) {
+      cancelBtn.style.display = "inline-block";
+    }
 
     // Populate form
-    document.getElementById("unit-id").value = unitId;
-    document.getElementById("unit-id").readOnly = true;
-    document.getElementById("unit-parent-id").value = unit.parent || "";
+    const unitIdInput = document.getElementById("unit-id");
+    if (unitIdInput) {
+      unitIdInput.value = unitId;
+      unitIdInput.readOnly = true;
+    }
+    
+    const unitParentInput = document.getElementById("unit-parent-id");
+    if (unitParentInput) {
+      unitParentInput.value = unit.parent || "";
+    }
 
     // Highlight selected unit in list
     document.querySelectorAll(".unit-list-item").forEach((item) => {
@@ -1676,11 +1706,30 @@ async function deleteUnit(unitId) {
 
 function cancelUnitEdit() {
   editingUnitId = null;
-  document.getElementById("unit-editor-title").textContent = "Add New Unit";
-  document.getElementById("unit-submit-btn").textContent = "Add Unit";
-  document.getElementById("cancel-unit-btn").style.display = "none";
-  document.getElementById("unit-id").readOnly = false;
-  document.getElementById("manage-units-form").reset();
+  const titleElement = document.getElementById("unit-editor-title");
+  if (titleElement) {
+    titleElement.textContent = "Add New Unit";
+  }
+  
+  const submitBtn = document.getElementById("unit-submit-btn");
+  if (submitBtn) {
+    submitBtn.textContent = "Add Unit";
+  }
+  
+  const cancelBtn = document.getElementById("cancel-unit-btn");
+  if (cancelBtn) {
+    cancelBtn.style.display = "none";
+  }
+  
+  const unitIdInput = document.getElementById("unit-id");
+  if (unitIdInput) {
+    unitIdInput.readOnly = false;
+  }
+  
+  const form = document.getElementById("manage-units-form");
+  if (form) {
+    form.reset();
+  }
 
   // Remove selection highlight
   document.querySelectorAll(".unit-list-item").forEach((item) => {
@@ -1743,18 +1792,33 @@ async function editRole(roleId) {
     editingRoleId = roleId;
 
     // Update form title and button
-    document.getElementById(
-      "role-editor-title"
-    ).textContent = `Edit Role: ${roleId}`;
-    document.getElementById("role-submit-btn").textContent = "Update Role";
-    document.getElementById("cancel-role-btn").style.display = "inline-block";
+    const titleElement = document.getElementById("role-editor-title");
+    if (titleElement) {
+      titleElement.textContent = `Edit Role: ${roleId}`;
+    }
+    
+    const submitBtn = document.getElementById("role-submit-btn");
+    if (submitBtn) {
+      submitBtn.textContent = "Update Role";
+    }
+    
+    const cancelBtn = document.getElementById("cancel-role-btn");
+    if (cancelBtn) {
+      cancelBtn.style.display = "inline-block";
+    }
 
     // Populate form
-    document.getElementById("role-id").value = roleId;
-    document.getElementById("role-id").readOnly = true;
+    const roleIdInput = document.getElementById("role-id");
+    if (roleIdInput) {
+      roleIdInput.value = roleId;
+      roleIdInput.readOnly = true;
+    }
 
     // Clear existing parent roles
-    document.getElementById("role-parents").innerHTML = "";
+    const roleParents = document.getElementById("role-parents");
+    if (roleParents) {
+      roleParents.innerHTML = "";
+    }
 
     // Add existing parent roles
     if (role.parents && role.parents.length > 0) {
@@ -1820,12 +1884,35 @@ async function deleteRole(roleId) {
 
 function cancelRoleEdit() {
   editingRoleId = null;
-  document.getElementById("role-editor-title").textContent = "Add New Role";
-  document.getElementById("role-submit-btn").textContent = "Add Role";
-  document.getElementById("cancel-role-btn").style.display = "none";
-  document.getElementById("role-id").readOnly = false;
-  document.getElementById("manage-roles-form").reset();
-  document.getElementById("role-parents").innerHTML = "";
+  const titleElement = document.getElementById("role-editor-title");
+  if (titleElement) {
+    titleElement.textContent = "Add New Role";
+  }
+  
+  const submitBtn = document.getElementById("role-submit-btn");
+  if (submitBtn) {
+    submitBtn.textContent = "Add Role";
+  }
+  
+  const cancelBtn = document.getElementById("cancel-role-btn");
+  if (cancelBtn) {
+    cancelBtn.style.display = "none";
+  }
+  
+  const roleIdInput = document.getElementById("role-id");
+  if (roleIdInput) {
+    roleIdInput.readOnly = false;
+  }
+  
+  const form = document.getElementById("manage-roles-form");
+  if (form) {
+    form.reset();
+  }
+  
+  const roleParents = document.getElementById("role-parents");
+  if (roleParents) {
+    roleParents.innerHTML = "";
+  }
 
   // Remove selection highlight
   document.querySelectorAll(".role-list-item").forEach((item) => {

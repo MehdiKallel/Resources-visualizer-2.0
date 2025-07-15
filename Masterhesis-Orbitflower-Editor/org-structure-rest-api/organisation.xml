@@ -138,16 +138,19 @@
       <parent>fefe</parent>
       <permissions/>
     </unit>
+    <unit id="fwefw">
+      <parent>fewf</parent>
+      <permissions/>
+    </unit>
+    <unit id="dw">
+      <parent>dw</parent>
+      <permissions/>
+    </unit>
   </units>
   <roles>
     <role id="Regular">
       <permissions/>
       <parent>Project</parent>
-      <parent>Project</parent>
-      <parent>fefe</parent>
-      <parent>fefe</parent>
-      <parent>fefe</parent>
-      <parent>fefe</parent>
     </role>
     <role id="Project">
       <permissions/>
@@ -958,6 +961,7 @@
     <skill id="Azure">
       <relation id="AWS" type="isRelatedTo" strength="5"/>
       <relation id="SQL" type="testing" strength="5"/>
+      <relation id="Cloud" type="Child" strength="5"/>
     </skill>
     <skill id="AWS">
       <relation id="Azure" type="isRelatedTo" score="300"/>
@@ -1221,5 +1225,6 @@
       <relation id="PostgreSQL" type="Similar" strength="5"/>
       <relation id="MongoDB" type="Similar" strength="5"/>
     </skill>
+    <skill id="greger"/>
   </skills>
 </organisation>

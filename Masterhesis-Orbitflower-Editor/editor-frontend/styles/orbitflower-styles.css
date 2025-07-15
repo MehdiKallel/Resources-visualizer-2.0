@@ -1,868 +1,826 @@
-/* OrbitFlower main styles */
-text {
-  font-size: 14px;
-  font-style: normal;
-  font-variant: normal;
-  font-weight: normal;
-  font-stretch: normal;
-  line-height: 100%;
-  letter-spacing: 0px;
-  word-spacing: 0px;
-  writing-mode: lr-tb;
-  text-anchor: start;
-  fill: #000000;
-  fill-opacity: 1;
-  stroke: none;
-  font-family: Arial;
-}
-
-#graph svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-.labeltext {
-  font-weight: normal;
-}
-
-.btext {
-  fill: #ffffff;
-  stroke: #ffffff;
-  stroke-width: 2.5;
-}
-
-.plainwhite {
-  fill: none;
-  stroke: #ffffff;
-  stroke-width: 2.9;
-}
-
-.left {
-  text-align: end;
-  text-anchor: end;
-}
-
-.right {
-  text-align: start;
-  text-anchor: start;
-}
-
-/* Node styling (units, roles) */
-.unit {
-  fill: #729fcf;
-  stroke: #204a87;
-  stroke-width: 1.5;
-  cursor: pointer;
-}
-
-.role {
-  fill: #ad7fa8;
-  stroke: #5c3566;
-  stroke-width: 1.5;
-  cursor: pointer;
-}
-
-.role .active-filter-element {
-  stroke: #ff0000; 
-  stroke-width: 3;
-}
-
-.unit .active-filter-element {
-  stroke: #ff0000; 
-  stroke-width: 3;
-}
-
-/* Connection styling */
-.unit.connect {
-  fill: none;
-  stroke: #204a87;
-  stroke-width: 1;
-}
-
-.role.connect {
-  fill: none;
-  stroke: #5c3566;
-  stroke-width: 1;
-}
-
-.connect.inactive {
-  stroke-opacity: 0.1;
-}
-
-/* Highlight states */
-.role circle.highlight, .unit circle.highlight {
-  stroke: #a40000;
-}
-
-.unit.connect.highlight, .role.connect.highlight {
-  stroke: #a40000;
-  stroke-opacity: 1;
-}
-
-.activefilter {
-  fill: #a40000;
-}
-
-/* Subject styling */
-.subject {
-  cursor: pointer;
-}
-
-.subject:hover .labeltext {
-  fill: #a40000;
-  color: #a40000;
-}
-
-.subject.highlightrole .labeltext {
-  color: #ad7fa8;
-}
-
-.subject.highlightunit .labeltext {
-  color: #729fcf;
-}
-
-.subject.highlightrole .subjecticon {
-  stroke: #ad7fa8;
-}
-
-.subject.highlightunit .subjecticon {
-  stroke: #729fcf;
-}
-
-.subject .subjecticon {
-  fill: #ffffff;
-  stroke: #000000;
-  stroke-width: 1;
-}
-
-/* Subject icon styling */
-.subjecticon.subjecthighlight, .subjecticon.highlight {
-  stroke: #a40000;
-}
-
-.subjecticon.number {
-  font-size: 11px;
-  font-style: normal;
-  font-variant: normal;
-  font-weight: normal;
-  font-stretch: normal;
-  line-height: 100%;
-  letter-spacing: 0px;
-  word-spacing: 0px;
-  writing-mode: lr-tb;
-  text-anchor: start;
-  fill: #000000;
-  fill-opacity: 1;
-  stroke: none;
-  font-family: Arial;
-}
-
-#main-svg {
-  cursor: grab;
-}
-#main-svg:active {
-  cursor: grabbing;
-}
-.subjecticon.number tspan {
-  text-anchor: middle;
-  text-align: center;
-}
-
-.subjecticon.number .inactive {
-  visibility: hidden;
-}
-
-/* Relation styling */
-.relation {
-  fill: none;
-  stroke: #777676;
-  stroke-width: 1;
-}
-
-.relation.inactive {
-  stroke-opacity: 0.2;
-}
-
-.relation.role {
-  stroke-opacity: 1;
-  stroke: #5c3566;
-}
-
-.relation.unit {
-  stroke-opacity: 1;
-  stroke: #204a87;
-}
-
-.relation.highlight {
-  stroke-opacity: 1;
-  stroke: #a40000;
-}
-
-/* Skill indicators */
-.skill-indicator {
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: all;
-}
-
-.skill-indicator:hover {
-  opacity: 1 !important;
-}
-
-/* Graph element interaction */
-#graphcolumn svg {
-  cursor: grab;
-}
-
-#graphcolumn svg:active {
-  cursor: grabbing;
-}
-
-/* Tab navigation */
-.tabs {
-  display: flex;
-  border-bottom: 1px solid #ccc;
-  background-color: #f1f1f1;
-  padding: 10px;
-}
-
-.tab-button {
-  background-color: inherit;
-  border: 1px solid #ccc;
-  outline: none;
-  padding: 14px 16px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  font-size: 17px;
-  margin-right: 5px;
-}
-
-.tab-button:hover {
-  background-color: #ddd;
-}
-
-.tab-button.active {
-  background-color: #ccc;
-}
-
-.tab-content.active {
-  display: block;
-}
-
-/* Form styling - simplified and symmetric */
-.manage-form {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 5px;
-  max-width: 400px;
-}
-
-.manage-form .form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 4px;
-  width: 100%;
-}
-
-.manage-form label {
-  font-weight: bold;
-  display: block;
-  margin-bottom: 2px;
-  font-size: 13px;
-}
-
-.manage-form input, 
-.manage-form select {
-  padding: 5px;
-  border: 1px solid #ccc;
-  font-size: 13px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.manage-form button {
-  padding: 5px 10px;
-  border: 1px solid #ccc;
-  font-size: 13px;
-  cursor: pointer;
-  margin-top: 4px;
-}
-
-.manage-form button[type="button"] {
-  border: 1px solid #ccc;
-}
-
-/* Form element groups - symmetric styling */
-.unit-role-pair, 
-.role-parent-pair, 
-.relation-item {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  padding: 2px 0;
-  margin-bottom: 4px;
-  width: 100%;
-}
-
-.unit-role-item, 
-.unit-role-pair {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 4px;
-  width: 100%;
-}
-
-.unit-role-item input,
-.unit-role-pair input {
-  flex: 1;
-  padding: 4px;
-  border: 1px solid #ccc;
-  font-size: 12px;
-}
-
-.unit-role-pair input, 
-.role-parent-pair input,
-.relation-item input {
-  flex: 1;
-  width: 140px;
-}
-
-.remove-btn,
-.remove-relation-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  color: #666;
-  padding: 0 5px;
-}
-
-/* Container styling - consistent across all forms */
-#relations-container,
-#role-parents,
-#unit-role-pairs {
-  padding: 5px 0;
-  margin-bottom: 10px;
-  width: 100%;
-}
-
-#relations-container h4 {
-  margin: 0 0 5px 0;
-  font-size: 14px;
-  font-weight: bold;
-}
-
-/* Message display - consistent */
-#messages-subjects,
-#messages-units,
-#messages-roles,
-#messages-skills {
-  margin-top: 10px;
-}
-
-/* Subject editor */
-.edit-subject-section {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: white;
-  z-index: 1000;
-  display: none;
-  padding: 20px;
-}
-
-.back-button {
-  margin-bottom: 10px;
-  padding: 5px 10px;
-  background: none;
-  border: 1px solid #ccc;
-  cursor: pointer;
-}
-
-.section-header {
-  margin-top: 15px;
-  margin-bottom: 10px;
-  border-bottom: 1px solid #ddd;
-}
-
-.edit-subject-container {
-  padding: 10px;
-}
-
-.edit-subject-container .form-group {
-  margin-bottom: 10px;
-}
-
-.skill-add-section {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-  align-items: center;
-}
-
-.skill-add-section input {
-  flex: 1;
-  padding: 5px;
-}
-
-.edit-subject-container .form-actions {
-  margin-top: 15px;
-  display: flex;
-  gap: 10px;
-}
-
-
-ui-area[data-belongs-to-tab="graph"] {
-  overflow: hidden !important;
-}
-
-/* Ensure SVG container fills the space without scrolling */
-#graph {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  position: relative;
-}
-
-/* Remove any default scrolling behaviors */
-.x-ui-layout.tab-content {
-  overflow: hidden !important;
-}
-
-#skill-drag-ghost {
-  background-color: #4a90e2;
-  transition: transform 0.2s ease;
-}
-
-#subject-drag-ghost {
-  pointer-events: none;
-  user-select: none;
-}
-
-.block-drop-target {
-  outline: 2px dashed #4CAF50;
-  background-color: rgba(76, 175, 80, 0.1);
-  transform: scale(1.02);
-  transition: transform 0.2s ease;
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.02); }
-  100% { transform: scale(1); }
-}
-
-/* Skills Management Interface */
-.skills-management-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  max-height: 70vh;
-  padding: 15px;
-}
-
-.skills-list-section, .skill-editor-section {
-  border: 1px solid #ccc;
-  padding: 15px;
-}
-
-.skills-filter {
-  margin-bottom: 15px;
-}
-
-#skills-search {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.skills-list {
-  max-height: 50vh;
-  overflow-y: auto;
-  border: 1px solid #ddd;
-}
-
-.skill-list-item {
-  padding: 10px;
-  border-bottom: 1px solid #eee;
-  cursor: pointer;
-  display: flex;
-  justify-content: between;
-  align-items: center;
-}
-
-.skill-list-item:hover {
-  background-color: #f0f0f0;
-}
-
-.skill-list-item.selected {
-  background-color: #e3f2fd;
-  border-left: 4px solid #2196f3;
-}
-
-.skill-info {
-  flex-grow: 1;
-}
-
-.skill-name {
-  font-weight: bold;
-  color: #333;
-}
-
-.skill-relations-count {
-  font-size: 0.9em;
-  color: #666;
-  margin-top: 2px;
-}
-
-.skill-actions {
-  display: flex;
-  gap: 5px;
-}
-
-.skill-edit-btn, .skill-delete-btn {
-  padding: 3px 6px;
-  border: 1px solid;
-  border-radius: 2px;
-  cursor: pointer;
-  font-size: 11px;
-  font-weight: 500;
-}
-
-/* Relations Section */
-.relations-section {
-  margin: 20px 0;
-}
-
-.relation-item {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 30px;
-  gap: 6px;
-  align-items: center;
-  padding: 6px;
-  margin-bottom: 6px;
-  border: 1px solid #ccc;
-  font-size: 13px;
-}
-
-.relation-skill-name {
-  font-weight: 500;
-  color: #333;
-  padding: 3px;
-  font-size: 13px;
-}
-
-.relation-type-input {
-  padding: 3px 4px;
-  border: 1px solid #ccc;
-  font-size: 12px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.relation-type-input:focus {
-  border-color: #007bff;
-  outline: none;
-}
-
-.strength-controls {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  justify-content: center;
-}
-
-.strength-slider,
-.strength-input {
-  width: 40px;
-  height: 20px;
-  border: 1px solid #ccc;
-  padding: 1px 2px;
-  font-size: 11px;
-  box-sizing: border-box;
-}
-
-.strength-slider {
-  outline: none;
-}
-
-.strength-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 12px;
-  height: 12px;
-  cursor: pointer;
-}
-
-.strength-slider::-moz-range-thumb {
-  width: 12px;
-  height: 12px;
-  cursor: pointer;
-  border: none;
-}
-
-.strength-input {
-  text-align: center;
-}
-
-.toggle-custom-btn {
-  width: 18px;
-  height: 18px;
-  border: 1px solid #ccc;
-  cursor: pointer;
-  font-size: 9px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  line-height: 1;
-}
-
-.toggle-custom-btn:hover {
-  border-color: #999;
-}
-
-.remove-relation-btn {
-  width: 24px;
-  height: 24px;
-  color: #000;
-  border: 1px solid #ccc;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-}
-
-.add-relation-controls {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  margin-top: 8px;
-  padding: 6px;
-  border: 1px solid #e9ecef;
-}
-
-#available-skills-dropdown {
-  flex-grow: 1;
-  padding: 4px 6px;
-  border: 1px solid #ccc;
-  font-size: 12px;
-  height: 24px;
-}
-
-#available-skills-dropdown:focus {
-  border-color: #007bff;
-  outline: none;
-}
-
-#add-relation-btn,
-#add-manual-relation-btn {
-  padding: 6px 12px;
-  border: 1px solid #ccc;
-  color: #333;
-  cursor: pointer;
-  font-size: 14px;
-  margin-top: 5px;
-}
-
-.form-actions {
-  display: flex;
-  gap: 6px;
-  margin-top: 12px;
-}
-
-.form-actions button {
-  padding: 6px 12px;
-  border: 1px solid #ccc;
-  color: #333;
-  cursor: pointer;
-  font-size: 14px;
-  margin-top: 5px;
-}
-
-/* Loading and Empty States */
-.skills-loading {
-  text-align: center;
-  padding: 20px;
-  color: #666;
-}
-
-.skills-empty {
-  text-align: center;
-  padding: 20px;
-  color: #999;
-  font-style: italic;
-}
-
-/* Manual relation input styling */
-.relation-manual-input {
-  display: flex;
-  gap: 2px;
-  align-items: center;
-}
-
-.relation-id-input {
-  padding: 3px 4px;
-  border: 1px solid #ccc;
-  font-size: 12px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.relation-id-input:focus {
-  border-color: #007bff;
-  outline: none;
-}
-
-.confirm-relation-btn {
-  width: 18px;
-  height: 18px;
-  border: 1px solid #ccc;
-  color: #000;
-  cursor: pointer;
-  font-size: 11px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  font-weight: bold;
-}
-
-/* Management Interface - Common Styles for Subjects, Units, Roles */
-.subjects-management-container,
-.units-management-container,
-.roles-management-container {
-  display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
-  gap: 20px;
-  max-height: 70vh;
-  padding: 15px;
-}
-
-.subjects-list-section, .subject-editor-section,
-.units-list-section, .unit-editor-section,
-.roles-list-section, .role-editor-section {
-  border: 1px solid #ccc;
-  padding: 10px;
-  background: #f9f9f9;
-  max-width: 450px;
-  width: 100%;
-}
-
-.relations-section {
-  margin: 10px 0;
-}
-
-.relations-section h4 {
-  margin: 8px 0 6px 0;
-  font-size: 14px;
-}
-
-.add-relation-controls {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  margin-top: 6px;
-  flex-wrap: wrap;
-  padding: 6px;
-  border: 1px solid #e9ecef;
-}
-
-.add-relation-controls input {
-  flex: 1;
-  min-width: 120px;
-  padding: 4px;
-  font-size: 12px;
-}
-
-.add-relation-controls button {
-  padding: 4px 8px;
-  font-size: 12px;
-}
-
-.subjects-filter, .units-filter, .roles-filter {
-  margin-bottom: 15px;
-}
-
-#subjects-search, #units-search, #roles-search {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.subjects-list, .units-list, .roles-list {
-  max-height: 50vh;
-  overflow-y: auto;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: white;
-}
-
-.subject-list-item, .unit-list-item, .role-list-item {
-  padding: 10px;
-  border-bottom: 1px solid #eee;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.subject-list-item:hover, .unit-list-item:hover, .role-list-item:hover {
-  background-color: #f0f0f0;
-}
-
-.subject-list-item.selected, .unit-list-item.selected, .role-list-item.selected {
-  background-color: #e3f2fd;
-  border-left: 4px solid #2196f3;
-}
-
-.unit-role-item, .role-parent-item {
-  display: grid;
-  grid-template-columns: 1fr 1fr 30px;
-  gap: 6px;
-  margin-bottom: 8px;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: white;
-}
-
-.unit-role-item input, .role-parent-item input {
-  padding: 4px 8px;
-  border: 1px solid #ccc;
-  border-radius: 2px;
-  font-size: 12px;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .skills-management-container {
-    grid-template-columns: 1fr;
+  /* OrbitFlower main styles */
+  text {
+    font-size: 14px;
+    font-style: normal;
+    font-variant: normal;
+    font-weight: normal;
+    font-stretch: normal;
+    line-height: 100%;
+    letter-spacing: 0px;
+    word-spacing: 0px;
+    writing-mode: lr-tb;
+    text-anchor: start;
+    fill: #000000;
+    fill-opacity: 1;
+    stroke: none;
+    font-family: Arial;
   }
+
+  #graph svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .labeltext {
+    font-weight: normal;
+  }
+
+  .btext {
+    fill: #ffffff;
+    stroke: #ffffff;
+    stroke-width: 2.5;
+  }
+
+  .plainwhite {
+    fill: none;
+    stroke: #ffffff;
+    stroke-width: 2.9;
+  }
+
+  .left {
+    text-align: end;
+    text-anchor: end;
+  }
+
+  .right {
+    text-align: start;
+    text-anchor: start;
+  }
+
+  /* Node styling (units, roles) */
+  .unit {
+    fill: #729fcf;
+    stroke: #204a87;
+    stroke-width: 1.5;
+    cursor: pointer;
+  }
+
+  .role {
+    fill: #ad7fa8;
+    stroke: #5c3566;
+    stroke-width: 1.5;
+    cursor: pointer;
+  }
+
+  .role .active-filter-element {
+    stroke: #ff0000; 
+    stroke-width: 3;
+  }
+
+  .unit .active-filter-element {
+    stroke: #ff0000; 
+    stroke-width: 3;
+  }
+
+  /* Connection styling */
+  .unit.connect {
+    fill: none;
+    stroke: #204a87;
+    stroke-width: 1;
+  }
+
+  .role.connect {
+    fill: none;
+    stroke: #5c3566;
+    stroke-width: 1;
+  }
+
+  .connect.inactive {
+    stroke-opacity: 0.1;
+  }
+
+  /* Highlight states */
+  .role circle.highlight, .unit circle.highlight {
+    stroke: #a40000;
+  }
+
+  .unit.connect.highlight, .role.connect.highlight {
+    stroke: #a40000;
+    stroke-opacity: 1;
+  }
+
+  .activefilter {
+    fill: #a40000;
+  }
+
+  /* Subject styling */
+  .subject {
+    cursor: pointer;
+  }
+
+  .subject:hover .labeltext {
+    fill: #a40000;
+    color: #a40000;
+  }
+
+  .subject.highlightrole .labeltext {
+    color: #ad7fa8;
+  }
+
+  .subject.highlightunit .labeltext {
+    color: #729fcf;
+  }
+
+  .subject.highlightrole .subjecticon {
+    stroke: #ad7fa8;
+  }
+
+  .subject.highlightunit .subjecticon {
+    stroke: #729fcf;
+  }
+
+  .subject .subjecticon {
+    fill: #ffffff;
+    stroke: #000000;
+    stroke-width: 1;
+  }
+
+  /* Subject icon styling */
+  .subjecticon.subjecthighlight, .subjecticon.highlight {
+    stroke: #a40000;
+  }
+
+  .subjecticon.number {
+    font-size: 11px;
+    font-style: normal;
+    font-variant: normal;
+    font-weight: normal;
+    font-stretch: normal;
+    line-height: 100%;
+    letter-spacing: 0px;
+    word-spacing: 0px;
+    writing-mode: lr-tb;
+    text-anchor: start;
+    fill: #000000;
+    fill-opacity: 1;
+    stroke: none;
+    font-family: Arial;
+  }
+
+  #main-svg {
+    cursor: grab;
+  }
+  #main-svg:active {
+    cursor: grabbing;
+  }
+  .subjecticon.number tspan {
+    text-anchor: middle;
+    text-align: center;
+  }
+
+  .subjecticon.number .inactive {
+    visibility: hidden;
+  }
+
+  /* Relation styling */
+  .relation {
+    fill: none;
+    stroke: #777676;
+    stroke-width: 1;
+  }
+
+  .relation.inactive {
+    stroke-opacity: 0.2;
+  }
+
+  .relation.role {
+    stroke-opacity: 1;
+    stroke: #5c3566;
+  }
+
+  .relation.unit {
+    stroke-opacity: 1;
+    stroke: #204a87;
+  }
+
+  .relation.highlight {
+    stroke-opacity: 1;
+    stroke: #a40000;
+  }
+
+  /* Skill indicators */
+  .skill-indicator {
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: all;
+  }
+
+  .skill-indicator:hover {
+    opacity: 1 !important;
+  }
+
+  /* Graph element interaction */
+  #graphcolumn svg {
+    cursor: grab;
+  }
+
+  #graphcolumn svg:active {
+    cursor: grabbing;
+  }
+
+  /* Tab navigation */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid #ccc;
+    background-color: #f1f1f1;
+    padding: 10px;
+  }
+
+  .tab-button {
+    background-color: inherit;
+    border: 1px solid #ccc;
+    outline: none;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 17px;
+    margin-right: 5px;
+  }
+
+  .tab-button:hover {
+    background-color: #ddd;
+  }
+
+  .tab-button.active {
+    background-color: #ccc;
+  }
+
+  .tab-content.active {
+    display: block;
+  }
+
+  /* Minimal Form Styling */
+  .manage-form {
+    padding: 20px;
+    max-width: 500px;
+  }
+
+  .manage-form .form-group {
+    margin-bottom: 20px;
+  }
+
+  .manage-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: normal;
+    font-size: 14px;
+  }
+
+ 
+  .manage-form input:focus, 
+  .manage-form select:focus,
+  .manage-form textarea:focus {
+    outline: 1px solid #666;
+    border-color: #666;
+  }
+
+  .manage-form button {
+    cursor: pointer;
   
+  }
+
+  /* Simplified Form Element Groups */
+  .unit-role-pair, 
+  .role-parent-pair, 
   .relation-item {
-    grid-template-columns: 1fr;
-    gap: 5px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 0;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #ccc;
   }
-  
-  .strength-slider-container {
-    flex-direction: row;
-    justify-content: space-between;
+
+  .unit-role-item, 
+  .unit-role-pair {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid #ccc;
+  }
+
+  .unit-role-item input,
+  .unit-role-pair input,
+  .role-parent-pair input,
+  .relation-item input {
+    flex: 1;
+    padding: 4px 6px;
+    border: 1px solid #ccc;
+    background: transparent;
+    margin: 0;
+    min-width: 0;
+  }
+
+  .relation-item input[type="number"] {
+    flex: 0 0 80px;
+  }
+
+  .unit-role-item input:focus,
+  .unit-role-pair input:focus,
+  .role-parent-pair input:focus,
+  .relation-item input:focus {
+    outline: 1px solid #666;
+    border-color: #666;
+  }
+
+  .remove-btn,
+  .remove-relation-btn,
+  .confirm-relation-btn {
+    border: 1px solid #ccc;
+    cursor: pointer;
+    padding: 4px 8px;
+    background: transparent;
+    margin: 0;
+    flex-shrink: 0;
+  }
+
+  /* Simplified Container Styling */
+  #relations-container,
+  #role-parents,
+  #unit-role-pairs {
+    padding: 8px 0;
+    margin-bottom: 16px;
+  }
+
+  #relations-container h4,
+  .section-title { 
+    margin: 0 0 12px 0;
+    font-weight: normal;
+  }
+
+  /* Minimal Message Display */
+  #messages-subjects,
+  #messages-units,
+  #messages-roles,
+  #messages-skills {
+    margin-top: 20px;
+    padding: 10px 0;
+  }
+
+  /* Subject editor */
+  .edit-subject-section {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: white;
+    z-index: 1000;
+    display: none;
+    padding: 20px;
+  }
+
+  .back-button {
+    margin-bottom: 20px;
+    padding: 8px 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+    font-size: 14px;
+  }
+
+  .section-header {
+    margin-top: 20px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+  }
+
+  .edit-subject-container {
+    padding: 10px;
+  }
+
+  .edit-subject-container .form-group {
+    margin-bottom: 10px;
+  }
+
+  .skill-add-section {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: center;
+  }
+
+  .skill-add-section input {
+    flex: 1;
+    padding: 5px;
+  }
+
+  .edit-subject-container .form-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 15px;
+  }
+
+
+  ui-area[data-belongs-to-tab="graph"] {
+    overflow: hidden !important;
+  }
+
+  /* Ensure SVG container fills the space without scrolling */
+  #graph {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Remove any default scrolling behaviors */
+  .x-ui-layout.tab-content {
+    overflow: hidden !important;
+  }
+
+  #skill-drag-ghost {
+    background-color: #4a90e2;
+    transition: transform 0.2s ease;
+  }
+
+  #subject-drag-ghost {
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .block-drop-target {
+    outline: 2px dashed #4CAF50;
+    background-color: rgba(76, 175, 80, 0.1);
+    transform: scale(1.02);
+    transition: transform 0.2s ease;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+  }
+
+  /* Minimal Skills Management Interface */
+  .skills-management-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .skills-list-section, .skill-editor-section {
+    padding: 20px;
+  }
+
+  .skills-filter {
+    margin-bottom: 20px;
+  }
+
+  #skills-search {
     width: 100%;
   }
-}
+
+  #skills-search:focus {
+    outline: 1px solid #666;
+    border-color: #666;
+  }
+
+  .skills-list {
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+
+  .skill-list-item {
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .skill-list-item:hover {
+    background-color: #f8f8f8;
+  }
+
+  .skill-list-item.selected {
+    background-color: #f0f0f0;
+  }
+
+  .skill-name {
+    font-weight: normal;
+  }
+
+  .skill-relations-count .role-parents-count .unit-parent{
+    font-size: 12px;
+    color: #999;
+  }
+
+  .skill-actions {
+    display: flex;
+    gap: 10px;
+    opacity: 0;
+  }
+
+  .skill-list-item:hover .skill-actions {
+    opacity: 1;
+  }
+
+  .skill-edit-btn, .skill-delete-btn {
+    padding: 4px 0;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    background: transparent;
+    text-decoration: underline;
+  }
+
+  /* Minimal Relations Section - Full Width Layout */
+
+
+
+  .relation-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+  }
+
+  .relation-skill-name {
+    font-weight: normal;
+    min-width: 120px;
+    padding: 4px 0;
+  }
+
+  .relation-type-input {
+    padding: 6px;
+    border: 1px solid #ddd;
+    font-size: 12px;
+    min-width: 100px;
+    background: transparent;
+  }
+
+  .relation-type-input:focus {
+    border-color: #666;
+    outline: 1px solid #666;
+  }
+
+  .strength-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 120px;
+  }
+
+  .strength-slider,
+  .strength-input {
+    width: 60px;
+    height: 20px;
+    border: 1px solid #ddd;
+    padding: 2px;
+    font-size: 11px;
+    background: transparent;
+  }
+
+  .strength-slider {
+    outline: none;
+  }
+
+  .strength-input {
+    text-align: center;
+  }
+
+  .toggle-custom-btn {
+    width: 20px;
+    height: 20px;
+    border: none;
+    cursor: pointer;
+    font-size: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    text-decoration: underline;
+  }
+
+  .remove-relation-btn {
+    width: 25px;
+    height: 25px;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: normal;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    margin-left: auto;
+    text-decoration: underline;
+  }
+
+  .add-relation-controls {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-top: 10px;
+    padding: 10px 0;
+    border-top: 1px solid #eee;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+  }
+
+  .form-actions button {
+    padding: 10px 0;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    background: transparent;
+    text-decoration: underline;
+  }
+
+  /* Simple Loading and Empty States */
+  .skills-loading,
+  .subjects-loading,
+  .units-loading,
+  .roles-loading {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+  }
+
+  .skills-empty,
+  .subjects-empty,
+  .units-empty,
+  .roles-empty {
+    text-align: center;
+    padding: 20px;
+    color: #999;
+    font-style: italic;
+  }
+
+  /* Minimal Manual Relation Input */
+  .relation-manual-input {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+
+  .relation-id-input {
+    padding: 6px;
+    border: 1px solid #ddd;
+    font-size: 12px;
+    width: 100%;
+    background: transparent;
+  }
+
+  .relation-id-input:focus {
+    border-color: #666;
+    outline: 1px solid #666;
+  }
+
+  .confirm-relation-btn {
+    width: 20px;
+    height: 20px;
+    border: none;
+    cursor: pointer;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: normal;
+    background: transparent;
+    text-decoration: underline;
+  }
+
+
+  .subjects-list-section, .subject-editor-section,
+  .units-list-section, .unit-editor-section,
+  .roles-list-section, .role-editor-section {
+    padding: 20px;
+    width: 100%;
+    overflow: auto;
+  }
+
+  .relations-section {
+    padding: 5px;
+    border: 1px solid #ddd;
+  }
+
+  .relations-section h4 {
+    margin-top: 5%;
+  }
+
+  .add-relation-controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 8px 0;
+    border-top: 1px solid #ccc;
+  }
+
+  .add-relation-controls input,
+  .add-relation-controls select {
+    flex: 1;
+    padding: 4px 6px;
+    border: 1px solid #ccc;
+    background: transparent;
+  }
+
+  .add-relation-controls button {
+    padding: 4px 8px;
+    border: 1px solid #ccc;
+    background: transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  /* Minimal Search and List Styling */
+  .subjects-filter, .units-filter, .roles-filter {
+    margin-bottom: 20px;
+  }
+
+  #subjects-search, #units-search, #roles-search {
+    width: 100%;
+  }
+
+  #subjects-search:focus, #units-search:focus, #roles-search:focus {
+    outline: 1px solid #666;
+    border-color: #666;
+  }
+
+
+
+  .subject-list-item, .unit-list-item, .role-list-item {
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .subject-list-item:hover, .unit-list-item:hover, .role-list-item:hover {
+    background-color: #f8f8f8;
+  }
+
+  .subject-list-item.selected, .unit-list-item.selected, .role-list-item.selected {
+    background-color: #f0f0f0;
+  }
+
+  /* Minimal Grid Item Styling */
+  .unit-role-item, .role-parent-item {
+    display: grid;
+    grid-template-columns: 1fr 1fr 30px;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+  }
+
+  .unit-role-item input, .role-parent-item input {
+    padding: 8px;
+    border: 1px solid #ddd;
+    font-size: 13px;
+    background: transparent;
+  }
+
+  .unit-role-item input:focus, .role-parent-item input:focus {
+    outline: 1px solid #666;
+    border-color: #666;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .skills-management-container {
+      grid-template-columns: 1fr;
+    }
+    
+    .strength-slider-container {
+      flex-direction: row;
+      justify-content: space-between;
+      width: 100%;
+    }
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .skills-management-container {
+      grid-template-columns: 1fr;
+    }
+    
+    .relation-item {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 4px;
+    }
+    
+    .relation-item > * {
+      width: 100%;
+    }
+  }
 
 
 

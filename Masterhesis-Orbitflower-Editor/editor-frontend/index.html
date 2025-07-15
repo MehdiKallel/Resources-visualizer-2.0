@@ -243,7 +243,7 @@
         const skillElem = $(`
          <div class="skill-item" data-skill-id="${skillId}" 
                style="margin-left: ${level * 20}px; 
-                     border-left: 3px solid ${color};
+                     border-left: 6px solid ${color};
                      padding: 5px;
                      padding-right: 50px;
                      opacity: ${opacity};"
@@ -924,10 +924,8 @@
           </div>
           
           <div class="subject-editor-section">
-            <h3 id="subject-editor-title">Add New Subject</h3>
             <form id="manage-subjects-form" class="manage-form">
               <div class="form-group">
-                <label for="subject-id">Subject ID:</label>
                 <input type="text" id="subject-id" placeholder="Subject ID" required />
               </div>
               
@@ -965,14 +963,11 @@
           </div>
           
           <div class="unit-editor-section">
-            <h3 id="unit-editor-title">Add New Unit</h3>
             <form id="manage-units-form" class="manage-form">
               <div class="form-group">
-                <label for="unit-id">Unit ID:</label>
                 <input type="text" id="unit-id" placeholder="Unit ID" required />
               </div>
               <div class="form-group">
-                <label for="unit-parent-id">Parent ID:</label>
                 <input type="text" id="unit-parent-id" placeholder="Parent ID (optional)" />
               </div>
               
@@ -998,10 +993,8 @@
           </div>
           
           <div class="role-editor-section">
-            <h3 id="role-editor-title">Add New Role</h3>
             <form id="manage-roles-form" class="manage-form">
               <div class="form-group">
-                <label for="role-id">Role ID:</label>
                 <input type="text" id="role-id" placeholder="Role ID" required />
               </div>
               
@@ -1041,10 +1034,8 @@
             
             <!-- Skill Editor Section -->
             <div class="skill-editor-section">
-              <h3 id="skill-editor-title">Add New Skill</h3>
               <form id="manage-skills-form" class="manage-form">
                 <div class="form-group">
-                  <label for="skill-id">Skill ID:</label>
                   <input type="text" id="skill-id" placeholder="Skill ID" required="" />
                 </div>
                 
