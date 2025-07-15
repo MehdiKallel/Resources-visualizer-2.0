@@ -871,7 +871,7 @@ class ExpressionBuilder {
     contentContainer.appendChild(expressionDisplay);
     contentContainer.appendChild(instructionsText);
     contentContainer.appendChild(buttonsContainer);
-    contentContainer.appendChild(savedExpressionsContainer);
+    //contentContainer.appendChild(savedExpressionsContainer);
     contentContainer.appendChild(searchUrlContainer);
 
     // Append header and content container to the main container.

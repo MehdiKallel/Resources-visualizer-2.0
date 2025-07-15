@@ -743,6 +743,53 @@ class SkillTreeComponent {
         }
         e.preventDefault();
       });
+      group.addEventListener("mouseover", (e) => {
+        console.error("Node hovered:", {
+          id: node.id,
+          name: node.name,
+          type: "skill",
+          x: node.x,
+          y: node.y,
+        });
+        console.error("Mouseover event on node:", e.target);  
+        const targetContainer = document.getElementById("main-svg");
+        if (!targetContainer) {
+          console.error("Target container not found for tooltip");
+          return;
+        }
+        // look for all paths with data-skill-id node.id
+        const paths = targetContainer.querySelectorAll(
+          `path[data-skill-id="${node.id}"]`
+        );
+        // add style to all paths
+        let done = false;
+        paths.forEach((path) => {
+          if (!done) {
+            done = true;
+            const parentGroup = path.closest("g");
+            if (parentGroup) {
+              parentGroup.setAttribute("data-expanded", "true");
+            }
+          }
+          path.classList.add("hover-highlight");
+          
+        });
+        // get parent element of the hovered node not closed but upper layer
+
+      });
+
+      group.addEventListener("mouseleave", (e) => {
+        const targetContainer = document.getElementById("main-svg");
+        if (!targetContainer) {
+          return;
+        }
+        const paths = targetContainer.querySelectorAll(
+          `path[data-skill-id="${node.id}"]`
+        );
+        paths.forEach((path) => {
+          path.classList.remove("hover-highlight");
+        });
+      });
       const baseRadius = 15;
       const count = node.id ? this.skillEmployeeMap.get(node.id) || 0 : 0;
       const maxRadius = 45;

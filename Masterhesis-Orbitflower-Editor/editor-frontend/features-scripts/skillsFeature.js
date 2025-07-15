@@ -869,9 +869,7 @@ class SkillsFeature {
               );
             }
           }
-        });
-
-        path.addEventListener("click", function (e) {
+        });        path.addEventListener("click", function (e) {
           const svg = this.ownerSVGElement;
           if (!svg) {
             console.error("SVG element not found.");
@@ -908,24 +906,8 @@ class SkillsFeature {
               self.clearCollapseTimeout(group.id, skill.skill);
             } else {
               path.parentNode.setAttribute("data-expanded", "true");
-              const childGroup = self.renderSkillSegments(
-                group,
-                skill.subSkills,
-                {
-                  level: config.level + 1,
-                  startAngle: startA,
-                  endAngle: endA,
-                  parent: skill.skill,
-                  autoCollapseDelay: config.autoCollapseDelay,
-                }
-              );
-              self.setCollapseTimeout(
-                group,
-                skill.skill,
-                childGroup,
-                path.parentNode,
-                config.autoCollapseDelay
-              );
+              // Recursively expand all child segments
+              self.expandAllChildSegments(group, skill, config, startA, endA);
             }
           }
           if (window.updateAfterClick) {
@@ -943,6 +925,66 @@ class SkillsFeature {
     }
 
     return null;
+  }
+
+  // Recursively expand all child segments
+  expandAllChildSegments(group, skill, config, startAngle, endAngle) {
+    const childGroup = this.renderSkillSegments(
+      group,
+      skill.subSkills,
+      {
+        level: config.level + 1,
+        startAngle: startAngle,
+        endAngle: endAngle,
+        parent: skill.skill,
+        autoCollapseDelay: config.autoCollapseDelay,
+      }
+    );
+
+    if (childGroup) {
+      // Set timeout for the current level
+      this.setCollapseTimeout(
+        group,
+        skill.skill,
+        childGroup,
+        childGroup.parentNode,
+        config.autoCollapseDelay
+      );
+
+      // For each child skill, if it has sub-skills, expand them recursively
+      skill.subSkills.forEach((childSkill, index) => {
+        if (childSkill.subSkills && childSkill.subSkills.length > 0) {
+          // Calculate the angle range for this child skill
+          const total = skill.subSkills.reduce((sum, s) => sum + s.value, 0);
+          const angleSpan = (childSkill.value / total) * (endAngle - startAngle);
+          const childStartAngle = startAngle + 
+            skill.subSkills.slice(0, index).reduce((sum, s) => sum + (s.value / total) * (endAngle - startAngle), 0);
+          const childEndAngle = childStartAngle + angleSpan;
+
+          // Find the corresponding path element and mark it as expanded
+          const childPath = group.querySelector(
+            `path[data-skill="${childSkill.skill}"]`
+          );
+          if (childPath && childPath.parentNode) {
+            childPath.parentNode.setAttribute("data-expanded", "true");
+          }
+
+          // Recursively expand this child's sub-skills
+          this.expandAllChildSegments(
+            group,
+            childSkill,
+            {
+              ...config,
+              level: config.level + 1,
+            },
+            childStartAngle,
+            childEndAngle
+          );
+        }
+      });
+    }
+
+    return childGroup;
   }
 
   addSkillDistributionRings() {

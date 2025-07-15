@@ -2,7 +2,6 @@
   <units>
     <unit id="Dekanat Informatik">
       <permissions/>
-      <parent>fwefwedwdwdddddwwww</parent>
     </unit>
     <unit id="Studienservicecenter Informatik">
       <permissions/>
@@ -63,89 +62,6 @@
       <parent>Dekanat Informatik</parent>
       <permissions/>
     </unit>
-    <unit id="fewfewf">
-      <permissions/>
-    </unit>
-    <unit id="weffewf">
-      <permissions/>
-    </unit>
-    <unit id="fewffew">
-      <permissions/>
-    </unit>
-    <unit id="wfefwefe">
-      <permissions/>
-    </unit>
-    <unit id="fewfewfw">
-      <permissions/>
-    </unit>
-    <unit id="wefwfwfw">
-      <permissions/>
-    </unit>
-    <unit id="fefwefewf">
-      <permissions/>
-    </unit>
-    <unit id="gregerge">
-      <permissions/>
-    </unit>
-    <unit id="gregrege">
-      <permissions/>
-    </unit>
-    <unit id="fwefwefw">
-      <permissions/>
-    </unit>
-    <unit id="fesfesfs">
-      <permissions/>
-    </unit>
-    <unit id="fesfsef">
-      <permissions/>
-    </unit>
-    <unit id="grereg">
-      <permissions/>
-    </unit>
-    <unit id="dwqd">
-      <parent>wdwd</parent>
-      <permissions/>
-    </unit>
-    <unit id="fefefef">
-      <parent>fefe</parent>
-      <permissions/>
-    </unit>
-    <unit id="fefeeff">
-      <parent>###</parent>
-      <permissions/>
-    </unit>
-    <unit id="ergerg">
-      <parent>gregergg</parent>
-      <permissions/>
-    </unit>
-    <unit id="yesyes">
-      <parent>fefe</parent>
-      <permissions/>
-    </unit>
-    <unit id="grgr">
-      <parent>grgr</parent>
-      <permissions/>
-    </unit>
-    <unit id="fef">
-      <parent>fefe</parent>
-      <permissions/>
-    </unit>
-    <unit id="ssss">
-      <parent>sss</parent>
-      <permissions/>
-    </unit>
-    <unit id="fefe">
-      <parent>fefe</parent>
-      <permissions/>
-    </unit>
-    <unit id="fwefw">
-      <parent>fewf</parent>
-      <permissions/>
-    </unit>
-    <unit id="dw">
-      <parent>dw</parent>
-      <permissions/>
-    </unit>
   </units>
   <roles>
     <role id="Regular">
@@ -189,15 +105,6 @@
     </role>
     <role id="Assistant">
       <parent>Project</parent>
-      <parent>Regular</parent>
-      <permissions/>
-    </role>
-    <role id="fefe">
-      <permissions/>
-      <parent>Staff</parent>
-      <parent>Assistant</parent>
-    </role>
-    <role id="wwwwwwGRE">
       <parent>Regular</parent>
       <permissions/>
     </role>
