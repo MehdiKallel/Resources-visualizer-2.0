@@ -634,11 +634,9 @@
 
   .form-actions button {
     padding: 10px 0;
-    border: none;
     cursor: pointer;
     font-size: 14px;
     background: transparent;
-    text-decoration: underline;
   }
 
   /* Simple Loading and Empty States */
