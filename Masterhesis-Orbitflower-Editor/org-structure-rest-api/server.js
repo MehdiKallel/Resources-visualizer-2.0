@@ -2004,52 +2004,54 @@ app.get('/search', (req, res) => {
           if (!parsed) {
             console.log(`[Parse] Could not parse displayValue: ${item.displayValue}`);
           } else if (parsed.type === 'skill' && !parsed.contextId) {
-            // Skill: SkillId
+            // Skill: SkillId (include descendants)
+            const skillIds = getAllDescendantSkills(parsed.skillId);
             const matches = allSubjects.filter(s => {
               const skills = select(`${NS_PREFIX}:subjectSkills/${NS_PREFIX}:ref`, s);
-              const hasSkill = skills.some(skill => skill.getAttribute('id') === parsed.skillId);
+              const hasSkill = skills.some(skill => skillIds.includes(skill.getAttribute('id')));
               if (hasSkill) {
-                console.log(`[Skill] Subject ${s.getAttribute('uid')} has skill ${parsed.skillId}`);
+                console.log(`[Skill] Subject ${s.getAttribute('uid')} has skill(s) ${skillIds}`);
               }
               return hasSkill;
             });
             matchSet = new Set(matches.map(s => s.getAttribute('uid')));
-            console.log(`[Skill] SkillId=${parsed.skillId} =>`, Array.from(matchSet));
+            console.log(`[Skill] SkillId(s)=${skillIds} =>`, Array.from(matchSet));
           } else if (parsed.type === 'skill' && parsed.contextId) {
             // Check if contextId is a valid unit or role
             const isUnit = select(`//${NS_PREFIX}:organisation/${NS_PREFIX}:units/${NS_PREFIX}:unit[@id='${parsed.contextId}']`, doc).length > 0;
             const isRole = select(`//${NS_PREFIX}:organisation/${NS_PREFIX}:roles/${NS_PREFIX}:role[@id='${parsed.contextId}']`, doc).length > 0;
+            const skillIds = getAllDescendantSkills(parsed.skillId);
             if (!isUnit && !isRole) {
               console.log(`[Skill+Context] ContextId '${parsed.contextId}' is not a valid unit or role. Treating as Skill only.`);
               const matches = allSubjects.filter(s => {
                 const skills = select(`${NS_PREFIX}:subjectSkills/${NS_PREFIX}:ref`, s);
-                const hasSkill = skills.some(skill => skill.getAttribute('id') === parsed.skillId);
+                const hasSkill = skills.some(skill => skillIds.includes(skill.getAttribute('id')));
                 if (hasSkill) {
-                  console.log(`[Skill] Subject ${s.getAttribute('uid')} has skill ${parsed.skillId}`);
+                  console.log(`[Skill] Subject ${s.getAttribute('uid')} has skill(s) ${skillIds}`);
                 }
                 return hasSkill;
               });
               matchSet = new Set(matches.map(s => s.getAttribute('uid')));
-              console.log(`[Skill] SkillId=${parsed.skillId} =>`, Array.from(matchSet));
+              console.log(`[Skill] SkillId(s)=${skillIds} =>`, Array.from(matchSet));
             } else {
-              // Skill: SkillId (unit or role Id) -- must have BOTH the skill and a relation with the context as role or unit
+              // Skill: SkillId (unit or role Id) -- must have BOTH the skill (or descendant) and a relation with the context as role or unit
               const matches = allSubjects.filter(s => {
-                const hasSkill = select(`${NS_PREFIX}:subjectSkills/${NS_PREFIX}:ref[@id='${parsed.skillId}']`, s).length > 0;
+                const hasSkill = select(`${NS_PREFIX}:subjectSkills/${NS_PREFIX}:ref`, s).some(skill => skillIds.includes(skill.getAttribute('id')));
                 if (!hasSkill) {
-                  console.log(`[Skill+Context] Subject ${s.getAttribute('uid')} does NOT have skill ${parsed.skillId}`);
+                  console.log(`[Skill+Context] Subject ${s.getAttribute('uid')} does NOT have skill(s) ${skillIds}`);
                   return false;
                 }
                 const rels = select(`${NS_PREFIX}:relation`, s);
                 const hasRelation = rels.some(rel => rel.getAttribute('unit') === parsed.contextId || rel.getAttribute('role') === parsed.contextId);
                 if (hasRelation) {
-                  console.log(`[Skill+Context] Subject ${s.getAttribute('uid')} has skill ${parsed.skillId} AND relation with context ${parsed.contextId}`);
+                  console.log(`[Skill+Context] Subject ${s.getAttribute('uid')} has skill(s) ${skillIds} AND relation with context ${parsed.contextId}`);
                 } else {
-                  console.log(`[Skill+Context] Subject ${s.getAttribute('uid')} has skill ${parsed.skillId} but NO relation with context ${parsed.contextId}`);
+                  console.log(`[Skill+Context] Subject ${s.getAttribute('uid')} has skill(s) ${skillIds} but NO relation with context ${parsed.contextId}`);
                 }
                 return hasRelation;
               });
               matchSet = new Set(matches.map(s => s.getAttribute('uid')));
-              console.log(`[Skill+Context] SkillId=${parsed.skillId}, ContextId=${parsed.contextId} =>`, Array.from(matchSet));
+              console.log(`[Skill+Context] SkillId(s)=${skillIds}, ContextId=${parsed.contextId} =>`, Array.from(matchSet));
             }
           } else if (parsed.type === 'unit') {
             // Unit: UnitId
@@ -2123,6 +2125,50 @@ app.get('/search', (req, res) => {
         result = setA;
       }
       return result;
+    }
+
+    // Helper: get all child skills recursively
+    function getAllDescendantSkills(skillId) {
+      const skillNodes = select(`//${NS_PREFIX}:organisation/${NS_PREFIX}:skills/${NS_PREFIX}:skill`, doc);
+      // Build parent-child map using <relation type="parent">, <parent>, and <relation type="Child"> elements
+      const childMap = {};
+      for (const skillNode of skillNodes) {
+        const id = skillNode.getAttribute('id');
+        // <parent> element
+        const parentNodes = select(`${NS_PREFIX}:parent`, skillNode);
+        for (const parentNode of parentNodes) {
+          const parentId = parentNode.textContent.trim();
+          if (!childMap[parentId]) childMap[parentId] = [];
+          childMap[parentId].push(id);
+        }
+        // <relation type="parent"> element
+        const relParentNodes = Array.from(skillNode.getElementsByTagName('relation')).filter(r => r.getAttribute('type') === 'parent');
+        for (const rel of relParentNodes) {
+          const parentId = rel.getAttribute('id');
+          if (!childMap[parentId]) childMap[parentId] = [];
+          childMap[parentId].push(id);
+        }
+        // <relation type="Child"> element (treat as child-of id)
+        const relChildNodes = Array.from(skillNode.getElementsByTagName('relation')).filter(r => r.getAttribute('type') === 'Child');
+        for (const rel of relChildNodes) {
+          const parentId = rel.getAttribute('id');
+          if (!childMap[parentId]) childMap[parentId] = [];
+          childMap[parentId].push(id);
+        }
+      }
+      // Recursively collect all descendants
+      const descendants = new Set();
+      function collect(skill) {
+        if (descendants.has(skill)) return;
+        descendants.add(skill);
+        if (childMap[skill]) {
+          for (const child of childMap[skill]) {
+            collect(child);
+          }
+        }
+      }
+      collect(skillId);
+      return Array.from(descendants);
     }
 
     // Evaluate the expression
