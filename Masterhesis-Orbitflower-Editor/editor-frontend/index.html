@@ -868,13 +868,129 @@
       });
     }
 
+    // Metrics tracking with persistence
+    let metricsClicks = parseInt(localStorage.getItem('metricsClicks') || '0');
+    let metricsBackClicks = parseInt(localStorage.getItem('metricsBackClicks') || '0');
+    let metricsStartTime = parseInt(localStorage.getItem('metricsStartTime') || Date.now());
+    let metricsPanel = null;
+    let metricsInterval = null;
+
+    function updateMetricsPanel() {
+      if (!metricsPanel) metricsPanel = document.getElementById('metrics-panel');
+      if (!metricsPanel) return;
+      document.getElementById('metrics-clicks').textContent = `Clicks: ${metricsClicks}`;
+      const elapsed = Math.floor((Date.now() - metricsStartTime) / 1000);
+      document.getElementById('metrics-time').textContent = `Time: ${elapsed}s`;
+      document.getElementById('metrics-back').textContent = `Skills Back Clicks: ${metricsBackClicks}`;
+    }
+
+    // Persist metrics to localStorage
+    function persistMetrics() {
+      localStorage.setItem('metricsClicks', metricsClicks);
+      localStorage.setItem('metricsBackClicks', metricsBackClicks);
+      localStorage.setItem('metricsStartTime', metricsStartTime);
+    }
+
+    // Track all clicks in the document
+    document.addEventListener('click', function(e) {
+      metricsClicks++;
+      persistMetrics();
+      updateMetricsPanel();
+    });
+
+    // Track skills-back-button clicks robustly
+    document.addEventListener('click', function(e) {
+      // Use closest to catch dynamically added buttons
+      if (e.target && (e.target.id === 'skills-back-button' || (e.target.closest && e.target.closest('#skills-back-button')))) {
+        metricsBackClicks++;
+        persistMetrics();
+        updateMetricsPanel();
+      }
+    });
+
+    // Update time every second
+    metricsInterval = setInterval(updateMetricsPanel, 1000);
+
+    // Reset metrics and timer
+    document.addEventListener('DOMContentLoaded', function() {
+      metricsPanel = document.getElementById('metrics-panel');
+      const resetBtn = document.getElementById('metrics-reset-btn');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+          metricsClicks = 0;
+          metricsBackClicks = 0;
+          metricsStartTime = Date.now();
+          persistMetrics();
+          updateMetricsPanel();
+        });
+      }
+    });
+
+    // Make metrics panel movable
+    $(function() {
+      metricsPanel = document.getElementById('metrics-panel');
+      let isDragging = false, dragOffsetX = 0, dragOffsetY = 0;
+      metricsPanel.addEventListener('pointerdown', function(e) {
+        if (e.button !== 0) return;
+        isDragging = true;
+        dragOffsetX = e.clientX - metricsPanel.offsetLeft;
+        dragOffsetY = e.clientY - metricsPanel.offsetTop;
+        metricsPanel.style.boxShadow = '0 4px 16px rgba(0,0,0,0.25)';
+        document.body.style.userSelect = 'none';
+      });
+      document.addEventListener('pointermove', function(e) {
+        if (!isDragging) return;
+        metricsPanel.style.left = (e.clientX - dragOffsetX) + 'px';
+        metricsPanel.style.top = (e.clientY - dragOffsetY) + 'px';
+      });
+      document.addEventListener('pointerup', function(e) {
+        if (isDragging) {
+          isDragging = false;
+          metricsPanel.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+          document.body.style.userSelect = '';
+        }
+      });
+    });
+
+    // Reset metrics button functionality
+    document.addEventListener('click', function(e) {
+      if (e.target && e.target.id === 'metrics-reset-btn') {
+        metricsClicks = 0;
+        metricsBackClicks = 0;
+        metricsStartTime = Date.now();
+        updateMetricsPanel();
+      }
+    });
   </script>
 </head>
 
 <body is="x-ui-">
   <ui-rest id="main">
-
-
+    <!-- Metrics Panel -->
+    <div id="metrics-panel" style="
+      position: fixed;
+      top: 40px;
+      right: 40px;
+      z-index: 9999;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      padding: 16px 20px;
+      min-width: 220px;
+      font-family: Arial, sans-serif;
+      font-size: 15px;
+      cursor: move;
+      user-select: none;
+      transition: box-shadow 0.2s;
+    ">
+      <div style="font-weight: bold; margin-bottom: 8px;">Session Metrics</div>
+      <div id="metrics-clicks">Clicks: 0</div>
+      <div id="metrics-time">Time: 0s</div>
+      <div id="metrics-back">Skills Back Clicks: 0</div>
+      <button id="metrics-reset-btn" style="margin-top:10px; padding:4px 10px; font-size:13px; border-radius:4px; border:1px solid #ccc; background:#f5f5f5; cursor:pointer;">Reset Metrics</button>
+    </div>
+    <!-- End Metrics Panel -->
     <ui-tabbar>
       <ui-before></ui-before>
       <ui-tab class="default" data-tab="graph">Home</ui-tab>
