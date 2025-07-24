@@ -1359,6 +1359,49 @@ function displaySubjectsList(subjects) {
     .join("");
 }
 
+// Search/filter logic for subjects
+$(document).ready(function () {
+  $('#subjects-search').on('input', function () {
+    const query = $(this).val().toLowerCase();
+    $('#subjects-list .subject-list-item').each(function () {
+      const subjectName = $(this).find('.subject-name').text().toLowerCase();
+      const subjectUid = $(this).find('.subject-uid').text().toLowerCase();
+      if (subjectName.includes(query) || subjectUid.includes(query)) {
+        $(this).show();
+      } else {
+        $(this).hide();
+      }
+    });
+  });
+
+  // Search/filter logic for units
+  $('#units-search').on('input', function () {
+    const query = $(this).val().toLowerCase();
+    $('#units-list .unit-list-item').each(function () {
+      const unitName = $(this).find('.unit-name').text().toLowerCase();
+      const unitParent = $(this).find('.unit-parent').text().toLowerCase();
+      if (unitName.includes(query) || unitParent.includes(query)) {
+        $(this).show();
+      } else {
+        $(this).hide();
+      }
+    });
+  });
+
+  // Search/filter logic for roles
+  $('#roles-search').on('input', function () {
+    const query = $(this).val().toLowerCase();
+    $('#roles-list .role-list-item').each(function () {
+      const roleName = $(this).find('.role-name').text().toLowerCase();
+      if (roleName.includes(query)) {
+        $(this).show();
+      } else {
+        $(this).hide();
+      }
+    });
+  });
+});
+
 function addUnitRolePair(unitId = "", roleId = "") {
   console.log("addUnitRolePair called with:", unitId, roleId);
 
@@ -1613,6 +1656,22 @@ function displayUnitsList(units) {
     .join("");
 }
 
+// Search/filter logic for units
+$(document).ready(function () {
+  $('#units-search').on('input', function () {
+    const query = $(this).val().toLowerCase();
+    $('#units-list .unit-list-item').each(function () {
+      const unitName = $(this).find('.unit-name').text().toLowerCase();
+      const unitParent = $(this).find('.unit-parent').text().toLowerCase();
+      if (unitName.includes(query) || unitParent.includes(query)) {
+        $(this).show();
+      } else {
+        $(this).hide();
+      }
+    });
+  });
+});
+
 async function editUnit(unitId) {
   try {
     const response = await fetch(`${apiBaseUrl}/units/${unitId}`);
@@ -1782,6 +1841,21 @@ function displayRolesList(roles) {
     })
     .join("");
 }
+
+// Search/filter logic for roles
+$(document).ready(function () {
+  $('#roles-search').on('input', function () {
+    const query = $(this).val().toLowerCase();
+    $('#roles-list .role-list-item').each(function () {
+      const roleName = $(this).find('.role-name').text().toLowerCase();
+      if (roleName.includes(query)) {
+        $(this).show();
+      } else {
+        $(this).hide();
+      }
+    });
+  });
+});
 
 async function editRole(roleId) {
   try {
