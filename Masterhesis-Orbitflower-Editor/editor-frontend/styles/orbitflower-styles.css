@@ -292,16 +292,7 @@
     border-bottom: 1px solid #ccc;
   }
 
-  .unit-role-item, 
-  .unit-role-pair {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-bottom: 8px;
-    padding: 8px 0;
-    border-bottom: 1px solid #ccc;
-  }
-
+ 
   .unit-role-item input,
   .unit-role-pair input,
   .role-parent-pair input,
@@ -768,15 +759,6 @@
     background-color: #f0f0f0;
   }
 
-  /* Minimal Grid Item Styling */
-  .unit-role-item, .role-parent-item {
-    display: grid;
-    grid-template-columns: 1fr 1fr 30px;
-    gap: 10px;
-    margin-bottom: 15px;
-    padding: 10px 0;
-    border-bottom: 1px solid #eee;
-  }
 
   .unit-role-item input, .role-parent-item input {
     padding: 8px;
