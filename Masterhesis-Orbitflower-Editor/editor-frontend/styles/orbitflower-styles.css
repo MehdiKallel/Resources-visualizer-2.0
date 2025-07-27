@@ -1,3 +1,148 @@
+/* Simplified, border-free subject editor and form styles */
+
+/* Edit Subject Overlay */
+.edit-subject-section {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  z-index: 1000;
+  display: none;
+  padding: 40px;
+  box-sizing: border-box;
+  overflow: auto;
+  /* Remove all borders and lines */
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Section headers without lines */
+.section-header {
+  margin: 0 0 20px;
+  padding: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  /* No underline or bottom border */
+  border-bottom: none !important;
+}
+
+/* Container for edit form */
+.edit-subject-container,
+.manage-form {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0;
+  box-sizing: border-box;
+  /* No borders */
+  border: none !important;
+}
+
+/* Form groups: consistent spacing */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+/* Inputs & selects: clean, subtle borders */
+.form-group input,
+.form-group select,
+.add-relation-controls input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fafafa;
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #999;
+}
+
+/* Relation lists and pairing containers */
+#unit-role-pairs,
+#relations-container {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  /* Remove dashed and solid borders */
+  border: none !important;
+  background: transparent !important;
+}
+
+.unit-role-item,
+.relation-item,
+.role-parent-pair {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+  /* No divider lines */
+  border: none !important;
+  padding: 0;
+}
+
+/* Buttons: uniform styling */
+.form-actions button,
+.add-relation-controls button,
+.remove-btn {
+  padding: 10px 20px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #f7f7f7;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.form-actions button:hover,
+.add-relation-controls button:hover,
+.remove-btn:hover {
+  background: #eee;
+}
+
+/* Form actions container: spacing, no top border */
+.form-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+  /* Remove separator line */
+  border-top: none !important;
+  padding-top: 0;
+}
+
+/* Cancel button: subtle text-link style */
+#cancel-subject-btn,
+#cancel-unit-btn,
+#cancel-role-btn,
+#cancel-edit-btn {
+  background: transparent;
+  border: none;
+  color: #666;
+  text-decoration: underline;
+  padding: 10px;
+  cursor: pointer;
+}
+
+#cancel-subject-btn:hover,
+#cancel-unit-btn:hover,
+#cancel-role-btn:hover,
+#cancel-edit-btn:hover {
+  color: #333;
+}
+
+/* Remove any default resize handles for simplicity */
+.ui-resizehandle {
+  display: none !important;
+}
   /* OrbitFlower main styles */
   text {
     font-size: 14px;
@@ -500,7 +645,6 @@
   }
 
   .skill-relations-count .role-parents-count .unit-parent{
-    font-size: 12px;
     color: #999;
   }
 
@@ -518,7 +662,6 @@
     padding: 4px 0;
     border: none;
     cursor: pointer;
-    font-size: 12px;
     background: transparent;
     text-decoration: underline;
   }
@@ -543,7 +686,6 @@
   .relation-type-input {
     padding: 6px;
     border: 1px solid #ddd;
-    font-size: 12px;
     min-width: 100px;
     background: transparent;
   }
@@ -566,7 +708,6 @@
     height: 20px;
     border: 1px solid #ddd;
     padding: 2px;
-    font-size: 11px;
     background: transparent;
   }
 
@@ -583,7 +724,6 @@
     height: 20px;
     border: none;
     cursor: pointer;
-    font-size: 9px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -596,7 +736,6 @@
     height: 25px;
     border: none;
     cursor: pointer;
-    font-size: 12px;
     font-weight: normal;
     display: flex;
     align-items: center;
@@ -626,7 +765,6 @@
   .form-actions button {
     padding: 10px;
     cursor: pointer;
-    font-size: 14px;
     background: transparent;
   }
 
@@ -660,7 +798,6 @@
   .relation-id-input {
     padding: 6px;
     border: 1px solid #ddd;
-    font-size: 12px;
     width: 100%;
     background: transparent;
   }
@@ -675,7 +812,6 @@
     height: 20px;
     border: none;
     cursor: pointer;
-    font-size: 11px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -763,7 +899,6 @@
   .unit-role-item input, .role-parent-item input {
     padding: 8px;
     border: 1px solid #ddd;
-    font-size: 13px;
     background: transparent;
   }
 

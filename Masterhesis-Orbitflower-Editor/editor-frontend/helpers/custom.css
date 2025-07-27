@@ -113,7 +113,6 @@
   top: 10px;
   right: 10px;
   cursor: pointer;
-  font-size: 20px;
   background: #f8f8f8;
   border-radius: 50%;
   width: 30px;
@@ -493,7 +492,6 @@ circle:hover {
   transition: opacity 0.2s ease-out, transform 0.2s ease-out;
   z-index: 10000;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  font-family: Arial, sans-serif;
 }
 
 #circle-tooltip.visible {
@@ -613,7 +611,6 @@ circle:hover {
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 3px;
-  font-size: 14px;
 }
 
 .unit-role-item .remove-relation-btn {
@@ -623,8 +620,7 @@ circle:hover {
   padding: 8px 12px;
   cursor: pointer;
   border-radius: 3px;
-  font-size: 14px;
-  min-width: 32px;
+    min-width: 32px;
   height: 32px;
   display: flex;
   align-items: center;
@@ -663,7 +659,6 @@ circle:hover {
   background: #e3f2fd;
   border: 1px solid #bbdefb;
   border-radius: 16px;
-  font-size: 14px;
 }
 
 .skill-item-edit .skill-name {
@@ -677,7 +672,6 @@ circle:hover {
   padding: 2px 6px;
   cursor: pointer;
   border-radius: 50%;
-  font-size: 12px;
   width: 20px;
   height: 20px;
   display: flex;
@@ -691,7 +685,6 @@ circle:hover {
   background: #e3f2fd;
   padding: 4px 8px;
   border-radius: 3px;
-  font-size: 14px;
   min-width: 80px;
 }
 
@@ -705,7 +698,6 @@ circle:hover {
   padding: 4px 8px;
   border: 1px solid #ccc;
   border-radius: 3px;
-  font-size: 14px;
   width: 120px;
 }
 
@@ -716,14 +708,12 @@ circle:hover {
   padding: 4px 8px;
   cursor: pointer;
   border-radius: 3px;
-  font-size: 14px;
 }
 
 .relation-type-input {
   padding: 4px 8px;
   border: 1px solid #ccc;
   border-radius: 3px;
-  font-size: 14px;
   width: 100px;
 }
 
@@ -734,7 +724,6 @@ circle:hover {
 }
 
 .strength-controls label {
-  font-size: 12px;
   color: #666;
   margin: 0;
 }
@@ -749,7 +738,6 @@ circle:hover {
   padding: 2px 4px;
   border: 1px solid #ccc;
   border-radius: 3px;
-  font-size: 12px;
   text-align: center;
   margin: 0;
 }
@@ -761,7 +749,6 @@ circle:hover {
   padding: 2px 6px;
   cursor: pointer;
   border-radius: 3px;
-  font-size: 12px;
   width: 20px;
   height: 20px;
 }
@@ -773,7 +760,6 @@ circle:hover {
   padding: 4px 8px;
   cursor: pointer;
   border-radius: 3px;
-  font-size: 14px;
   margin-left: auto;
 }
 
