@@ -1831,7 +1831,7 @@ class ExpressionBuilder {
     });
 
     if (this.currentExpression.length === 0) {
-      display.textContent = "Click on elements to build expression";
+      display.textContent = "Drag elements to build expression";
     }
 
     this.highlightGraph();
