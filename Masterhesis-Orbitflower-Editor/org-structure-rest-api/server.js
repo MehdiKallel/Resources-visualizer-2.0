@@ -72,6 +72,79 @@ const XML_FILE = path.join(__dirname, "organisation.xml");
 
 app.use(cookieParser());
 
+
+app.put("/subjects/:id/skills/:skillId/strength", express.json(), (req, res) => {
+  try {
+    const { id, skillId } = req.params;
+    const { strength } = req.body;
+    
+    // Validate strength value
+    const strengthNum = parseInt(strength, 10);
+    if (isNaN(strengthNum) || strengthNum < 0 || strengthNum > 100) {
+      return res.status(400).send("Strength must be a number between 0 and 100");
+    }
+
+    const doc = readXML();
+    
+    // Find subject by ID or UID
+    let subjectNode = select(
+      `//${NS_PREFIX}:organisation/${NS_PREFIX}:subjects/${NS_PREFIX}:subject[@id='${id}']`,
+      doc
+    )[0];
+    
+    if (!subjectNode) {
+      // Try to find by UID
+      subjectNode = select(
+        `//${NS_PREFIX}:organisation/${NS_PREFIX}:subjects/${NS_PREFIX}:subject[@uid='${id}']`,
+        doc
+      )[0];
+    }
+    
+    if (!subjectNode) return res.status(404).send("Subject not found");
+
+    // Find skill reference
+    let skillRefNode = select(
+      `${NS_PREFIX}:subjectSkills/${NS_PREFIX}:ref[@id='${skillId}']`,
+      subjectNode
+    )[0];
+    
+    if (!skillRefNode) {
+      // Skill doesn't exist for this subject - check if skill exists globally
+      const skillExists = select(
+        `//${NS_PREFIX}:organisation/${NS_PREFIX}:skills/${NS_PREFIX}:skill[@id='${skillId}']`,
+        doc
+      )[0];
+      
+      if (!skillExists) return res.status(404).send("Skill not found");
+      
+      // Create subject skills container if needed
+      let subjectSkillsNode = select(
+        `${NS_PREFIX}:subjectSkills`,
+        subjectNode
+      )[0];
+      
+      if (!subjectSkillsNode) {
+        subjectSkillsNode = doc.createElement("subjectSkills");
+        subjectNode.appendChild(subjectSkillsNode);
+      }
+      
+      // Create new skill reference
+      skillRefNode = doc.createElement("ref");
+      skillRefNode.setAttribute("id", skillId);
+      subjectSkillsNode.appendChild(skillRefNode);
+    }
+    
+    // Update strength attribute
+    skillRefNode.setAttribute("strength", strengthNum.toString());
+    
+    writeXML(doc, "skill-strength-updated");
+    res.send("Skill strength updated successfully");
+  } catch (error) {
+    console.error("Error updating skill strength:", error);
+    res.status(500).send(error.message);
+  }
+});
+
 // Add session middleware
 app.use((req, res, next) => {
   let sessionId = req.cookies.sessionId;
